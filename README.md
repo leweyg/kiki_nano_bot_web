@@ -33,6 +33,10 @@ The proting should be firstly translating the level files into json or javascrip
 
 The current web files provide a working scaffold: `index.html`, `play.html`, `sim.html`, `sim.js`, and `sim_test.sh`. The current JavaScript levels are deterministic placeholder layouts, so they are useful for testing the shared state and renderer but are not yet ports of the original puzzles.
 
+General iteration loop will be:
+
+- Port each level, starting at the first, check that required game world and control mechanics are working, and tested in sim, then check that the 3D rendering is as expected, and then move onto the next level. If it's clear that future feature should be implimented early do that.
+
 The remaining implementation work is:
 
 1. **Convert the level data**
@@ -57,6 +61,7 @@ The remaining implementation work is:
 	- Render the shared world as the intended 3D arena instead of the current simple cube grid.
 	- Port the relevant meshes and color schemes from the original C++ implementation in `kiki/src/items/`.
 	- Connect keyboard and touch controls to the shared action system, including the move joystick, jump-and-move joystick, push, and shoot.
+    - Make very sure that the system idles unless needed to complete interaction. The page should be idle of the time unless directly interacted with, or if the level absolutly requires animation. It is okay if idle animation stop, as they shouldn't effect fundamental game state.
 
 5. **Make the simulator authoritative**
 	- Extend `sim.js` with a basic search or scripted solver for each converted level.
