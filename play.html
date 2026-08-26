@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
-<style>:root{--paper:#111b1a;--ink:#ecf0df;--accent:#e4865e}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#1d2c29;border:1px solid #52635c;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#b9c8bb}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.control-button{height:88px;min-width:76px;color:#fff;background:#a95643;border:0}.won{background:#6b9f7b!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}}
-</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="pad"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><button class="control-button" id="jump">JUMP<br>+ MOVE</button><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div>
+<style>:root{--paper:#111b1a;--ink:#ecf0df;--accent:#e4865e}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#1d2c29;border:1px solid #52635c;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#b9c8bb}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.control-button{height:88px;min-width:76px;color:#fff;background:#a95643;border:0}.jump-pad button{background:#8f4f42;color:#fff}.won{background:#6b9f7b!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px;gap:8px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}}
+</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="pad"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><div class="pad jump-pad"><button data-jump-dir="up">↑</button><button data-jump-dir="left">←</button><button data-jump-dir="down">↓</button><button data-jump-dir="right">→</button></div><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div>
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
@@ -18,6 +18,9 @@ scene.add(new THREE.HemisphereLight(0xe6f0d9, 0x24312c, 1.7));
 const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
 keyLight.position.set(-3, 8, 5);
 scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
+fillLight.position.set(3, -8, -5);
+scene.add(fillLight);
 const board = new THREE.Group();
 scene.add(board);
 const palette = {mint: 0x91c1a7, copper: 0xd78363, sky: 0x80aeba, violet: 0xb295c9, lime: 0xb8c76e, coral: 0xe4865e};
@@ -25,12 +28,15 @@ const materials = {
   floorA: new THREE.MeshStandardMaterial({color: 0x20332f, roughness: .85}),
   floorB: new THREE.MeshStandardMaterial({color: 0x263b35, roughness: .85}),
   wall: new THREE.MeshStandardMaterial({color: 0x66796d, roughness: .82}),
+  borderA: new THREE.MeshStandardMaterial({color: 0x4d675c, roughness: .85, transparent: true, opacity: .46, side: THREE.DoubleSide}),
+  borderB: new THREE.MeshStandardMaterial({color: 0x5a7468, roughness: .85, transparent: true, opacity: .46, side: THREE.DoubleSide}),
   botBody: new THREE.MeshStandardMaterial({color: 0xf3c56c, roughness: .62, metalness: .05}),
   botTire: new THREE.MeshStandardMaterial({color: 0x1b2422, roughness: .88}),
   room: new THREE.MeshStandardMaterial({color: 0x71907f, roughness: .9, transparent: true, opacity: .11, side: THREE.BackSide}),
   roomLine: new THREE.LineBasicMaterial({color: 0x465c53, transparent: true, opacity: .55})
 };
 function cube(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material);}
+function box(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);}
 function v(position){return new THREE.Vector3(position.x, position.y, position.z);}
 function centered(level, position, lift){
   return new THREE.Vector3(
@@ -45,10 +51,45 @@ function addCube(position, size, material){
   board.add(mesh);
   return mesh;
 }
+function addBox(position, size, material){
+  const mesh = box(size, material);
+  mesh.position.copy(position);
+  board.add(mesh);
+  return mesh;
+}
 function addRoom(level){
   const room = new THREE.Mesh(new THREE.BoxGeometry(level.size.x, level.size.y, level.size.z), materials.room);
   const edges = new THREE.LineSegments(new THREE.EdgesGeometry(room.geometry), materials.roomLine);
   board.add(room, edges);
+}
+function borderMaterial(a, b, c){
+  return (a + b + c) % 2 ? materials.borderA : materials.borderB;
+}
+function addBoundaryWalls(level){
+  const xmin = -level.size.x / 2 - .02;
+  const xmax = level.size.x / 2 + .02;
+  const ymin = -level.size.y / 2 - .02;
+  const ymax = level.size.y / 2 + .02;
+  const zmin = -level.size.z / 2 - .02;
+  const zmax = level.size.z / 2 + .02;
+  for (let y = 0; y < level.size.y; y += 1) {
+    for (let z = 0; z < level.size.z; z += 1) {
+      addBox(new THREE.Vector3(xmin, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 0));
+      addBox(new THREE.Vector3(xmax, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 1));
+    }
+  }
+  for (let x = 0; x < level.size.x; x += 1) {
+    for (let z = 0; z < level.size.z; z += 1) {
+      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymin, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 2));
+      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymax, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 3));
+    }
+  }
+  for (let x = 0; x < level.size.x; x += 1) {
+    for (let y = 0; y < level.size.y; y += 1) {
+      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmin), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 4));
+      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmax), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 5));
+    }
+  }
 }
 function addGate(level, exit){
   const color = palette[level.theme] || 0x91c1a7;
@@ -93,6 +134,7 @@ function draw(){
   while(board.children.length) board.remove(board.children[0]);
   const level = game.level;
   addRoom(level);
+  addBoundaryWalls(level);
   for(let z = 0; z < level.size.z; z += 1) {
     for(let x = 0; x < level.size.x; x += 1) {
       addCube(centered(level, {x, y: 0, z}, -.55), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
@@ -111,14 +153,19 @@ function draw(){
   renderer.render(scene, camera);
 }
 function act(direction){if(game.action(direction)) draw();}
+function jumpAction(direction){
+  return {up: 'jump forward', down: 'jump backward', left: 'jump left', right: 'jump right'}[direction];
+}
 document.querySelectorAll('[data-dir]').forEach(button => button.addEventListener('click', () => act(button.dataset.dir)));
+document.querySelectorAll('[data-jump-dir]').forEach(button => button.addEventListener('click', () => act(jumpAction(button.dataset.jumpDir))));
 document.getElementById('reset').onclick = () => { location.reload(); };
-document.getElementById('jump').onclick = () => act('jump forward');
 document.getElementById('push').onclick = () => {};
 document.getElementById('shoot').onclick = () => {};
 addEventListener('keydown', event => {
   const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', Control: 'jump forward', j: 'jump', ' ': 'jump forward'};
+  const jumpMap = {ArrowUp: 'jump forward', w: 'jump forward', ArrowDown: 'jump backward', s: 'jump backward', ArrowLeft: 'jump left', a: 'jump left', ArrowRight: 'jump right', d: 'jump right'};
   if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';draw();return;}
+  if((event.ctrlKey || event.shiftKey) && jumpMap[event.key]){event.preventDefault();act(jumpMap[event.key]);return;}
   if(map[event.key]){event.preventDefault();act(map[event.key]);}
 });
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); draw(); });

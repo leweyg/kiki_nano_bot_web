@@ -12,7 +12,7 @@
   ];
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
-  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"];
+  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump backward", "jump"];
 
   function hash(name) {
     var value = 0;
@@ -246,7 +246,7 @@
     var forward = add(this.position, step);
     var moved = false;
 
-    if (jump && sign > 0 && this.isUnoccupied(above)) {
+    if (jump && this.isUnoccupied(above)) {
       if (this.isUnoccupied(forward) && this.isUnoccupied(add(forward, this.up))) {
         this.position = add(forward, this.up);
       } else {
@@ -273,6 +273,22 @@
     this.checkExit();
     return true;
   };
+  Game.prototype.jumpToward = function (step) {
+    if (this.won) return false;
+    var above = add(this.position, this.up);
+    var target = add(this.position, step);
+    if (!this.isUnoccupied(above)) return false;
+    if (this.isUnoccupied(target) && this.isUnoccupied(add(target, this.up))) {
+      this.position = add(target, this.up);
+    } else {
+      this.position = above;
+    }
+    this.moves += 1;
+    this.checkExit();
+    this.applyGravity(step, 1);
+    this.checkExit();
+    return true;
+  };
   Game.prototype.jumpInPlace = function () {
     if (this.won) return false;
     var above = add(this.position, this.up);
@@ -295,6 +311,9 @@
     if (name === "turn left" || name === "left") return this.turn(1);
     if (name === "turn right" || name === "right") return this.turn(-1);
     if (name === "jump forward") return this.moveAlong(1, true);
+    if (name === "jump backward") return this.moveAlong(-1, true);
+    if (name === "jump left") return this.jumpToward(neg(this.getRight()));
+    if (name === "jump right") return this.jumpToward(this.getRight());
     if (name === "jump") return this.jumpInPlace();
     return false;
   };
