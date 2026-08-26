@@ -7,7 +7,7 @@ Kiki.levels.forEach(function (level) {
   var path = Kiki.solve(level);
   var game = new Kiki.Game(level);
   if (!path) { failed.push(level.id + " (no route)"); return; }
-  path.forEach(function (direction) { game.move(direction[0], direction[1], direction[2]); });
+  path.forEach(function (action) { game.action(action); });
   if (!game.won) failed.push(level.id + " (route did not finish)");
   else console.log("OK  " + level.id.padEnd(10) + " " + path.length + " moves");
 });

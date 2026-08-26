@@ -12,7 +12,7 @@
   ];
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
-  var directions = [[0, 0, 1], [1, 0, 0], [0, 0, -1], [-1, 0, 0], [0, 1, 0], [0, -1, 0]];
+  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"];
 
   function hash(name) {
     var value = 0;
@@ -93,6 +93,7 @@
     return {
       id: name, title: name, index: index, theme: themes[index % themes.length],
       size: { x: width, y: 1, z: depth }, start: start, exit: exit, walls: walls,
+      player: { coordinates: start, orientation: "rot0" },
       exits: [{ name: "exit", active: true, coordinates: exit }],
       objects: walls.map(function (wall) { return { type: "wall", coordinates: wall }; }),
       help: index < 6 ? "Reach the exit. Use the arrow keys or the controls below." : "Find a route through the arena and reach the glowing exit.",
@@ -111,6 +112,24 @@
 
   function key(x, y, z) { return x + "," + y + "," + z; }
   function copyPosition(position) { return { x: position.x, y: position.y || 0, z: position.z || 0 }; }
+  function vec(x, y, z) { return { x: x, y: y, z: z }; }
+  function add(a, b) { return vec(a.x + b.x, a.y + b.y, a.z + b.z); }
+  function neg(a) { return vec(-a.x, -a.y, -a.z); }
+  function mul(a, scalar) { return vec(a.x * scalar, a.y * scalar, a.z * scalar); }
+  function cross(a, b) {
+    return vec(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
+  }
+  function same(a, b) { return a.x === b.x && a.y === b.y && a.z === b.z; }
+  function vectorKey(a) { return a.x + "," + a.y + "," + a.z; }
+  function orientationForName(name) {
+    if (name === "rot0") return { dir: vec(0, 0, 1), up: vec(0, 1, 0) };
+    if (name === "roty180") return { dir: vec(0, 0, -1), up: vec(0, 1, 0) };
+    if (name === "roty270") return { dir: vec(-1, 0, 0), up: vec(0, 1, 0) };
+    return { dir: vec(1, 0, 0), up: vec(0, 1, 0) };
+  }
+  function cloneOrientation(orientation) {
+    return { dir: copyPosition(orientation.dir), up: copyPosition(orientation.up) };
+  }
   function cleanText(text) {
     return String(text || "")
       .replace(/\$scale\([^)]+\)/g, "")
@@ -126,7 +145,10 @@
   function Game(level) {
     this.level = typeof level === "string" ? byName[level] : (level || levels[0]);
     var playerStart = this.level.player && this.level.player.coordinates ? this.level.player.coordinates : this.level.start;
+    var orientation = orientationForName(this.level.player && this.level.player.orientation);
     this.position = copyPosition(playerStart);
+    this.dir = copyPosition(orientation.dir);
+    this.up = copyPosition(orientation.up);
     this.moves = 0;
     this.won = false;
     this.walls = {};
@@ -137,52 +159,162 @@
     this.help = levelHelp(this.level);
   }
 
+  Game.prototype.clone = function () {
+    var clone = new Game(this.level);
+    clone.position = copyPosition(this.position);
+    clone.dir = copyPosition(this.dir);
+    clone.up = copyPosition(this.up);
+    clone.moves = this.moves;
+    clone.won = this.won;
+    return clone;
+  };
+  Game.prototype.stateKey = function () {
+    return vectorKey(this.position) + "|" + vectorKey(this.dir) + "|" + vectorKey(this.up);
+  };
+  Game.prototype.getRight = function () {
+    return cross(this.up, this.dir);
+  };
   Game.prototype.isBlocked = function (x, y, z) {
     if (z === undefined) { z = y; y = 0; }
     return x < 0 || y < 0 || z < 0 ||
       x >= this.level.size.x || y >= this.level.size.y || z >= this.level.size.z ||
       this.walls[key(x, y, z)];
   };
+  Game.prototype.isUnoccupied = function (position) {
+    return !this.isBlocked(position.x, position.y, position.z);
+  };
   Game.prototype.isExit = function (x, y, z) {
     return this.exits.some(function (exit) {
       return exit.active && exit.coordinates.x === x && exit.coordinates.y === y && exit.coordinates.z === z;
     });
   };
-  Game.prototype.move = function (dx, dy, dz) {
-    if (dz === undefined) { dz = dy; dy = 0; }
+  Game.prototype.checkExit = function () {
+    if (this.isExit(this.position.x, this.position.y, this.position.z)) this.won = true;
+  };
+  Game.prototype.applyGravity = function (holdStep, sign) {
+    var down = neg(this.up);
+    var moved = false;
+    var guard = 0;
+    while (this.isUnoccupied(add(this.position, down)) && guard < 64) {
+      guard += 1;
+      if (holdStep) {
+        var forward = add(this.position, holdStep);
+        if (this.isUnoccupied(forward) && !this.isUnoccupied(add(forward, down))) {
+          this.position = forward;
+          this.checkExit();
+          if (this.won) return true;
+          moved = true;
+          continue;
+        }
+        if (!this.isUnoccupied(forward)) {
+          this.rollClimbUp(holdStep, sign || 1);
+          down = neg(this.up);
+          moved = true;
+          continue;
+        }
+      }
+      this.position = add(this.position, down);
+      this.checkExit();
+      if (this.won) return true;
+      moved = true;
+    }
+    if (moved) this.checkExit();
+    return moved;
+  };
+  Game.prototype.turn = function (sign) {
     if (this.won) return false;
-    var nextX = this.position.x + dx;
-    var nextY = this.position.y + dy;
-    var nextZ = this.position.z + dz;
-    if (this.isBlocked(nextX, nextY, nextZ)) return false;
-    this.position.x = nextX; this.position.y = nextY; this.position.z = nextZ; this.moves += 1;
-    if (this.isExit(nextX, nextY, nextZ)) this.won = true;
+    this.dir = sign > 0 ? cross(this.up, this.dir) : cross(this.dir, this.up);
+    this.moves += 1;
+    this.applyGravity();
     return true;
   };
+  Game.prototype.rollClimbUp = function (step, sign) {
+    var oldUp = this.up;
+    this.up = neg(step);
+    this.dir = mul(oldUp, sign);
+  };
+  Game.prototype.rollClimbDown = function (step, sign) {
+    var oldUp = this.up;
+    this.position = add(add(this.position, step), neg(oldUp));
+    this.up = step;
+    this.dir = mul(oldUp, -sign);
+  };
+  Game.prototype.moveAlong = function (sign, jump) {
+    if (this.won) return false;
+    var step = mul(this.dir, sign);
+    var above = add(this.position, this.up);
+    var forward = add(this.position, step);
+    var moved = false;
+
+    if (jump && sign > 0 && this.isUnoccupied(above)) {
+      if (this.isUnoccupied(forward) && this.isUnoccupied(add(forward, this.up))) {
+        this.position = add(forward, this.up);
+      } else {
+        this.position = above;
+      }
+      this.checkExit();
+      moved = true;
+    } else if (this.isUnoccupied(forward)) {
+      if (this.isUnoccupied(add(forward, neg(this.up)))) {
+        this.rollClimbDown(step, sign);
+      } else {
+        this.position = forward;
+      }
+      this.checkExit();
+      moved = true;
+    } else {
+      this.rollClimbUp(step, sign);
+      moved = true;
+    }
+
+    if (!moved) return false;
+    this.moves += 1;
+    this.applyGravity(step, sign);
+    this.checkExit();
+    return true;
+  };
+  Game.prototype.jumpInPlace = function () {
+    if (this.won) return false;
+    var above = add(this.position, this.up);
+    if (!this.isUnoccupied(above)) return false;
+    this.position = above;
+    this.moves += 1;
+    this.checkExit();
+    return true;
+  };
+  Game.prototype.move = function (dx, dy, dz) {
+    if (dz === undefined) { dz = dy; dy = 0; }
+    if (same(vec(dx, dy, dz), this.dir)) return this.moveAlong(1, false);
+    if (same(vec(dx, dy, dz), neg(this.dir))) return this.moveAlong(-1, false);
+    if (same(vec(dx, dy, dz), this.up)) return this.jumpInPlace();
+    return false;
+  };
   Game.prototype.action = function (name) {
-    if (name === "move forward" || name === "up") return this.move(0, 0, 1);
-    if (name === "move backward" || name === "down") return this.move(0, 0, -1);
-    if (name === "turn left" || name === "left") return this.move(-1, 0, 0);
-    if (name === "turn right" || name === "right") return this.move(1, 0, 0);
-    if (name === "jump") return this.move(0, 1, 0);
-    if (name === "drop") return this.move(0, -1, 0);
+    if (name === "move forward" || name === "up") return this.moveAlong(1, false);
+    if (name === "move backward" || name === "down") return this.moveAlong(-1, false);
+    if (name === "turn left" || name === "left") return this.turn(1);
+    if (name === "turn right" || name === "right") return this.turn(-1);
+    if (name === "jump forward") return this.moveAlong(1, true);
+    if (name === "jump") return this.jumpInPlace();
     return false;
   };
   Game.prototype.reset = function () { return new Game(this.level); };
 
   function solve(level) {
-    var game = new Game(level);
-    var queue = [{ x: game.position.x, y: game.position.y, z: game.position.z, path: [] }];
-    var visited = {}; visited[key(game.position.x, game.position.y, game.position.z)] = true;
+    var start = new Game(level);
+    var queue = [{ game: start, path: [] }];
+    var visited = {}; visited[start.stateKey()] = true;
     while (queue.length) {
       var current = queue.shift();
-      if (game.isExit(current.x, current.y, current.z)) return current.path;
-      directions.forEach(function (direction) {
-        var nextX = current.x + direction[0], nextY = current.y + direction[1], nextZ = current.z + direction[2];
-        var nextKey = key(nextX, nextY, nextZ);
-        if (!game.isBlocked(nextX, nextY, nextZ) && !visited[nextKey]) {
-          visited[nextKey] = true;
-          queue.push({ x: nextX, y: nextY, z: nextZ, path: current.path.concat([direction]) });
+      if (current.game.won) return current.path;
+      solverActions.forEach(function (action) {
+        var next = current.game.clone();
+        if (next.action(action)) {
+          var nextKey = next.stateKey();
+          if (!visited[nextKey]) {
+            visited[nextKey] = true;
+            queue.push({ game: next, path: current.path.concat([action]) });
+          }
         }
       });
     }
