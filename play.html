@@ -1,39 +1,39 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
-<style>:root{--paper:#111b1a;--ink:#ecf0df;--accent:#e4865e}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#1d2c29;border:1px solid #52635c;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#b9c8bb}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.control-button{height:88px;min-width:76px;color:#fff;background:#a95643;border:0}.jump-pad button{background:#8f4f42;color:#fff}.won{background:#6b9f7b!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px;gap:8px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}}
+<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.control-button{height:88px;min-width:76px;color:#fff;background:#8a1f16;border:0}.jump-pad button{background:#681313;color:#fff}.won{background:#8f8f20!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px;gap:8px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}}
 </style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="pad"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><div class="pad jump-pad"><button data-jump-dir="up">↑</button><button data-jump-dir="left">←</button><button data-jump-dir="down">↓</button><button data-jump-dir="right">→</button></div><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div>
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
 const game = new Kiki.Game(Kiki.getLevel(query.get('level')));
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#111b1a');
+scene.background = new THREE.Color('#212121');
 const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
 let cameraMode = 'behind';
 const renderer = new THREE.WebGLRenderer({antialias: true});
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 document.body.appendChild(renderer.domElement);
-scene.add(new THREE.HemisphereLight(0xe6f0d9, 0x24312c, 1.7));
-const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
-keyLight.position.set(-3, 8, 5);
+scene.add(new THREE.HemisphereLight(0xffffff, 0x000000, .25));
+const keyLight = new THREE.DirectionalLight(0xffffff, .75);
+keyLight.position.set(-3, 6, 4);
 scene.add(keyLight);
-const fillLight = new THREE.DirectionalLight(0xffffff, 1.4);
-fillLight.position.set(3, -8, -5);
-scene.add(fillLight);
+const cameraLight = new THREE.SpotLight(0xffffff, 2.15, 0, Math.PI / 2, .16, .45);
+cameraLight.target = new THREE.Object3D();
+scene.add(cameraLight, cameraLight.target);
 const board = new THREE.Group();
 scene.add(board);
-const palette = {mint: 0x91c1a7, copper: 0xd78363, sky: 0x80aeba, violet: 0xb295c9, lime: 0xb8c76e, coral: 0xe4865e};
+const DEFAULT_GATE_COLOR = 0xffff00;
 const materials = {
-  floorA: new THREE.MeshStandardMaterial({color: 0x20332f, roughness: .85}),
-  floorB: new THREE.MeshStandardMaterial({color: 0x263b35, roughness: .85}),
-  wall: new THREE.MeshStandardMaterial({color: 0x66796d, roughness: .82}),
-  borderA: new THREE.MeshStandardMaterial({color: 0x4d675c, roughness: .85, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  borderB: new THREE.MeshStandardMaterial({color: 0x5a7468, roughness: .85, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  botBody: new THREE.MeshStandardMaterial({color: 0xf3c56c, roughness: .62, metalness: .05}),
-  botTire: new THREE.MeshStandardMaterial({color: 0x1b2422, roughness: .88}),
-  room: new THREE.MeshStandardMaterial({color: 0x71907f, roughness: .9, transparent: true, opacity: .11, side: THREE.BackSide}),
-  roomLine: new THREE.LineBasicMaterial({color: 0x465c53, transparent: true, opacity: .55})
+  floorA: new THREE.MeshStandardMaterial({color: 0x555555, roughness: .55, metalness: .05}),
+  floorB: new THREE.MeshStandardMaterial({color: 0x666666, roughness: .55, metalness: .05}),
+  wall: new THREE.MeshStandardMaterial({color: 0x808080, roughness: .48, metalness: .04}),
+  borderA: new THREE.MeshStandardMaterial({color: 0x777777, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
+  borderB: new THREE.MeshStandardMaterial({color: 0x8a8a8a, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
+  botBody: new THREE.MeshStandardMaterial({color: 0xff8000, roughness: .42, metalness: .08}),
+  botTire: new THREE.MeshStandardMaterial({color: 0x800000, roughness: .62}),
+  room: new THREE.MeshStandardMaterial({color: 0x212121, roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide}),
+  roomLine: new THREE.LineBasicMaterial({color: 0x808080, transparent: true, opacity: .45})
 };
 function cube(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material);}
 function box(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);}
@@ -92,8 +92,8 @@ function addBoundaryWalls(level){
   }
 }
 function addGate(level, exit){
-  const color = palette[level.theme] || 0x91c1a7;
-  const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: .28, roughness: .45});
+  const color = DEFAULT_GATE_COLOR;
+  const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: .4, roughness: .35});
   const group = new THREE.Group();
   const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), material);
   const ringB = ringA.clone();
@@ -128,6 +128,9 @@ function updateCamera(level){
     camera.position.copy(desired);
     camera.lookAt(position.clone().addScaledVector(dir, .35));
   }
+  cameraLight.position.copy(camera.position);
+  cameraLight.target.position.copy(position);
+  cameraLight.target.updateMatrixWorld();
   camera.updateProjectionMatrix();
 }
 function draw(){
