@@ -12,7 +12,16 @@
   ];
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
-  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump backward", "jump"];
+  var actionTimings = {
+    "move forward": 200,
+    "move backward": 200,
+    "turn left": 200,
+    "turn right": 200,
+    "jump": 120,
+    "jump forward": 200,
+    "jump far forward": 400
+  };
+  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump"];
 
   function hash(name) {
     var value = 0;
@@ -191,24 +200,33 @@
   Game.prototype.checkExit = function () {
     if (this.isExit(this.position.x, this.position.y, this.position.z)) this.won = true;
   };
-  Game.prototype.applyGravity = function (holdStep, sign) {
+  Game.prototype.applyGravity = function (holdStep, sign, maxForwardFalls) {
     var down = neg(this.up);
     var moved = false;
+    var forwardFalls = 0;
     var guard = 0;
     while (this.isUnoccupied(add(this.position, down)) && guard < 64) {
       guard += 1;
       if (holdStep) {
         var forward = add(this.position, holdStep);
-        if (this.isUnoccupied(forward) && !this.isUnoccupied(add(forward, down))) {
+        if (!this.isUnoccupied(forward)) {
+          this.rollClimbUp(holdStep, sign || 1);
+          this.checkExit();
+          moved = true;
+          break;
+        }
+        if (!this.isUnoccupied(add(forward, down))) {
           this.position = forward;
           this.checkExit();
           if (this.won) return true;
           moved = true;
           continue;
         }
-        if (!this.isUnoccupied(forward)) {
-          this.rollClimbUp(holdStep, sign || 1);
-          down = neg(this.up);
+        if (maxForwardFalls === undefined || forwardFalls < maxForwardFalls) {
+          this.position = add(forward, down);
+          forwardFalls += 1;
+          this.checkExit();
+          if (this.won) return true;
           moved = true;
           continue;
         }
@@ -220,6 +238,22 @@
     }
     if (moved) this.checkExit();
     return moved;
+  };
+  Game.prototype.jumpAlong = function (sign, maxForwardFalls) {
+    if (this.won) return false;
+    var step = mul(this.dir, sign);
+    var above = add(this.position, this.up);
+    var forward = add(this.position, step);
+    if (!this.isUnoccupied(above)) return false;
+    if (this.isUnoccupied(forward) && this.isUnoccupied(add(forward, this.up))) {
+      this.position = add(forward, this.up);
+    } else {
+      this.position = above;
+    }
+    this.applyGravity(step, sign, maxForwardFalls || 0);
+    this.moves += 1;
+    this.checkExit();
+    return true;
   };
   Game.prototype.turn = function (sign) {
     if (this.won) return false;
@@ -246,14 +280,8 @@
     var forward = add(this.position, step);
     var moved = false;
 
-    if (jump && this.isUnoccupied(above)) {
-      if (this.isUnoccupied(forward) && this.isUnoccupied(add(forward, this.up))) {
-        this.position = add(forward, this.up);
-      } else {
-        this.position = above;
-      }
-      this.checkExit();
-      moved = true;
+    if (jump) {
+      return this.jumpAlong(sign, 0);
     } else if (this.isUnoccupied(forward)) {
       if (this.isUnoccupied(add(forward, neg(this.up)))) {
         this.rollClimbDown(step, sign);
@@ -270,22 +298,6 @@
     if (!moved) return false;
     this.moves += 1;
     this.applyGravity(step, sign);
-    this.checkExit();
-    return true;
-  };
-  Game.prototype.jumpToward = function (step) {
-    if (this.won) return false;
-    var above = add(this.position, this.up);
-    var target = add(this.position, step);
-    if (!this.isUnoccupied(above)) return false;
-    if (this.isUnoccupied(target) && this.isUnoccupied(add(target, this.up))) {
-      this.position = add(target, this.up);
-    } else {
-      this.position = above;
-    }
-    this.moves += 1;
-    this.checkExit();
-    this.applyGravity(step, 1);
     this.checkExit();
     return true;
   };
@@ -311,11 +323,17 @@
     if (name === "turn left" || name === "left") return this.turn(1);
     if (name === "turn right" || name === "right") return this.turn(-1);
     if (name === "jump forward") return this.moveAlong(1, true);
-    if (name === "jump backward") return this.moveAlong(-1, true);
-    if (name === "jump left") return this.jumpToward(neg(this.getRight()));
-    if (name === "jump right") return this.jumpToward(this.getRight());
+    if (name === "jump far forward") return this.jumpAlong(1, 2);
     if (name === "jump") return this.jumpInPlace();
     return false;
+  };
+  Game.prototype.actionDuration = function (name) {
+    return actionTimings[name] || actionTimings[{
+      up: "move forward",
+      down: "move backward",
+      left: "turn left",
+      right: "turn right"
+    }[name]] || 200;
   };
   Game.prototype.reset = function () { return new Game(this.level); };
 
@@ -340,5 +358,5 @@
     return null;
   }
 
-  return { levels: levels, levelNames: levelNames, getLevel: function (name) { return byName[name] || levels[0]; }, Game: Game, solve: solve };
+  return { levels: levels, levelNames: levelNames, actionTimings: actionTimings, getLevel: function (name) { return byName[name] || levels[0]; }, Game: Game, solve: solve };
 }));

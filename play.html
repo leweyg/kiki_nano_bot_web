@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
-<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.control-button{height:88px;min-width:76px;color:#fff;background:#8a1f16;border:0}.jump-pad button{background:#681313;color:#fff}.won{background:#8f8f20!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px;gap:8px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}}
-</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="pad"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><div class="pad jump-pad"><button data-jump-dir="up">↑</button><button data-jump-dir="left">←</button><button data-jump-dir="down">↓</button><button data-jump-dir="right">→</button></div><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div>
+<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box}body{margin:0;overflow:hidden;background:var(--paper);color:var(--ink);font:14px monospace}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:18px;left:0;right:0;display:flex;justify-content:center;gap:12px;align-items:end}.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,42px);gap:4px}.pad button:nth-child(1){grid-column:2}.pad button:nth-child(2){grid-column:1;grid-row:2}.pad button:nth-child(3){grid-column:2;grid-row:2}.pad button:nth-child(4){grid-column:3;grid-row:2}.jump-actions{display:flex;gap:8px}.control-button{height:88px;min-width:76px;color:#fff;background:#8a1f16;border:0}.jump-actions .control-button{background:#681313}.won{background:#8f8f20!important}@media(max-width:600px){header{padding:12px}.controls{bottom:10px;gap:8px}.pad{grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,38px)}.control-button{min-width:62px;padding:8px}.jump-actions{gap:5px}}
+</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="pad"><button data-dir="up">↑</button><button data-dir="left">←</button><button data-dir="down">↓</button><button data-dir="right">→</button></div><div class="jump-actions"><button class="control-button" data-action="jump">JUMP</button><button class="control-button" data-action="jump forward">JUMP<br>+FWD</button><button class="control-button" data-action="jump far forward">JUMP<br>+FAR</button></div><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div>
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
@@ -146,6 +146,7 @@ let visualState = snapshot(game);
 let activeAnimation = null;
 let queuedAction = null;
 let cameraReady = false;
+const heldInput = {move: null, pointerMove: null};
 function buildStaticScene(){
   while(board.children.length) board.remove(board.children[0]);
   const level = game.level;
@@ -248,6 +249,7 @@ function updateHud(){
 function animationSegment(kind, duration, from, to, extra){
   return Object.assign({kind, duration, from, to}, extra || {});
 }
+function actionDuration(name){return game.actionDuration ? game.actionDuration(name) : 200;}
 function appendCatchUp(segments, from, to){
   if (near(from.position, to.position) && quaternionForState(from).angleTo(quaternionForState(to)) < .001) return;
   const distance = v(to.position).sub(v(from.position)).length();
@@ -258,13 +260,12 @@ function buildAnimation(action, from, to, beforeGame){
   const dir = copyPosition(from.dir);
   const up = copyPosition(from.up);
   const down = neg(up);
-  const right = plain(new THREE.Vector3().crossVectors(v(up), v(dir)).normalize());
   let cursor = from;
   let step = null;
   let target = null;
 
   if (action === 'turn left' || action === 'left' || action === 'turn right' || action === 'right') {
-    segments.push(animationSegment('turn', 200, from, to));
+    segments.push(animationSegment('turn', actionDuration(action === 'left' ? 'turn left' : action === 'right' ? 'turn right' : action), from, to));
     return segments;
   }
 
@@ -278,33 +279,24 @@ function buildAnimation(action, from, to, beforeGame){
         segments.push(animationSegment('climbDown', 500, from, target, {step, down}));
       } else {
         target = {position: forward, dir: from.dir, up: from.up};
-        segments.push(animationSegment('forward', 200, from, target));
+        segments.push(animationSegment('forward', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target));
       }
     } else {
       target = {position: from.position, dir: mul(up, sign), up: neg(step)};
-      segments.push(animationSegment('climbUp', 200, from, target));
+      segments.push(animationSegment('climbUp', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target));
     }
     cursor = target;
-  } else if (action === 'jump forward' || action === 'jump backward') {
-    const sign = action === 'jump backward' ? -1 : 1;
-    step = mul(dir, sign);
+  } else if (action === 'jump forward' || action === 'jump far forward') {
+    step = dir;
     const above = add(from.position, up);
     const forward = add(from.position, step);
     const jumpTarget = beforeGame.isUnoccupied(forward) && beforeGame.isUnoccupied(add(forward, up)) ? add(forward, up) : above;
     target = {position: jumpTarget, dir: from.dir, up: from.up};
-    segments.push(animationSegment('jumpForward', 200, from, target, {step, up}));
-    cursor = target;
-  } else if (action === 'jump left' || action === 'jump right') {
-    step = action === 'jump left' ? neg(right) : right;
-    const above = add(from.position, up);
-    const targetCell = add(from.position, step);
-    const jumpTarget = beforeGame.isUnoccupied(targetCell) && beforeGame.isUnoccupied(add(targetCell, up)) ? add(targetCell, up) : above;
-    target = {position: jumpTarget, dir: from.dir, up: from.up};
-    segments.push(animationSegment('jumpForward', 200, from, target, {step, up}));
+    segments.push(animationSegment('jumpForward', action === 'jump far forward' ? actionDuration('jump forward') : actionDuration(action), from, target, {step, up}));
     cursor = target;
   } else if (action === 'jump') {
     target = {position: add(from.position, up), dir: from.dir, up: from.up};
-    segments.push(animationSegment('jump', 120, from, target, {up}));
+    segments.push(animationSegment('jump', actionDuration('jump'), from, target, {up}));
     cursor = target;
   }
 
@@ -353,6 +345,8 @@ function finishAnimation(){
     const next = queuedAction;
     queuedAction = null;
     act(next);
+  } else {
+    continueHeldInput();
   }
 }
 function draw(now){
@@ -384,20 +378,50 @@ function act(direction){
   };
   updateHud();
 }
-function jumpAction(direction){
-  return {up: 'jump forward', down: 'jump backward', left: 'jump left', right: 'jump right'}[direction];
+function continueHeldInput(){
+  const next = heldInput.move;
+  if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => act(next));
 }
-document.querySelectorAll('[data-dir]').forEach(button => button.addEventListener('click', () => act(button.dataset.dir)));
-document.querySelectorAll('[data-jump-dir]').forEach(button => button.addEventListener('click', () => act(jumpAction(button.dataset.jumpDir))));
+function pressMove(direction, pointerId){
+  heldInput.move = direction;
+  heldInput.pointerMove = pointerId;
+  act(direction);
+}
+function releaseMove(pointerId){
+  if (heldInput.pointerMove === pointerId) {
+    heldInput.move = null;
+    heldInput.pointerMove = null;
+  }
+}
+document.querySelectorAll('[data-dir]').forEach(button => {
+  button.addEventListener('pointerdown', event => {event.preventDefault();button.setPointerCapture(event.pointerId);pressMove(button.dataset.dir, event.pointerId);});
+  button.addEventListener('pointerup', event => releaseMove(event.pointerId));
+  button.addEventListener('pointercancel', event => releaseMove(event.pointerId));
+});
+document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
 document.getElementById('reset').onclick = () => { location.reload(); };
 document.getElementById('push').onclick = () => {};
 document.getElementById('shoot').onclick = () => {};
 addEventListener('keydown', event => {
-  const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', Control: 'jump forward', j: 'jump', ' ': 'jump forward'};
-  const jumpMap = {ArrowUp: 'jump forward', w: 'jump forward', ArrowDown: 'jump backward', s: 'jump backward', ArrowLeft: 'jump left', a: 'jump left', ArrowRight: 'jump right', d: 'jump right'};
+  const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
   if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';updateHud();return;}
-  if((event.ctrlKey || event.shiftKey) && jumpMap[event.key]){event.preventDefault();act(jumpMap[event.key]);return;}
-  if(map[event.key]){event.preventDefault();act(map[event.key]);}
+  if(event.key === ' '){
+    event.preventDefault();
+    if (!event.repeat) act('jump');
+    return;
+  }
+  if(map[event.key]){
+    event.preventDefault();
+    heldInput.move = map[event.key];
+    if (!event.repeat) act(heldInput.move);
+  }
+});
+addEventListener('keyup', event => {
+  const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
+  if(map[event.key] && heldInput.move === map[event.key]){
+    event.preventDefault();
+    heldInput.move = null;
+  }
 });
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
 buildStaticScene();

@@ -9,7 +9,10 @@ Kiki.levels.forEach(function (level) {
   if (!path) { failed.push(level.id + " (no route)"); return; }
   path.forEach(function (action) { game.action(action); });
   if (!game.won) failed.push(level.id + " (route did not finish)");
-  else console.log("OK  " + level.id.padEnd(10) + " " + path.length + " moves");
+  else {
+    var ms = path.reduce(function (total, action) { return total + game.actionDuration(action); }, 0);
+    console.log("OK  " + level.id.padEnd(10) + " " + path.length + " moves  " + ms + " ms");
+  }
 });
 
 if (failed.length) {
