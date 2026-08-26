@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kiki the Nano Bot</title>
+  <style>
+    :root{--ink:#17221f;--paper:#f3f0e8;--mint:#b9d6c5;--coral:#d96d54;--line:#c4c9bc}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px Georgia,serif}main{max-width:1080px;margin:auto;padding:8vh 6vw}.eyebrow{font:12px monospace;letter-spacing:2px;text-transform:uppercase;color:#65736a}h1{font-size:clamp(3.5rem,10vw,8rem);line-height:.85;margin:20px 0;color:#25483c;font-weight:normal}p{max-width:560px;line-height:1.55}.actions{display:flex;gap:12px;margin:32px 0;flex-wrap:wrap}a{display:inline-block;padding:13px 18px;border:1px solid var(--ink);color:var(--ink);text-decoration:none}a.primary{background:var(--coral);color:#fff;border-color:var(--coral)}section{border-top:1px solid var(--line);padding-top:24px;margin-top:60px}.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.levels a{padding:10px;font:13px monospace}.note{color:#65736a;font-size:14px}
+  </style>
+</head>
+<body><main>
+  <div class="eyebrow">A small machine with a big way out</div>
+  <h1>Kiki<br>the Nano Bot</h1>
+  <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version keeps the game state shared between the 3D client and an offline validator.</p>
+  <div class="actions"><a class="primary" href="play.html">Play the first level</a><a href="sim.html">Run the level lab</a></div>
+  <section><div class="eyebrow">50 arenas</div><h2>Choose a level</h2><div class="levels" id="levels"></div><p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p></section>
+</main><script src="kiki/js/kiki.js"></script><script>
+  document.getElementById("levels").innerHTML = Kiki.levels.map(function(level){return '<a href="play.html?level='+level.id+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+level.title+'</a>';}).join('');
+</script></body></html>
