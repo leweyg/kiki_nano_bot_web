@@ -154,7 +154,7 @@ function buildStaticScene(){
   addBoundaryWalls(level);
   for(let z = 0; z < level.size.z; z += 1) {
     for(let x = 0; x < level.size.x; x += 1) {
-      addCube(centered(level, {x, y: 0, z}, -.55), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
+      addCube(centered(level, {x, y: 0, z}, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
     }
   }
   (level.walls || []).forEach(wall => addCube(centered(level, wall, 0), .88, materials.wall));

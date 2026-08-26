@@ -66,8 +66,8 @@
     var rightTire = new THREE.Mesh(tireGeometry, materials.tire);
     leftTire.rotation.y = Math.PI / 2;
     rightTire.rotation.y = Math.PI / 2;
-    leftTire.position.z = 0.35;
-    rightTire.position.z = -0.35;
+    leftTire.position.x = 0.35;
+    rightTire.position.x = -0.35;
     group.add(leftTire, rightTire, body);
     return group;
   }

@@ -197,8 +197,35 @@
       return exit.active && exit.coordinates.x === x && exit.coordinates.y === y && exit.coordinates.z === z;
     });
   };
-  Game.prototype.checkExit = function () {
-    if (this.isExit(this.position.x, this.position.y, this.position.z)) this.won = true;
+  Game.prototype.checkExitAt = function (position) {
+    if (this.isExit(Math.round(position.x), Math.round(position.y || 0), Math.round(position.z))) this.won = true;
+  };
+  Game.prototype.checkExit = function (position) {
+    this.checkExitAt(position || this.position);
+  };
+  Game.prototype.checkJumpArcExit = function (start, step, up) {
+    var end = add(add(start, step), up);
+    var minX = Math.min(start.x, end.x), maxX = Math.max(start.x, end.x);
+    var minY = Math.min(start.y || 0, end.y || 0), maxY = Math.max(start.y || 0, end.y || 0);
+    var minZ = Math.min(start.z, end.z), maxZ = Math.max(start.z, end.z);
+    for (var x = minX; x <= maxX; x += 1) {
+      for (var y = minY; y <= maxY; y += 1) {
+        for (var z = minZ; z <= maxZ; z += 1) {
+          this.checkExitAt({ x: x, y: y, z: z });
+          if (this.won) return true;
+        }
+      }
+    }
+    for (var sample = 0; sample <= 24; sample += 1) {
+      var t = sample / 24;
+      this.checkExitAt({
+        x: start.x + (1 - Math.cos(Math.PI / 2 * t)) * step.x + Math.sin(Math.PI / 2 * t) * up.x,
+        y: (start.y || 0) + (1 - Math.cos(Math.PI / 2 * t)) * (step.y || 0) + Math.sin(Math.PI / 2 * t) * (up.y || 0),
+        z: start.z + (1 - Math.cos(Math.PI / 2 * t)) * step.z + Math.sin(Math.PI / 2 * t) * up.z
+      });
+      if (this.won) return true;
+    }
+    return false;
   };
   Game.prototype.applyGravity = function (holdStep, sign, maxForwardFalls) {
     var down = neg(this.up);
@@ -241,6 +268,7 @@
   };
   Game.prototype.jumpAlong = function (sign, maxForwardFalls) {
     if (this.won) return false;
+    var start = copyPosition(this.position);
     var step = mul(this.dir, sign);
     var above = add(this.position, this.up);
     var forward = add(this.position, step);
@@ -249,6 +277,11 @@
       this.position = add(forward, this.up);
     } else {
       this.position = above;
+    }
+    this.checkJumpArcExit(start, step, this.up);
+    if (this.won) {
+      this.moves += 1;
+      return true;
     }
     this.applyGravity(step, sign, maxForwardFalls || 0);
     this.moves += 1;
