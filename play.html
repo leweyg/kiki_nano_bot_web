@@ -45,6 +45,43 @@ function centered(level, position, lift){
     (position.z || 0) - level.size.z / 2 + .5
   );
 }
+function copyPosition(position){return {x: position.x, y: position.y || 0, z: position.z || 0};}
+function plain(vector){return {x: vector.x, y: vector.y, z: vector.z};}
+function add(a, b){return {x: a.x + b.x, y: (a.y || 0) + (b.y || 0), z: a.z + b.z};}
+function neg(a){return {x: -a.x, y: -(a.y || 0), z: -a.z};}
+function mul(a, scalar){return {x: a.x * scalar, y: (a.y || 0) * scalar, z: a.z * scalar};}
+function near(a, b){return Math.abs(a.x - b.x) < .001 && Math.abs((a.y || 0) - (b.y || 0)) < .001 && Math.abs(a.z - b.z) < .001;}
+function snapshot(source){return {position: copyPosition(source.position), dir: copyPosition(source.dir), up: copyPosition(source.up)};}
+function quaternionForState(state){
+  const dir = v(state.dir).normalize();
+  const up = v(state.up).normalize();
+  const right = new THREE.Vector3().crossVectors(up, dir).normalize();
+  const matrix = new THREE.Matrix4().makeBasis(right, up, dir);
+  return new THREE.Quaternion().setFromRotationMatrix(matrix);
+}
+function stateFromQuaternion(position, quaternion){
+  const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion).normalize();
+  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion).normalize();
+  return {position: copyPosition(position), dir: plain(dir), up: plain(up), quaternion: quaternion.clone()};
+}
+function stateVectors(state){
+  const q = state.quaternion || quaternionForState(state);
+  return {
+    dir: new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize(),
+    up: new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize()
+  };
+}
+function lerpPosition(a, b, amount){
+  return {
+    x: a.x + (b.x - a.x) * amount,
+    y: (a.y || 0) + ((b.y || 0) - (a.y || 0)) * amount,
+    z: a.z + (b.z - a.z) * amount
+  };
+}
+function slerpState(from, to, amount, position){
+  const q = quaternionForState(from).slerp(quaternionForState(to), amount);
+  return stateFromQuaternion(position || lerpPosition(from.position, to.position, amount), q);
+}
 function addCube(position, size, material){
   const mesh = cube(size, material);
   mesh.position.copy(position);
@@ -103,37 +140,13 @@ function addGate(level, exit){
   group.position.copy(centered(level, exit.coordinates || exit, 0));
   board.add(group);
 }
-function addBot(level){
-  const bot = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
-  const right = game.getRight();
-  const basis = new THREE.Matrix4().makeBasis(v(right), v(game.up), v(game.dir));
-  basis.setPosition(centered(level, game.position, 0));
-  bot.matrix.copy(basis);
-  bot.matrixAutoUpdate = false;
-  board.add(bot);
-}
-function updateCamera(level){
-  const position = centered(level, game.position, 0);
-  const dir = v(game.dir).normalize();
-  const up = v(game.up).normalize();
-  camera.aspect = innerWidth / innerHeight;
-  camera.up.copy(up);
-  if (cameraMode === 'inside') {
-    camera.position.copy(position).addScaledVector(up, .18);
-    camera.lookAt(position.clone().add(dir));
-  } else {
-    const desired = cameraMode === 'follow'
-      ? position.clone().addScaledVector(up, 2.2).addScaledVector(dir, -4.2)
-      : position.clone().add(up.clone().addScaledVector(dir, -2).normalize().multiplyScalar(3.1));
-    camera.position.copy(desired);
-    camera.lookAt(position.clone().addScaledVector(dir, .35));
-  }
-  cameraLight.position.copy(camera.position);
-  cameraLight.target.position.copy(position);
-  cameraLight.target.updateMatrixWorld();
-  camera.updateProjectionMatrix();
-}
-function draw(){
+const botMesh = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
+botMesh.matrixAutoUpdate = false;
+let visualState = snapshot(game);
+let activeAnimation = null;
+let queuedAction = null;
+let cameraReady = false;
+function buildStaticScene(){
   while(board.children.length) board.remove(board.children[0]);
   const level = game.level;
   addRoom(level);
@@ -148,14 +161,229 @@ function draw(){
     if (exit.active === false) return;
     addGate(level, exit);
   });
-  addBot(level);
-  updateCamera(level);
+  board.add(botMesh);
+}
+function updateBot(level, state){
+  const q = state.quaternion || quaternionForState(state);
+  const matrix = new THREE.Matrix4().compose(centered(level, state.position, 0), q, new THREE.Vector3(1, 1, 1));
+  botMesh.matrix.copy(matrix);
+}
+function clampInsideRoom(level, position, delta){
+  return new THREE.Vector3(
+    Math.min(level.size.x / 2 - delta, Math.max(-level.size.x / 2 + delta, position.x)),
+    Math.min(level.size.y / 2 - delta, Math.max(-level.size.y / 2 + delta, position.y)),
+    Math.min(level.size.z / 2 - delta, Math.max(-level.size.z / 2 + delta, position.z))
+  );
+}
+function roomRayDistance(level, origin, direction){
+  let distance = Infinity;
+  [['x', -level.size.x / 2], ['x', level.size.x / 2], ['y', -level.size.y / 2], ['y', level.size.y / 2], ['z', -level.size.z / 2], ['z', level.size.z / 2]].forEach(([axis, plane]) => {
+    const value = direction[axis];
+    if (Math.abs(value) < .0001) return;
+    const candidate = (plane - origin[axis]) / value;
+    if (candidate > 0) distance = Math.min(distance, candidate);
+  });
+  return distance;
+}
+function desiredBehindCamera(level, position, dir, up){
+  const botToCamera = up.clone().addScaledVector(dir, -2);
+  const maxDistance = botToCamera.length();
+  botToCamera.normalize();
+  const wallDistance = roomRayDistance(level, position, botToCamera);
+  const distance = Math.max(.72, Math.min(maxDistance, wallDistance - .2));
+  return clampInsideRoom(level, position.clone().addScaledVector(botToCamera, distance), .2);
+}
+function desiredFollowCamera(level, position, dir, up){
+  const desiredDistance = 2;
+  let botToCamera = camera.position.clone().sub(position);
+  if (!cameraReady || botToCamera.length() < .001) {
+    return desiredBehindCamera(level, position, dir, up);
+  }
+  const distance = botToCamera.length();
+  if (distance >= desiredDistance) {
+    const delta = Math.min(.2, Math.pow(distance - desiredDistance, 2) / 400);
+    botToCamera = botToCamera.multiplyScalar(1 - delta);
+  } else {
+    const delta = Math.min(.2, (desiredDistance - distance) / 20);
+    botToCamera = botToCamera.lerp(botToCamera.clone().normalize().multiplyScalar(desiredDistance), delta);
+  }
+  const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+  const horizontal = botToCamera.clone().projectOnPlane(up).normalize();
+  const behind = dir.clone().multiplyScalar(-1);
+  const angle = Math.acos(Math.min(1, Math.max(-1, behind.dot(horizontal)))) * (horizontal.dot(side) > 0 ? -1 : 1);
+  botToCamera.applyAxisAngle(up, angle / 400);
+  const wallDistance = roomRayDistance(level, position, botToCamera.clone().normalize());
+  if (wallDistance < botToCamera.length() + .2) botToCamera.setLength(Math.max(.72, wallDistance - .2));
+  return clampInsideRoom(level, position.clone().add(botToCamera), .2);
+}
+function updateCamera(level, state){
+  const position = centered(level, state.position, 0);
+  const vectors = stateVectors(state);
+  const dir = vectors.dir;
+  const up = vectors.up;
+  camera.aspect = innerWidth / innerHeight;
+  camera.up.copy(up);
+  if (cameraMode === 'inside') {
+    camera.position.copy(position).addScaledVector(up, .18);
+    camera.lookAt(position.clone().add(dir));
+  } else {
+    const desired = cameraMode === 'follow'
+      ? desiredFollowCamera(level, position, dir, up)
+      : desiredBehindCamera(level, position, dir, up);
+    camera.position.copy(cameraReady ? camera.position.lerp(desired, cameraMode === 'follow' ? .12 : .2) : desired);
+    camera.lookAt(position.clone().addScaledVector(dir, .35));
+  }
+  cameraReady = true;
+  cameraLight.position.copy(camera.position);
+  cameraLight.target.position.copy(position);
+  cameraLight.target.updateMatrixWorld();
+  camera.updateProjectionMatrix();
+}
+function updateHud(){
+  const level = game.level;
   document.getElementById('title').textContent = String(level.index + 1).padStart(2, '0') + ' / ' + level.title;
   document.getElementById('hud').textContent = game.won ? 'EXIT REACHED' : 'MOVES ' + game.moves + '  ·  ' + cameraMode.toUpperCase() + '\n' + game.help;
   document.querySelectorAll('.control-button').forEach(button => button.classList.toggle('won', game.won));
-  renderer.render(scene, camera);
 }
-function act(direction){if(game.action(direction)) draw();}
+function animationSegment(kind, duration, from, to, extra){
+  return Object.assign({kind, duration, from, to}, extra || {});
+}
+function appendCatchUp(segments, from, to){
+  if (near(from.position, to.position) && quaternionForState(from).angleTo(quaternionForState(to)) < .001) return;
+  const distance = v(to.position).sub(v(from.position)).length();
+  segments.push(animationSegment('generic', Math.max(120, distance * 120), from, to));
+}
+function buildAnimation(action, from, to, beforeGame){
+  const segments = [];
+  const dir = copyPosition(from.dir);
+  const up = copyPosition(from.up);
+  const down = neg(up);
+  const right = plain(new THREE.Vector3().crossVectors(v(up), v(dir)).normalize());
+  let cursor = from;
+  let step = null;
+  let target = null;
+
+  if (action === 'turn left' || action === 'left' || action === 'turn right' || action === 'right') {
+    segments.push(animationSegment('turn', 200, from, to));
+    return segments;
+  }
+
+  if (action === 'move forward' || action === 'up' || action === 'move backward' || action === 'down') {
+    const sign = (action === 'move backward' || action === 'down') ? -1 : 1;
+    step = mul(dir, sign);
+    const forward = add(from.position, step);
+    if (beforeGame.isUnoccupied(forward)) {
+      if (beforeGame.isUnoccupied(add(forward, down))) {
+        target = {position: add(forward, down), dir: mul(up, -sign), up: step};
+        segments.push(animationSegment('climbDown', 500, from, target, {step, down}));
+      } else {
+        target = {position: forward, dir: from.dir, up: from.up};
+        segments.push(animationSegment('forward', 200, from, target));
+      }
+    } else {
+      target = {position: from.position, dir: mul(up, sign), up: neg(step)};
+      segments.push(animationSegment('climbUp', 200, from, target));
+    }
+    cursor = target;
+  } else if (action === 'jump forward' || action === 'jump backward') {
+    const sign = action === 'jump backward' ? -1 : 1;
+    step = mul(dir, sign);
+    const above = add(from.position, up);
+    const forward = add(from.position, step);
+    const jumpTarget = beforeGame.isUnoccupied(forward) && beforeGame.isUnoccupied(add(forward, up)) ? add(forward, up) : above;
+    target = {position: jumpTarget, dir: from.dir, up: from.up};
+    segments.push(animationSegment('jumpForward', 200, from, target, {step, up}));
+    cursor = target;
+  } else if (action === 'jump left' || action === 'jump right') {
+    step = action === 'jump left' ? neg(right) : right;
+    const above = add(from.position, up);
+    const targetCell = add(from.position, step);
+    const jumpTarget = beforeGame.isUnoccupied(targetCell) && beforeGame.isUnoccupied(add(targetCell, up)) ? add(targetCell, up) : above;
+    target = {position: jumpTarget, dir: from.dir, up: from.up};
+    segments.push(animationSegment('jumpForward', 200, from, target, {step, up}));
+    cursor = target;
+  } else if (action === 'jump') {
+    target = {position: add(from.position, up), dir: from.dir, up: from.up};
+    segments.push(animationSegment('jump', 120, from, target, {up}));
+    cursor = target;
+  }
+
+  appendCatchUp(segments, cursor || from, to);
+  return segments.length ? segments : [animationSegment('generic', 160, from, to)];
+}
+function stateAtSegment(segment, amount){
+  const t = Math.min(1, Math.max(0, amount));
+  if (segment.kind === 'jump') {
+    const height = Math.sin(Math.PI / 2 * t);
+    return slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.up, height)));
+  }
+  if (segment.kind === 'jumpForward') {
+    const forward = 1 - Math.cos(Math.PI / 2 * t);
+    const height = Math.sin(Math.PI / 2 * t);
+    return slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.up, height)));
+  }
+  if (segment.kind === 'climbDown') {
+    const q = quaternionForState(segment.from).slerp(quaternionForState(segment.to), t);
+    let position;
+    if (t <= .2) {
+      position = add(segment.from.position, mul(segment.step, t / .2 / 2));
+    } else if (t >= .8) {
+      position = add(add(segment.from.position, segment.step), mul(segment.down, .5 + (t - .8) / .2 / 2));
+    } else {
+      const currentUp = plain(new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize());
+      position = add(segment.from.position, mul(add(add(segment.step, segment.down), currentUp), .5));
+    }
+    return stateFromQuaternion(position, q);
+  }
+  const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
+  return slerpState(segment.from, segment.to, eased);
+}
+function stateAtAnimation(animation, now){
+  let elapsed = now - animation.startedAt;
+  for (const segment of animation.segments) {
+    if (elapsed <= segment.duration) return stateAtSegment(segment, elapsed / segment.duration);
+    elapsed -= segment.duration;
+  }
+  return animation.to;
+}
+function finishAnimation(){
+  activeAnimation = null;
+  visualState = snapshot(game);
+  if (queuedAction) {
+    const next = queuedAction;
+    queuedAction = null;
+    act(next);
+  }
+}
+function draw(now){
+  if (activeAnimation) {
+    visualState = stateAtAnimation(activeAnimation, now);
+    if (now - activeAnimation.startedAt >= activeAnimation.totalDuration) finishAnimation();
+  }
+  updateBot(game.level, visualState);
+  updateCamera(game.level, visualState);
+  updateHud();
+  renderer.render(scene, camera);
+  requestAnimationFrame(draw);
+}
+function act(direction){
+  if (activeAnimation) {
+    queuedAction = direction;
+    return;
+  }
+  const before = game.clone();
+  const from = snapshot(before);
+  if (!game.action(direction)) return;
+  const to = snapshot(game);
+  const segments = buildAnimation(direction, from, to, before);
+  activeAnimation = {
+    startedAt: performance.now(),
+    segments,
+    to,
+    totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
+  };
+  updateHud();
+}
 function jumpAction(direction){
   return {up: 'jump forward', down: 'jump backward', left: 'jump left', right: 'jump right'}[direction];
 }
@@ -167,10 +395,12 @@ document.getElementById('shoot').onclick = () => {};
 addEventListener('keydown', event => {
   const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', Control: 'jump forward', j: 'jump', ' ': 'jump forward'};
   const jumpMap = {ArrowUp: 'jump forward', w: 'jump forward', ArrowDown: 'jump backward', s: 'jump backward', ArrowLeft: 'jump left', a: 'jump left', ArrowRight: 'jump right', d: 'jump right'};
-  if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';draw();return;}
+  if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';updateHud();return;}
   if((event.ctrlKey || event.shiftKey) && jumpMap[event.key]){event.preventDefault();act(jumpMap[event.key]);return;}
   if(map[event.key]){event.preventDefault();act(map[event.key]);}
 });
-addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); draw(); });
-draw();
+addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
+buildStaticScene();
+updateHud();
+requestAnimationFrame(draw);
 </script></body></html>
