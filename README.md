@@ -5,6 +5,8 @@ Play here: https://leweyg.github.io/kiki_nano_bot_web/
 
 Downloaded from: https://sourceforge.net/projects/kiki/files/kiki-src/1.0.2
 
+Direct port of original to web (original controls, menus, etc.): https://transmutrix.itch.io/kiki-the-nanobot
+
 # Web Structure
 
 index.html - landing page, project intro, controls guide, links to levels, and guide to characters etc.
