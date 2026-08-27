@@ -19,7 +19,9 @@
     "turn right": 200,
     "jump": 120,
     "jump forward": 200,
-    "jump far forward": 400
+    "jump far forward": 400,
+    "fall": 120,
+    "fall forward": 200
   };
   var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump"];
 
@@ -330,7 +332,7 @@
 
     if (!moved) return false;
     this.moves += 1;
-    this.applyGravity(step, sign);
+    this.applyGravity();
     this.checkExit();
     return true;
   };
@@ -341,6 +343,7 @@
     this.position = above;
     this.moves += 1;
     this.checkExit();
+    if (!this.won) this.applyGravity();
     return true;
   };
   Game.prototype.move = function (dx, dy, dz) {

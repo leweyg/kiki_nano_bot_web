@@ -146,7 +146,8 @@ let visualState = snapshot(game);
 let activeAnimation = null;
 let queuedAction = null;
 let cameraReady = false;
-const heldInput = {move: null, pointerMove: null};
+const heldInput = {move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null};
+const JUMP_GRACE_MS = 220;
 function buildStaticScene(){
   while(board.children.length) board.remove(board.children[0]);
   const level = game.level;
@@ -255,6 +256,26 @@ function appendCatchUp(segments, from, to){
   const distance = v(to.position).sub(v(from.position)).length();
   segments.push(animationSegment('generic', Math.max(120, distance * 120), from, to));
 }
+function sameOrientation(a, b){
+  return quaternionForState(a).angleTo(quaternionForState(b)) < .001;
+}
+function appendJumpSettle(segments, from, to, step, up){
+  if (!sameOrientation(from, to)) return false;
+  const down = neg(up);
+  if (near(to.position, add(from.position, down))) {
+    segments.push(animationSegment('fall', actionDuration('fall'), from, to, {down}));
+    return true;
+  }
+  if (step && near(to.position, add(add(from.position, step), down))) {
+    segments.push(animationSegment('fallForward', actionDuration('fall forward'), from, to, {step, down}));
+    return true;
+  }
+  if (step && near(to.position, add(from.position, step))) {
+    segments.push(animationSegment('forward', actionDuration('move forward'), from, to));
+    return true;
+  }
+  return false;
+}
 function buildAnimation(action, from, to, beforeGame){
   const segments = [];
   const dir = copyPosition(from.dir);
@@ -300,7 +321,7 @@ function buildAnimation(action, from, to, beforeGame){
     cursor = target;
   }
 
-  appendCatchUp(segments, cursor || from, to);
+  if (!appendJumpSettle(segments, cursor || from, to, step, up)) appendCatchUp(segments, cursor || from, to);
   return segments.length ? segments : [animationSegment('generic', 160, from, to)];
 }
 function stateAtSegment(segment, amount){
@@ -327,6 +348,14 @@ function stateAtSegment(segment, amount){
     }
     return stateFromQuaternion(position, q);
   }
+  if (segment.kind === 'fallForward') {
+    const forward = Math.sin(Math.PI / 2 * t);
+    const down = 1 - Math.cos(Math.PI / 2 * t);
+    return slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.down, down)));
+  }
+  if (segment.kind === 'fall') {
+    return slerpState(segment.from, segment.to, t);
+  }
   const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
   return slerpState(segment.from, segment.to, eased);
 }
@@ -348,6 +377,34 @@ function finishAnimation(){
   } else {
     continueHeldInput();
   }
+}
+function canJumpForward(direction){
+  return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
+}
+function actionForMove(direction){
+  return canJumpForward(direction) ? 'jump forward' : direction;
+}
+function clearPendingJump(){
+  if (heldInput.jumpTimer) clearTimeout(heldInput.jumpTimer);
+  heldInput.jumpTimer = null;
+  heldInput.jumpPending = false;
+}
+function consumeJumpIntent(){
+  clearPendingJump();
+  heldInput.jumpConsumed = true;
+  heldInput.jumpGraceUntil = 0;
+}
+function schedulePlainJump(){
+  const delay = Math.max(0, heldInput.jumpGraceUntil - performance.now());
+  clearPendingJump();
+  heldInput.jumpPending = true;
+  heldInput.jumpTimer = setTimeout(() => {
+    heldInput.jumpTimer = null;
+    if (!heldInput.jumpPending || heldInput.jumpConsumed) return;
+    heldInput.jumpPending = false;
+    heldInput.jumpGraceUntil = 0;
+    act('jump');
+  }, delay);
 }
 function draw(now){
   if (activeAnimation) {
@@ -380,13 +437,21 @@ function act(direction){
 }
 function continueHeldInput(){
   const next = heldInput.move;
-  if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => act(next));
+  if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => {
+    const action = actionForMove(next);
+    if (action === 'jump forward') consumeJumpIntent();
+    act(action);
+  });
 }
 function setHeldMove(direction, pointerId){
   const changed = heldInput.move !== direction || heldInput.pointerMove !== pointerId;
   heldInput.move = direction;
   heldInput.pointerMove = pointerId;
-  if (changed && !activeAnimation && !queuedAction) act(direction);
+  if (changed && !activeAnimation && !queuedAction) {
+    const action = actionForMove(direction);
+    if (action === 'jump forward') consumeJumpIntent();
+    act(action);
+  }
 }
 function releaseMove(pointerId){
   if (heldInput.pointerMove === pointerId) {
@@ -460,17 +525,41 @@ addEventListener('keydown', event => {
   if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';updateHud();return;}
   if(event.key === ' '){
     event.preventDefault();
-    if (!event.repeat) act('jump');
+    if (!event.repeat) clearPendingJump();
+    heldInput.jump = true;
+    heldInput.jumpGraceUntil = performance.now() + JUMP_GRACE_MS;
+    if (!event.repeat && heldInput.move === 'up') {
+      consumeJumpIntent();
+      act('jump forward');
+    }
     return;
   }
   if(map[event.key]){
     event.preventDefault();
     heldInput.move = map[event.key];
-    if (!event.repeat) act(heldInput.move);
+    if (!event.repeat) {
+      const action = actionForMove(heldInput.move);
+      if (action === 'jump forward') consumeJumpIntent();
+      act(action);
+    }
   }
 });
 addEventListener('keyup', event => {
   const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
+  if(event.key === ' '){
+    event.preventDefault();
+    heldInput.jump = false;
+    if (heldInput.jumpConsumed) {
+      heldInput.jumpConsumed = false;
+      heldInput.jumpGraceUntil = 0;
+    } else if (performance.now() <= heldInput.jumpGraceUntil) {
+      schedulePlainJump();
+    } else {
+      heldInput.jumpGraceUntil = 0;
+      act('jump');
+    }
+    return;
+  }
   if(map[event.key] && heldInput.move === map[event.key]){
     event.preventDefault();
     heldInput.move = null;
