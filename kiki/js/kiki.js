@@ -23,7 +23,7 @@
     "fall": 120,
     "fall forward": 200
   };
-  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump"];
+  var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump", "push forward", "push backward", "shoot"];
 
   function hash(name) {
     var value = 0;
@@ -76,6 +76,73 @@
     };
   }
 
+  function makeStepsLevel(index) {
+    var size = { x: 7, y: 7, z: 13 };
+    var objectSpecs = [
+      { type: "wall", position: { x: 0, y: 0, z: 3 } },
+      { type: "wall", position: { x: 0, y: -1, z: 1 } },
+      { type: "wall", position: { x: 0, y: -2, z: -1 } },
+      { type: "wall", position: { x: 0, y: -3, z: -3 } }
+    ];
+    var exits = [{ name: "exit", active: true, position: { x: 0, y: 1, z: 3 } }];
+    objectSpecs.forEach(function (object) { object.coordinates = decenter(size, object.position); });
+    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
+    return {
+      id: "steps",
+      title: "steps",
+      index: index,
+      theme: "sky",
+      source: "kiki/py/levels/steps.py",
+      scheme: "blue_scheme",
+      size: size,
+      intro: "steps",
+      help: [
+        "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\njump on the stones",
+        "to jump,\npress \"$key(jump)\"\nwhile moving",
+        "to move, press \"$key(move forward)\" or \"$key(move backward)\",\n\nto turn, press \"$key(turn left)\" or \"$key(turn right)\""
+      ],
+      player: { coordinates: { x: 3, y: 0, z: 6 }, nostatus: false },
+      start: { x: 3, y: 0, z: 6 },
+      exits: exits,
+      exit: exits[0].coordinates,
+      objects: objectSpecs,
+      walls: objectSpecs.map(function (object) { return object.coordinates; })
+    };
+  }
+
+  function makeMoveLevel(index) {
+    var size = { x: 7, y: 7, z: 7 };
+    var stones = [
+      { x: 2, y: 4, z: 0 }, { x: 4, y: 4, z: 0 }, { x: 4, y: 2, z: 0 }, { x: 2, y: 2, z: 0 },
+      { x: 2, y: 3, z: 0 }, { x: 4, y: 3, z: 0 }, { x: 3, y: 2, z: 0 }, { x: 3, y: 4, z: 0 },
+      { x: 3, y: 3, z: 1 }
+    ];
+    var objects = stones.map(function (coordinates) { return { type: "stone", coordinates: coordinates }; });
+    objects.push({ type: "switch", name: "exit switch", active: false, toggles: ["exit"], coordinates: { x: 3, y: 3, z: 0 } });
+    var exits = [{ name: "exit", active: false, position: { x: 0, y: 0, z: 0 } }];
+    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
+    return {
+      id: "move",
+      title: "move",
+      index: index,
+      theme: "coral",
+      source: "kiki/py/levels/move.py",
+      scheme: "red_scheme",
+      size: size,
+      intro: "move",
+      help: [
+        "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the switch\n\nto activate the switch,\nshoot it\n\nto be able to shoot the switch,\nmove the stone",
+        "to move a stone, press \"$key(push)\" while moving\n\nto shoot, press \"$key(shoot)\""
+      ],
+      player: { coordinates: { x: 3, y: 5, z: 5 }, orientation: "roty180", nostatus: false },
+      start: { x: 3, y: 5, z: 5 },
+      exits: exits,
+      exit: exits[0].coordinates,
+      objects: objects,
+      walls: []
+    };
+  }
+
   function makeGeneratedLevel(name, index) {
     var width = 9 + (index % 3) * 2;
     var depth = 9 + ((index * 2) % 3) * 2;
@@ -114,6 +181,8 @@
 
   function makeLevel(name, index) {
     if (name === "start") return makeStartLevel(index);
+    if (name === "steps") return makeStepsLevel(index);
+    if (name === "move") return makeMoveLevel(index);
     return makeGeneratedLevel(name, index);
   }
 
@@ -127,6 +196,16 @@
   function add(a, b) { return vec(a.x + b.x, a.y + b.y, a.z + b.z); }
   function neg(a) { return vec(-a.x, -a.y, -a.z); }
   function mul(a, scalar) { return vec(a.x * scalar, a.y * scalar, a.z * scalar); }
+  function objectBlocks(object) { return object.type === "wall" || object.type === "stone" || object.type === "switch"; }
+  function cloneObject(object) {
+    return {
+      type: object.type,
+      name: object.name,
+      active: object.active,
+      toggles: object.toggles ? object.toggles.slice() : undefined,
+      coordinates: copyPosition(object.coordinates || object.position || object)
+    };
+  }
   function cross(a, b) {
     return vec(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x);
   }
@@ -162,11 +241,11 @@
     this.up = copyPosition(orientation.up);
     this.moves = 0;
     this.won = false;
-    this.walls = {};
-    (this.level.walls || []).forEach(function (wall) { this.walls[key(wall.x, wall.y || 0, wall.z || 0)] = true; }, this);
+    this.objects = (this.level.objects || (this.level.walls || []).map(function (wall) { return { type: "wall", coordinates: wall }; })).map(cloneObject);
     this.exits = (this.level.exits || [{ active: true, coordinates: this.level.exit }]).map(function (exit) {
       return { name: exit.name || "exit", active: exit.active !== false, coordinates: copyPosition(exit.coordinates || exit.position || exit) };
     });
+    this.rebuildOccupants();
     this.help = levelHelp(this.level);
   }
 
@@ -177,10 +256,35 @@
     clone.up = copyPosition(this.up);
     clone.moves = this.moves;
     clone.won = this.won;
+    clone.objects = this.objects.map(cloneObject);
+    clone.exits = this.exits.map(function (exit) {
+      return { name: exit.name, active: exit.active, coordinates: copyPosition(exit.coordinates) };
+    });
+    clone.rebuildOccupants();
     return clone;
   };
+  Game.prototype.rebuildOccupants = function () {
+    this.walls = {};
+    this.occupants = {};
+    this.objects.forEach(function (object) {
+      var position = object.coordinates;
+      if (object.type === "wall") this.walls[key(position.x, position.y || 0, position.z || 0)] = true;
+      if (objectBlocks(object)) this.occupants[key(position.x, position.y || 0, position.z || 0)] = object;
+    }, this);
+  };
+  Game.prototype.objectAt = function (position) {
+    return this.occupants[key(position.x, position.y || 0, position.z || 0)] || null;
+  };
+  Game.prototype.moveObjectTo = function (object, position) {
+    object.coordinates = copyPosition(position);
+    this.rebuildOccupants();
+  };
   Game.prototype.stateKey = function () {
-    return vectorKey(this.position) + "|" + vectorKey(this.dir) + "|" + vectorKey(this.up);
+    return vectorKey(this.position) + "|" + vectorKey(this.dir) + "|" + vectorKey(this.up) + "|" +
+      this.objects.map(function (object) {
+        return object.type + ":" + (object.name || "") + ":" + vectorKey(object.coordinates) + ":" + (object.active ? 1 : 0);
+      }).join(";") + "|" +
+      this.exits.map(function (exit) { return exit.name + ":" + (exit.active ? 1 : 0); }).join(";");
   };
   Game.prototype.getRight = function () {
     return cross(this.up, this.dir);
@@ -189,7 +293,7 @@
     if (z === undefined) { z = y; y = 0; }
     return x < 0 || y < 0 || z < 0 ||
       x >= this.level.size.x || y >= this.level.size.y || z >= this.level.size.z ||
-      this.walls[key(x, y, z)];
+      this.occupants[key(x, y, z)];
   };
   Game.prototype.isUnoccupied = function (position) {
     return !this.isBlocked(position.x, position.y, position.z);
@@ -308,6 +412,56 @@
     this.up = step;
     this.dir = mul(oldUp, -sign);
   };
+  Game.prototype.applyObjectGravity = function (object, down) {
+    var guard = 0;
+    while (this.isUnoccupied(add(object.coordinates, down)) && guard < 64) {
+      this.moveObjectTo(object, add(object.coordinates, down));
+      guard += 1;
+    }
+  };
+  Game.prototype.pushAlong = function (sign) {
+    if (this.won) return false;
+    var step = mul(this.dir, sign);
+    var forward = add(this.position, step);
+    var object = this.objectAt(forward);
+    if (!object || object.type !== "stone") return false;
+    var destination = add(forward, step);
+    if (!this.isUnoccupied(destination)) return false;
+    this.moveObjectTo(object, destination);
+    if (this.isUnoccupied(add(forward, neg(this.up)))) this.rollClimbDown(step, sign);
+    else this.position = forward;
+    this.moves += 1;
+    this.applyGravity();
+    this.applyObjectGravity(object, neg(this.up));
+    this.checkExit();
+    return true;
+  };
+  Game.prototype.toggleExit = function (name) {
+    this.exits.forEach(function (exit) {
+      if (exit.name === name) exit.active = !exit.active;
+    });
+  };
+  Game.prototype.toggleSwitch = function (object) {
+    object.active = !object.active;
+    (object.toggles || []).forEach(function (targetName) { this.toggleExit(targetName); }, this);
+    this.rebuildOccupants();
+  };
+  Game.prototype.shoot = function () {
+    if (this.won) return false;
+    var halfStep = this.dir;
+    var position = copyPosition(this.position);
+    var guard = 0;
+    while (guard < 64) {
+      position = add(position, halfStep);
+      if (this.isBlocked(position.x, position.y, position.z)) {
+        var object = this.objectAt(position);
+        if (object && object.type === "switch") this.toggleSwitch(object);
+        return true;
+      }
+      guard += 1;
+    }
+    return true;
+  };
   Game.prototype.moveAlong = function (sign, jump) {
     if (this.won) return false;
     var step = mul(this.dir, sign);
@@ -356,11 +510,14 @@
   Game.prototype.action = function (name) {
     if (name === "move forward" || name === "up") return this.moveAlong(1, false);
     if (name === "move backward" || name === "down") return this.moveAlong(-1, false);
+    if (name === "push forward") return this.pushAlong(1);
+    if (name === "push backward") return this.pushAlong(-1);
     if (name === "turn left" || name === "left") return this.turn(1);
     if (name === "turn right" || name === "right") return this.turn(-1);
     if (name === "jump forward") return this.moveAlong(1, true);
     if (name === "jump far forward") return this.jumpAlong(1, 2);
     if (name === "jump") return this.jumpInPlace();
+    if (name === "shoot") return this.shoot();
     return false;
   };
   Game.prototype.actionDuration = function (name) {

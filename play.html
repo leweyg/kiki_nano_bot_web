@@ -28,6 +28,10 @@ const materials = {
   floorA: new THREE.MeshStandardMaterial({color: 0x555555, roughness: .55, metalness: .05}),
   floorB: new THREE.MeshStandardMaterial({color: 0x666666, roughness: .55, metalness: .05}),
   wall: new THREE.MeshStandardMaterial({color: 0x808080, roughness: .48, metalness: .04}),
+  stone: new THREE.MeshStandardMaterial({color: 0x9a9a8a, roughness: .52, metalness: .03}),
+  switchRing: new THREE.MeshStandardMaterial({color: 0xa0b8ff, emissive: 0x182c64, emissiveIntensity: .25, roughness: .34}),
+  switchCore: new THREE.MeshStandardMaterial({color: 0x80f0ff, emissive: 0x00a0ff, emissiveIntensity: .7, roughness: .24}),
+  switchOffCore: new THREE.MeshStandardMaterial({color: 0x39465c, emissive: 0x101824, emissiveIntensity: .25, roughness: .48}),
   borderA: new THREE.MeshStandardMaterial({color: 0x777777, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
   borderB: new THREE.MeshStandardMaterial({color: 0x8a8a8a, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
   botBody: new THREE.MeshStandardMaterial({color: 0xff8000, roughness: .42, metalness: .08}),
@@ -128,9 +132,19 @@ function addBoundaryWalls(level){
     }
   }
 }
+function addSwitch(level, object){
+  const group = new THREE.Group();
+  const ringA = new THREE.Mesh(new THREE.TorusGeometry(.35, .035, 8, 24), materials.switchRing);
+  const ringB = ringA.clone();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 10), object.active ? materials.switchCore : materials.switchOffCore);
+  ringB.rotation.y = Math.PI / 2;
+  group.add(ringA, ringB, core);
+  group.position.copy(centered(level, object.coordinates, 0));
+  board.add(group);
+}
 function addGate(level, exit){
   const color = DEFAULT_GATE_COLOR;
-  const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: .4, roughness: .35});
+  const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: exit.active ? .4 : .08, roughness: .35, transparent: true, opacity: exit.active ? 1 : .18});
   const group = new THREE.Group();
   const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), material);
   const ringB = ringA.clone();
@@ -146,7 +160,7 @@ let visualState = snapshot(game);
 let activeAnimation = null;
 let queuedAction = null;
 let cameraReady = false;
-const heldInput = {move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null};
+const heldInput = {move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null, push: false};
 const JUMP_GRACE_MS = 220;
 function buildStaticScene(){
   while(board.children.length) board.remove(board.children[0]);
@@ -158,9 +172,12 @@ function buildStaticScene(){
       addCube(centered(level, {x, y: 0, z}, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
     }
   }
-  (level.walls || []).forEach(wall => addCube(centered(level, wall, 0), .88, materials.wall));
-  (level.exits || [{active: true, coordinates: level.exit}]).forEach(exit => {
-    if (exit.active === false) return;
+  (game.objects || []).forEach(object => {
+    if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall);
+    else if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
+    else if (object.type === 'switch') addSwitch(level, object);
+  });
+  (game.exits || [{active: true, coordinates: level.exit}]).forEach(exit => {
     addGate(level, exit);
   });
   board.add(botMesh);
@@ -382,6 +399,8 @@ function canJumpForward(direction){
   return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
 }
 function actionForMove(direction){
+  if (heldInput.push && direction === 'up') return 'push forward';
+  if (heldInput.push && direction === 'down') return 'push backward';
   return canJumpForward(direction) ? 'jump forward' : direction;
 }
 function clearPendingJump(){
@@ -433,6 +452,7 @@ function act(direction){
     to,
     totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
   };
+  buildStaticScene();
   updateHud();
 }
 function continueHeldInput(){
@@ -518,11 +538,16 @@ touchpad.addEventListener('pointerup', event => {
 touchpad.addEventListener('pointercancel', event => {releaseMove(event.pointerId);resetTouchpad();});
 document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
 document.getElementById('reset').onclick = () => { location.reload(); };
-document.getElementById('push').onclick = () => {};
-document.getElementById('shoot').onclick = () => {};
+document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
+document.getElementById('shoot').onclick = () => act('shoot');
 addEventListener('keydown', event => {
   const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
   if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';updateHud();return;}
+  if(event.key === 'Shift'){
+    event.preventDefault();
+    heldInput.push = true;
+    return;
+  }
   if(event.key === ' '){
     event.preventDefault();
     if (!event.repeat) clearPendingJump();
@@ -546,6 +571,11 @@ addEventListener('keydown', event => {
 });
 addEventListener('keyup', event => {
   const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
+  if(event.key === 'Shift'){
+    event.preventDefault();
+    heldInput.push = false;
+    return;
+  }
   if(event.key === ' '){
     event.preventDefault();
     heldInput.jump = false;
