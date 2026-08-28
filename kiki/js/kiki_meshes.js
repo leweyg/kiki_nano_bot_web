@@ -68,6 +68,8 @@
     rightTire.rotation.y = Math.PI / 2;
     leftTire.position.x = 0.35;
     rightTire.position.x = -0.35;
+    group.userData.leftTire = leftTire;
+    group.userData.rightTire = rightTire;
     group.add(leftTire, rightTire, body);
     return group;
   }

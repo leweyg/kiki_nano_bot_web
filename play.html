@@ -62,6 +62,9 @@ function neg(a){return {x: -a.x, y: -(a.y || 0), z: -a.z};}
 function mul(a, scalar){return {x: a.x * scalar, y: (a.y || 0) * scalar, z: a.z * scalar};}
 function near(a, b){return Math.abs(a.x - b.x) < .001 && Math.abs((a.y || 0) - (b.y || 0)) < .001 && Math.abs(a.z - b.z) < .001;}
 function snapshot(source){return {position: copyPosition(source.position), dir: copyPosition(source.dir), up: copyPosition(source.up)};}
+function copyTires(tires){return {left: tires.left, right: tires.right};}
+function withTires(state, tires){state.tires = copyTires(tires); return state;}
+function lerpTires(a, b, amount){return {left: a.left + (b.left - a.left) * amount, right: a.right + (b.right - a.right) * amount};}
 function quaternionForState(state){
   const dir = v(state.dir).normalize();
   const up = v(state.up).normalize();
@@ -162,7 +165,10 @@ function addGate(level, exit){
 }
 const botMesh = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
 botMesh.matrixAutoUpdate = false;
-let visualState = snapshot(game);
+const TIRE_HALF_TURN = Math.PI;
+const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2;
+let tireAngles = {left: 0, right: 0};
+let visualState = withTires(snapshot(game), tireAngles);
 let activeAnimation = null;
 let queuedAction = null;
 let cameraReady = false;
@@ -192,6 +198,11 @@ function buildStaticScene(){
 function updateBot(level, state){
   const q = state.quaternion || quaternionForState(state);
   const matrix = new THREE.Matrix4().compose(centered(level, state.position, 0), q, new THREE.Vector3(1, 1, 1));
+  const tires = state.tires || tireAngles;
+  if (botMesh.userData.leftTire && botMesh.userData.rightTire) {
+    botMesh.userData.leftTire.rotation.set(0, Math.PI / 2, tires.left);
+    botMesh.userData.rightTire.rotation.set(0, Math.PI / 2, tires.right);
+  }
   botMesh.matrix.copy(matrix);
 }
 function clampInsideRoom(level, position, delta){
@@ -275,6 +286,12 @@ function animationSegment(kind, duration, from, to, extra){
   return Object.assign({kind, duration, from, to}, extra || {});
 }
 function actionDuration(name){return game.actionDuration ? game.actionDuration(name) : 200;}
+function tireDelta(left, right){return {left, right};}
+function rollingDelta(sign, scale){return tireDelta(sign * TIRE_HALF_TURN * scale, sign * TIRE_HALF_TURN * scale);}
+function turnTireDelta(action){
+  const leftTurn = action === 'turn left' || action === 'left';
+  return tireDelta(leftTurn ? -TIRE_HALF_TURN : TIRE_HALF_TURN, leftTurn ? TIRE_HALF_TURN : -TIRE_HALF_TURN);
+}
 function appendCatchUp(segments, from, to){
   if (near(from.position, to.position) && quaternionForState(from).angleTo(quaternionForState(to)) < .001) return;
   const distance = v(to.position).sub(v(from.position)).length();
@@ -295,7 +312,7 @@ function appendJumpSettle(segments, from, to, step, up){
     return true;
   }
   if (step && near(to.position, add(from.position, step))) {
-    segments.push(animationSegment('forward', actionDuration('move forward'), from, to));
+    segments.push(animationSegment('forward', actionDuration('move forward'), from, to, {tireDelta: rollingDelta(1, 1)}));
     return true;
   }
   return false;
@@ -310,7 +327,7 @@ function buildAnimation(action, from, to, beforeGame){
   let target = null;
 
   if (action === 'turn left' || action === 'left' || action === 'turn right' || action === 'right') {
-    segments.push(animationSegment('turn', actionDuration(action === 'left' ? 'turn left' : action === 'right' ? 'turn right' : action), from, to));
+    segments.push(animationSegment('turn', actionDuration(action === 'left' ? 'turn left' : action === 'right' ? 'turn right' : action), from, to, {tireDelta: turnTireDelta(action)}));
     return segments;
   }
 
@@ -321,14 +338,14 @@ function buildAnimation(action, from, to, beforeGame){
     if (beforeGame.isUnoccupied(forward)) {
       if (beforeGame.isUnoccupied(add(forward, down))) {
         target = {position: add(forward, down), dir: mul(up, -sign), up: step};
-        segments.push(animationSegment('climbDown', 500, from, target, {step, down}));
+        segments.push(animationSegment('climbDown', 500, from, target, {step, down, tireDelta: rollingDelta(sign, 1)}));
       } else {
         target = {position: forward, dir: from.dir, up: from.up};
-        segments.push(animationSegment('forward', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target));
+        segments.push(animationSegment('forward', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, {tireDelta: rollingDelta(sign, 1)}));
       }
     } else {
       target = {position: from.position, dir: mul(up, sign), up: neg(step)};
-      segments.push(animationSegment('climbUp', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target));
+      segments.push(animationSegment('climbUp', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, {tireDelta: rollingDelta(sign, .5)}));
     }
     cursor = target;
   } else if (action === 'jump forward' || action === 'jump far forward') {
@@ -337,7 +354,7 @@ function buildAnimation(action, from, to, beforeGame){
     const forward = add(from.position, step);
     const jumpTarget = beforeGame.isUnoccupied(forward) && beforeGame.isUnoccupied(add(forward, up)) ? add(forward, up) : above;
     target = {position: jumpTarget, dir: from.dir, up: from.up};
-    segments.push(animationSegment('jumpForward', action === 'jump far forward' ? actionDuration('jump forward') : actionDuration(action), from, target, {step, up}));
+    segments.push(animationSegment('jumpForward', action === 'jump far forward' ? actionDuration('jump forward') : actionDuration(action), from, target, {step, up, tireDelta: tireDelta(TIRE_JUMP_FORWARD, TIRE_JUMP_FORWARD)}));
     cursor = target;
   } else if (action === 'jump') {
     target = {position: add(from.position, up), dir: from.dir, up: from.up};
@@ -366,23 +383,37 @@ function buildSettleAnimation(from, to){
   return segments.length ? segments : [animationSegment('generic', 160, from, to)];
 }
 function startAnimation(segments, to){
+  let cursorTires = copyTires(tireAngles);
+  segments.forEach(segment => {
+    const delta = segment.tireDelta || tireDelta(0, 0);
+    withTires(segment.from, cursorTires);
+    cursorTires = {left: cursorTires.left + delta.left, right: cursorTires.right + delta.right};
+    withTires(segment.to, cursorTires);
+  });
+  tireAngles = cursorTires;
   activeAnimation = {
     startedAt: performance.now(),
     segments,
-    to,
+    to: withTires(to, tireAngles),
     totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
   };
+}
+function tiresAtSegment(segment, amount){
+  return lerpTires(segment.from.tires || tireAngles, segment.to.tires || tireAngles, amount);
+}
+function stateWithSegmentTires(state, segment, amount){
+  return withTires(state, tiresAtSegment(segment, amount));
 }
 function stateAtSegment(segment, amount){
   const t = Math.min(1, Math.max(0, amount));
   if (segment.kind === 'jump') {
     const height = Math.sin(Math.PI / 2 * t);
-    return slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.up, height)));
+    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.up, height))), segment, t);
   }
   if (segment.kind === 'jumpForward') {
     const forward = 1 - Math.cos(Math.PI / 2 * t);
     const height = Math.sin(Math.PI / 2 * t);
-    return slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.up, height)));
+    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.up, height))), segment, forward);
   }
   if (segment.kind === 'climbDown') {
     const q = quaternionForState(segment.from).slerp(quaternionForState(segment.to), t);
@@ -395,18 +426,18 @@ function stateAtSegment(segment, amount){
       const currentUp = plain(new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize());
       position = add(segment.from.position, mul(add(add(segment.step, segment.down), currentUp), .5));
     }
-    return stateFromQuaternion(position, q);
+    return stateWithSegmentTires(stateFromQuaternion(position, q), segment, t);
   }
   if (segment.kind === 'fallForward') {
     const forward = Math.sin(Math.PI / 2 * t);
     const down = 1 - Math.cos(Math.PI / 2 * t);
-    return slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.down, down)));
+    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.down, down))), segment, t);
   }
   if (segment.kind === 'fall') {
-    return slerpState(segment.from, segment.to, t);
+    return stateWithSegmentTires(slerpState(segment.from, segment.to, t), segment, t);
   }
   const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
-  return slerpState(segment.from, segment.to, eased);
+  return stateWithSegmentTires(slerpState(segment.from, segment.to, eased), segment, t);
 }
 function stateAtAnimation(animation, now){
   let elapsed = now - animation.startedAt;
@@ -418,7 +449,7 @@ function stateAtAnimation(animation, now){
 }
 function finishAnimation(){
   activeAnimation = null;
-  visualState = snapshot(game);
+  visualState = withTires(snapshot(game), tireAngles);
   if (scheduleAdvanceIfWon()) {
     queuedAction = null;
     return;
@@ -640,7 +671,7 @@ addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); ca
 const spawnFrom = snapshot(game);
 game.applyGravity();
 const spawnTo = snapshot(game);
-visualState = spawnFrom;
+visualState = withTires(spawnFrom, tireAngles);
 buildStaticScene();
 updateHud();
 if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
