@@ -5,7 +5,8 @@
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
-const game = new Kiki.Game(Kiki.getLevel(query.get('level')));
+const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
+let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color('#212121');
 const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
@@ -165,6 +166,7 @@ let visualState = snapshot(game);
 let activeAnimation = null;
 let queuedAction = null;
 let cameraReady = false;
+let advancingLevel = false;
 const heldInput = {move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null, push: false};
 const JUMP_GRACE_MS = 220;
 function buildStaticScene(){
@@ -346,6 +348,31 @@ function buildAnimation(action, from, to, beforeGame){
   if (!appendJumpSettle(segments, cursor || from, to, step, up)) appendCatchUp(segments, cursor || from, to);
   return segments.length ? segments : [animationSegment('generic', 160, from, to)];
 }
+function buildSettleAnimation(from, to){
+  const segments = [];
+  const down = neg(from.up);
+  let cursor = from;
+  let guard = 0;
+  while (sameOrientation(cursor, to) && !near(cursor.position, to.position) && guard < 64) {
+    const target = {position: add(cursor.position, down), dir: cursor.dir, up: cursor.up};
+    const toward = v(to.position).sub(v(cursor.position)).dot(v(down));
+    const remainingAfterTarget = v(to.position).sub(v(target.position)).dot(v(down));
+    if (toward < .001 || remainingAfterTarget < -.001) break;
+    segments.push(animationSegment('fall', actionDuration('fall'), cursor, target, {down}));
+    cursor = target;
+    guard += 1;
+  }
+  appendCatchUp(segments, cursor, to);
+  return segments.length ? segments : [animationSegment('generic', 160, from, to)];
+}
+function startAnimation(segments, to){
+  activeAnimation = {
+    startedAt: performance.now(),
+    segments,
+    to,
+    totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
+  };
+}
 function stateAtSegment(segment, amount){
   const t = Math.min(1, Math.max(0, amount));
   if (segment.kind === 'jump') {
@@ -392,6 +419,10 @@ function stateAtAnimation(animation, now){
 function finishAnimation(){
   activeAnimation = null;
   visualState = snapshot(game);
+  if (scheduleAdvanceIfWon()) {
+    queuedAction = null;
+    return;
+  }
   if (queuedAction) {
     const next = queuedAction;
     queuedAction = null;
@@ -399,6 +430,16 @@ function finishAnimation(){
   } else {
     continueHeldInput();
   }
+}
+function scheduleAdvanceIfWon(){
+  if (!game.won) return false;
+  const nextIndex = game.level.index + 1;
+  if (nextIndex >= Kiki.levels.length) return true;
+  if (!advancingLevel) {
+    advancingLevel = true;
+    setTimeout(() => { location.href = 'play.html?level=' + nextIndex; }, 700);
+  }
+  return true;
 }
 function canJumpForward(direction){
   return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
@@ -451,12 +492,7 @@ function act(direction){
   if (!game.action(direction)) return;
   const to = snapshot(game);
   const segments = buildAnimation(direction, from, to, before);
-  activeAnimation = {
-    startedAt: performance.now(),
-    segments,
-    to,
-    totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
-  };
+  startAnimation(segments, to);
   buildStaticScene();
   updateHud();
 }
@@ -601,7 +637,14 @@ addEventListener('keyup', event => {
   }
 });
 addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
+const spawnFrom = snapshot(game);
+game.applyGravity();
+const spawnTo = snapshot(game);
+visualState = spawnFrom;
 buildStaticScene();
 updateHud();
+if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
+  startAnimation(buildSettleAnimation(spawnFrom, spawnTo), spawnTo);
+}
 requestAnimationFrame(draw);
 </script></body></html>

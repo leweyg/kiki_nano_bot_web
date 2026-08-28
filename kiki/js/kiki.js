@@ -4,13 +4,6 @@
 }(typeof globalThis !== "undefined" ? globalThis : this, function () {
   "use strict";
 
-  var levelNames = [
-    "start", "steps", "move", "electro", "elevate", "throw", "gold", "jump", "escape", "gears", "gamma", "cube", "switch", "borg",
-    "mini", "blocks", "bombs", "sandbox", "energy", "maze", "love", "towers", "edge", "random", "plate", "nice", "entropy",
-    "slick", "bridge", "flower", "stones", "walls", "grid", "rings", "core", "bronze", "pool", "hidden", "church", "strange", "mesh", "columns", "machine",
-    "neutron", "captured", "circuit", "regal", "conductor", "evil", "mutants"
-  ];
-
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
   var actionTimings = {
     "move forward": 200,
@@ -24,6 +17,59 @@
     "fall forward": 200
   };
   var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump", "push forward", "push backward", "shoot"];
+  var levelDefinitions = [
+    { index: 0, id: "start", title: "start", create: makeIndex00StartLevel },
+    { index: 1, id: "steps", title: "steps", create: makeIndex01StepsLevel },
+    { index: 2, id: "move", title: "move", create: makeIndex02MoveLevel },
+    { index: 3, id: "electro", title: "electro" },
+    { index: 4, id: "elevate", title: "elevate" },
+    { index: 5, id: "throw", title: "throw" },
+    { index: 6, id: "gold", title: "gold" },
+    { index: 7, id: "jump", title: "jump" },
+    { index: 8, id: "escape", title: "escape" },
+    { index: 9, id: "gears", title: "gears" },
+    { index: 10, id: "gamma", title: "gamma" },
+    { index: 11, id: "cube", title: "cube" },
+    { index: 12, id: "switch", title: "switch" },
+    { index: 13, id: "borg", title: "borg" },
+    { index: 14, id: "mini", title: "mini" },
+    { index: 15, id: "blocks", title: "blocks" },
+    { index: 16, id: "bombs", title: "bombs" },
+    { index: 17, id: "sandbox", title: "sandbox" },
+    { index: 18, id: "energy", title: "energy" },
+    { index: 19, id: "maze", title: "maze" },
+    { index: 20, id: "love", title: "love" },
+    { index: 21, id: "towers", title: "towers" },
+    { index: 22, id: "edge", title: "edge" },
+    { index: 23, id: "random", title: "random" },
+    { index: 24, id: "plate", title: "plate" },
+    { index: 25, id: "nice", title: "nice" },
+    { index: 26, id: "entropy", title: "entropy" },
+    { index: 27, id: "slick", title: "slick" },
+    { index: 28, id: "bridge", title: "bridge" },
+    { index: 29, id: "flower", title: "flower" },
+    { index: 30, id: "stones", title: "stones" },
+    { index: 31, id: "walls", title: "walls" },
+    { index: 32, id: "grid", title: "grid" },
+    { index: 33, id: "rings", title: "rings" },
+    { index: 34, id: "core", title: "core" },
+    { index: 35, id: "bronze", title: "bronze" },
+    { index: 36, id: "pool", title: "pool" },
+    { index: 37, id: "hidden", title: "hidden" },
+    { index: 38, id: "church", title: "church" },
+    { index: 39, id: "strange", title: "strange" },
+    { index: 40, id: "mesh", title: "mesh" },
+    { index: 41, id: "columns", title: "columns" },
+    { index: 42, id: "machine", title: "machine" },
+    { index: 43, id: "neutron", title: "neutron" },
+    { index: 44, id: "captured", title: "captured" },
+    { index: 45, id: "circuit", title: "circuit" },
+    { index: 46, id: "regal", title: "regal" },
+    { index: 47, id: "conductor", title: "conductor" },
+    { index: 48, id: "evil", title: "evil" },
+    { index: 49, id: "mutants", title: "mutants" }
+  ];
+  var levelNames = levelDefinitions.map(function (definition) { return definition.id; });
 
   function hash(name) {
     var value = 0;
@@ -39,7 +85,7 @@
     };
   }
 
-  function makeStartLevel(index) {
+  function makeIndex00StartLevel(index) {
     var size = { x: 7, y: 7, z: 11 };
     var objectSpecs = [
       { type: "wall", position: { x: 0, y: 0, z: -2 } },
@@ -76,7 +122,7 @@
     };
   }
 
-  function makeStepsLevel(index) {
+  function makeIndex01StepsLevel(index) {
     var size = { x: 7, y: 7, z: 13 };
     var objectSpecs = [
       { type: "wall", position: { x: 0, y: 0, z: 3 } },
@@ -110,7 +156,7 @@
     };
   }
 
-  function makeMoveLevel(index) {
+  function makeIndex02MoveLevel(index) {
     var size = { x: 7, y: 7, z: 7 };
     var stones = [
       { x: 2, y: 4, z: 0 }, { x: 4, y: 4, z: 0 }, { x: 4, y: 2, z: 0 }, { x: 2, y: 2, z: 0 },
@@ -179,16 +225,22 @@
     };
   }
 
-  function makeLevel(name, index) {
-    if (name === "start") return makeStartLevel(index);
-    if (name === "steps") return makeStepsLevel(index);
-    if (name === "move") return makeMoveLevel(index);
-    return makeGeneratedLevel(name, index);
+  function makeLevelFromDefinition(definition) {
+    return definition.create ? definition.create(definition.index) : makeGeneratedLevel(definition.id, definition.index);
   }
 
-  var levels = levelNames.map(makeLevel);
-  var byName = {};
-  levels.forEach(function (level) { byName[level.id] = level; });
+  var levels = levelDefinitions.map(makeLevelFromDefinition);
+  function getLevelIndex(identifier) {
+    var index = parseInt(identifier, 10);
+    if (String(index) === String(identifier) && levels[index]) return index;
+    for (var i = 0; i < levelDefinitions.length; i += 1) {
+      if (levelDefinitions[i].id === identifier) return i;
+    }
+    return 0;
+  }
+  function getLevel(identifier) {
+    return levels[getLevelIndex(identifier)];
+  }
 
   function key(x, y, z) { return x + "," + y + "," + z; }
   function copyPosition(position) { return { x: position.x, y: position.y || 0, z: position.z || 0 }; }
@@ -233,7 +285,7 @@
   }
 
   function Game(level) {
-    this.level = typeof level === "string" ? byName[level] : (level || levels[0]);
+    this.level = (typeof level === "number" || typeof level === "string") ? getLevel(level) : (level || levels[0]);
     var playerStart = this.level.player && this.level.player.coordinates ? this.level.player.coordinates : this.level.start;
     var orientation = orientationForName(this.level.player && this.level.player.orientation);
     this.position = copyPosition(playerStart);
@@ -306,32 +358,58 @@
   Game.prototype.checkExitAt = function (position) {
     if (this.isExit(Math.round(position.x), Math.round(position.y || 0), Math.round(position.z))) this.won = true;
   };
+  Game.prototype.checkExitTouchAt = function (position) {
+    this.checkExitAt(position);
+    if (this.won) return;
+    this.exits.some(function (exit) {
+      if (!exit.active) return false;
+      var dx = position.x - exit.coordinates.x;
+      var dy = (position.y || 0) - exit.coordinates.y;
+      var dz = position.z - exit.coordinates.z;
+      if (dx * dx + dy * dy + dz * dz <= 1.002001) {
+        this.won = true;
+        return true;
+      }
+      return false;
+    }, this);
+  };
   Game.prototype.checkExit = function (position) {
     this.checkExitAt(position || this.position);
   };
-  Game.prototype.checkJumpArcExit = function (start, step, up) {
-    var end = add(add(start, step), up);
-    var minX = Math.min(start.x, end.x), maxX = Math.max(start.x, end.x);
-    var minY = Math.min(start.y || 0, end.y || 0), maxY = Math.max(start.y || 0, end.y || 0);
-    var minZ = Math.min(start.z, end.z), maxZ = Math.max(start.z, end.z);
-    for (var x = minX; x <= maxX; x += 1) {
-      for (var y = minY; y <= maxY; y += 1) {
-        for (var z = minZ; z <= maxZ; z += 1) {
-          this.checkExitAt({ x: x, y: y, z: z });
-          if (this.won) return true;
-        }
-      }
-    }
-    for (var sample = 0; sample <= 24; sample += 1) {
-      var t = sample / 24;
-      this.checkExitAt({
-        x: start.x + (1 - Math.cos(Math.PI / 2 * t)) * step.x + Math.sin(Math.PI / 2 * t) * up.x,
-        y: (start.y || 0) + (1 - Math.cos(Math.PI / 2 * t)) * (step.y || 0) + Math.sin(Math.PI / 2 * t) * (up.y || 0),
-        z: start.z + (1 - Math.cos(Math.PI / 2 * t)) * step.z + Math.sin(Math.PI / 2 * t) * up.z
-      });
+  Game.prototype.checkPathExit = function (sampler, samples) {
+    for (var sample = 0; sample <= samples; sample += 1) {
+      if (sample === 0) this.checkExitAt(sampler(0));
+      else this.checkExitTouchAt(sampler(sample / samples));
       if (this.won) return true;
     }
     return false;
+  };
+  Game.prototype.checkLineExit = function (start, end) {
+    return this.checkPathExit(function (t) {
+      return {
+        x: start.x + (end.x - start.x) * t,
+        y: (start.y || 0) + ((end.y || 0) - (start.y || 0)) * t,
+        z: start.z + (end.z - start.z) * t
+      };
+    }, 24);
+  };
+  Game.prototype.checkJumpArcExit = function (start, step, up) {
+    return this.checkPathExit(function (t) {
+      return {
+        x: start.x + (1 - Math.cos(Math.PI / 2 * t)) * step.x + Math.sin(Math.PI / 2 * t) * up.x,
+        y: (start.y || 0) + (1 - Math.cos(Math.PI / 2 * t)) * (step.y || 0) + Math.sin(Math.PI / 2 * t) * (up.y || 0),
+        z: start.z + (1 - Math.cos(Math.PI / 2 * t)) * step.z + Math.sin(Math.PI / 2 * t) * up.z
+      };
+    }, 48);
+  };
+  Game.prototype.checkFallForwardArcExit = function (start, step, down) {
+    return this.checkPathExit(function (t) {
+      return {
+        x: start.x + Math.sin(Math.PI / 2 * t) * step.x + (1 - Math.cos(Math.PI / 2 * t)) * down.x,
+        y: (start.y || 0) + Math.sin(Math.PI / 2 * t) * (step.y || 0) + (1 - Math.cos(Math.PI / 2 * t)) * (down.y || 0),
+        z: start.z + Math.sin(Math.PI / 2 * t) * step.z + (1 - Math.cos(Math.PI / 2 * t)) * down.z
+      };
+    }, 48);
   };
   Game.prototype.applyGravity = function (holdStep, sign, maxForwardFalls) {
     var down = neg(this.up);
@@ -349,14 +427,19 @@
           break;
         }
         if (!this.isUnoccupied(add(forward, down))) {
+          var lineReachedExit = this.checkLineExit(this.position, forward);
           this.position = forward;
+          if (lineReachedExit) return true;
           this.checkExit();
           if (this.won) return true;
           moved = true;
           continue;
         }
         if (maxForwardFalls === undefined || forwardFalls < maxForwardFalls) {
-          this.position = add(forward, down);
+          var forwardDown = add(forward, down);
+          var fallForwardReachedExit = this.checkFallForwardArcExit(this.position, holdStep, down);
+          this.position = forwardDown;
+          if (fallForwardReachedExit) return true;
           forwardFalls += 1;
           this.checkExit();
           if (this.won) return true;
@@ -364,7 +447,10 @@
           continue;
         }
       }
-      this.position = add(this.position, down);
+      var target = add(this.position, down);
+      var fallReachedExit = this.checkLineExit(this.position, target);
+      this.position = target;
+      if (fallReachedExit) return true;
       this.checkExit();
       if (this.won) return true;
       moved = true;
@@ -378,13 +464,15 @@
     var step = mul(this.dir, sign);
     var above = add(this.position, this.up);
     var forward = add(this.position, step);
+    var jumpStep = vec(0, 0, 0);
     if (!this.isUnoccupied(above)) return false;
     if (this.isUnoccupied(forward) && this.isUnoccupied(add(forward, this.up))) {
       this.position = add(forward, this.up);
+      jumpStep = step;
     } else {
       this.position = above;
     }
-    this.checkJumpArcExit(start, step, this.up);
+    this.checkJumpArcExit(start, jumpStep, this.up);
     if (this.won) {
       this.moves += 1;
       return true;
@@ -473,9 +561,13 @@
       return this.jumpAlong(sign, 0);
     } else if (this.isUnoccupied(forward)) {
       if (this.isUnoccupied(add(forward, neg(this.up)))) {
+        var climbDownReachedExit = this.checkFallForwardArcExit(this.position, step, neg(this.up));
         this.rollClimbDown(step, sign);
+        if (climbDownReachedExit) return true;
       } else {
+        var moveReachedExit = this.checkLineExit(this.position, forward);
         this.position = forward;
+        if (moveReachedExit) return true;
       }
       this.checkExit();
       moved = true;
@@ -494,7 +586,12 @@
     if (this.won) return false;
     var above = add(this.position, this.up);
     if (!this.isUnoccupied(above)) return false;
+    var jumpReachedExit = this.checkJumpArcExit(this.position, vec(0, 0, 0), this.up);
     this.position = above;
+    if (jumpReachedExit) {
+      this.moves += 1;
+      return true;
+    }
     this.moves += 1;
     this.checkExit();
     if (!this.won) this.applyGravity();
@@ -551,5 +648,5 @@
     return null;
   }
 
-  return { levels: levels, levelNames: levelNames, actionTimings: actionTimings, getLevel: function (name) { return byName[name] || levels[0]; }, Game: Game, solve: solve };
+  return { levels: levels, levelDefinitions: levelDefinitions, levelNames: levelNames, actionTimings: actionTimings, getLevel: getLevel, getLevelIndex: getLevelIndex, Game: Game, solve: solve };
 }));
