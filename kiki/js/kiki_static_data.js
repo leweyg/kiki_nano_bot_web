@@ -6,12 +6,12 @@
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
   var levelDefinitions = [
-    { index: 0, id: "start", title: "start", source: "kiki/py/levels/start.py", scheme: "default_scheme", theme: "mint", factory: "makeIndex00StartLevel" },
-    { index: 1, id: "steps", title: "steps", source: "kiki/py/levels/steps.py", scheme: "blue_scheme", theme: "sky", factory: "makeIndex01StepsLevel" },
-    { index: 2, id: "move", title: "move", source: "kiki/py/levels/move.py", scheme: "red_scheme", theme: "coral", factory: "makeIndex02MoveLevel" },
-    { index: 3, id: "electro", title: "electro", source: "kiki/py/levels/electro.py", scheme: "metal_scheme", theme: "lime", factory: "makeIndex03ElectroLevel" },
-    { index: 4, id: "elevate", title: "elevate", source: "kiki/py/levels/elevate.py", scheme: "bronze_scheme", theme: "copper", factory: "makeIndex04ElevateLevel" },
-    { index: 5, id: "throw", title: "throw", source: "kiki/py/levels/throw.py", scheme: "tron_scheme", theme: "violet", factory: "makeIndex05ThrowLevel" },
+    { index: 0, id: "start", title: "start", source: "kiki/py/levels/start.py", scheme: "default_scheme", theme: "mint" },
+    { index: 1, id: "steps", title: "steps", source: "kiki/py/levels/steps.py", scheme: "blue_scheme", theme: "sky" },
+    { index: 2, id: "move", title: "move", source: "kiki/py/levels/move.py", scheme: "red_scheme", theme: "coral" },
+    { index: 3, id: "electro", title: "electro", source: "kiki/py/levels/electro.py", scheme: "metal_scheme", theme: "lime" },
+    { index: 4, id: "elevate", title: "elevate", source: "kiki/py/levels/elevate.py", scheme: "bronze_scheme", theme: "copper" },
+    { index: 5, id: "throw", title: "throw", source: "kiki/py/levels/throw.py", scheme: "tron_scheme", theme: "violet" },
     { index: 6, id: "gold", title: "gold", source: "kiki/py/levels/gold.py", scheme: "yellow_scheme" },
     { index: 7, id: "jump", title: "jump", source: "kiki/py/levels/jump.py", scheme: "red_scheme" },
     { index: 8, id: "escape", title: "escape", source: "kiki/py/levels/escape.py", scheme: "metal_scheme" },
@@ -57,6 +57,176 @@
     { index: 48, id: "evil", title: "evil", source: "kiki/py/levels/evil.py", scheme: "red_scheme" },
     { index: 49, id: "mutants", title: "mutants", source: "kiki/py/levels/mutants.py", scheme: "blue_scheme" }
   ];
+
+  var commonIntroHelp = [
+    "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\njump on the stones",
+    "to jump,\npress \"$key(jump)\"\nwhile moving",
+    "to move, press \"$key(move forward)\" or \"$key(move backward)\",\n\nto turn, press \"$key(turn left)\" or \"$key(turn right)\""
+  ];
+
+  var levelTemplates = {
+    start: {
+      size: { x: 7, y: 7, z: 11 },
+      intro: "start",
+      help: commonIntroHelp,
+      player: { coordinates: { x: 3, y: 0, z: 3 }, orientation: "roty90", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 0, z: 3 }] }
+      ],
+      objects: [
+        { clone: { type: "wall" }, space: "position", at: [
+          { x: 0, y: 0, z: -2 },
+          { x: 0, y: 0, z: -4 },
+          { x: 0, y: 0, z: 1 }
+        ] }
+      ]
+    },
+    steps: {
+      size: { x: 7, y: 7, z: 13 },
+      intro: "steps",
+      help: commonIntroHelp,
+      player: { coordinates: { x: 3, y: 0, z: 6 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 1, z: 3 }] }
+      ],
+      objects: [
+        { clone: { type: "wall" }, space: "position", at: [
+          { x: 0, y: 0, z: 3 },
+          { x: 0, y: -1, z: 1 },
+          { x: 0, y: -2, z: -1 },
+          { x: 0, y: -3, z: -3 }
+        ] }
+      ]
+    },
+    move: {
+      size: { x: 7, y: 7, z: 7 },
+      intro: "move",
+      help: [
+        "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the switch\n\nto activate the switch,\nshoot it\n\nto be able to shoot the switch,\nmove the stone",
+        "to move a stone, press \"$key(push)\" while moving\n\nto shoot, press \"$key(shoot)\""
+      ],
+      player: { coordinates: { x: 3, y: 5, z: 5 }, orientation: "roty180", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 0, y: 0, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "stone" }, space: "coordinates", at: [
+          { x: 2, y: 4, z: 0 }, { x: 4, y: 4, z: 0 },
+          { x: 4, y: 2, z: 0 }, { x: 2, y: 2, z: 0 },
+          { x: 2, y: 3, z: 0 }, { x: 4, y: 3, z: 0 },
+          { x: 3, y: 2, z: 0 }, { x: 3, y: 4, z: 0 },
+          { x: 3, y: 3, z: 1 }
+        ] },
+        { clone: { type: "switch", name: "exit switch", active: false, toggles: ["exit"] }, space: "coordinates", at: [
+          { x: 3, y: 3, z: 0 }
+        ] }
+      ]
+    },
+    electro: {
+      size: { x: 9, y: 7, z: 9 },
+      intro: "electro",
+      powerCondition: "connectedMotor",
+      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"],
+      help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit\nfeed it with electricity:\n\nconnect the generator\nwith the motor",
+      player: { coordinates: { x: 2, y: 0, z: 4 }, orientation: "rotz180", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 0, y: 0, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "wireStone" }, space: "coordinates", at: [
+          { x: 2, y: 6, z: 4 }, { x: 2, y: 5, z: 4 }, { x: 2, y: 4, z: 4 }, { x: 2, y: 3, z: 4 },
+          { x: 6, y: 6, z: 4 }, { x: 6, y: 5, z: 4 }, { x: 6, y: 4, z: 4 }, { x: 6, y: 3, z: 4 },
+          { x: 6, y: 3, z: 4 }, { x: 5, y: 3, z: 4 },
+          { x: 2, y: 3, z: 4 }, { x: 3, y: 3, z: 4 }
+        ] },
+        { clone: { type: "gear", face: "PY" }, space: "coordinates", at: [{ x: 3, y: 0, z: 3 }] },
+        { clone: { type: "generator", face: "PY", active: true }, space: "coordinates", at: [{ x: 5, y: 0, z: 5 }] },
+        { clone: { type: "motorCylinder", face: "PY" }, space: "coordinates", at: [{ x: 4, y: 1, z: 4 }] },
+        { clone: { type: "motorGear", face: "PY" }, space: "coordinates", at: [{ x: 4, y: 0, z: 4 }] },
+        { clone: { type: "wire", face: "PY", connections: 10 }, space: "coordinates", at: [
+          { x: 3, y: 0, z: 2 }, { x: 4, y: 0, z: 2 }, { x: 5, y: 0, z: 2 }, { x: 6, y: 0, z: 2 },
+          { x: 3, y: 0, z: 6 }, { x: 4, y: 0, z: 6 }, { x: 5, y: 0, z: 6 }, { x: 6, y: 0, z: 6 },
+          { x: 0, y: 0, z: 4 }, { x: 1, y: 0, z: 4 }, { x: 2, y: 0, z: 4 },
+          { x: 7, y: 0, z: 4 }, { x: 8, y: 0, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "PY", connections: 5 }, space: "coordinates", at: [
+          { x: 2, y: 0, z: 3 }, { x: 2, y: 0, z: 4 }, { x: 2, y: 0, z: 5 }, { x: 2, y: 0, z: 6 },
+          { x: 6, y: 0, z: 3 }, { x: 6, y: 0, z: 4 }, { x: 6, y: 0, z: 5 }, { x: 6, y: 0, z: 6 }
+        ] },
+        { clone: { type: "wire", face: "PX", connections: 5 }, space: "coordinates", at: [
+          { x: 0, y: 0, z: 4 }, { x: 0, y: 1, z: 4 }, { x: 0, y: 2, z: 4 }, { x: 0, y: 3, z: 4 },
+          { x: 0, y: 4, z: 4 }, { x: 0, y: 5, z: 4 }, { x: 0, y: 6, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "NX", connections: 5 }, space: "coordinates", at: [
+          { x: 8, y: 0, z: 4 }, { x: 8, y: 1, z: 4 }, { x: 8, y: 2, z: 4 }, { x: 8, y: 3, z: 4 },
+          { x: 8, y: 4, z: 4 }, { x: 8, y: 5, z: 4 }, { x: 8, y: 6, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "NY", connections: 10 }, space: "coordinates", at: [
+          { x: 0, y: 6, z: 4 }, { x: 1, y: 6, z: 4 }, { x: 2, y: 6, z: 4 },
+          { x: 7, y: 6, z: 4 }, { x: 8, y: 6, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "PY", connections: 6 }, space: "coordinates", at: [{ x: 2, y: 0, z: 2 }] },
+        { clone: { type: "wire", face: "PY", connections: 3 }, space: "coordinates", at: [{ x: 2, y: 0, z: 6 }] },
+        { clone: { type: "wire", face: "PY", connections: 9 }, space: "coordinates", at: [{ x: 6, y: 0, z: 6 }] },
+        { clone: { type: "wire", face: "PY", connections: 12 }, space: "coordinates", at: [{ x: 6, y: 0, z: 2 }] },
+        { clone: { type: "wire", face: "PY", connections: 13 }, space: "coordinates", at: [{ x: 2, y: 0, z: 4 }] },
+        { clone: { type: "wire", face: "PY", connections: 7 }, space: "coordinates", at: [{ x: 6, y: 0, z: 4 }] }
+      ]
+    },
+    elevate: {
+      size: { x: 9, y: 5, z: 7 },
+      intro: "elevate",
+      powerCondition: "elevatedCircuit",
+      solverActions: ["move forward", "move backward", "turn left", "turn right", "shoot"],
+      help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity\n\nuse the bombs\nto elevate the gears\nand the generator\n\nthe bombs will detonate\nif you shoot them",
+      player: { position: { x: 3, y: -2, z: 0 }, orientation: "roty90", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 2, y: -2, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "motorGear", face: "NY" }, space: "coordinates", at: [{ x: 1, y: 4, z: 3 }] },
+        { clone: { type: "motorCylinder", face: "NY" }, space: "coordinates", at: [{ x: 1, y: 3, z: 3 }] },
+        { clone: { type: "generator", face: "NY", active: true, circuitPart: true }, space: "coordinates", at: [{ x: 6, y: 1, z: 2 }] },
+        { clone: { type: "gear", face: "NY", circuitPart: true }, space: "coordinates", at: [
+          { x: 5, y: 1, z: 4 }, { x: 4, y: 1, z: 2 }, { x: 3, y: 1, z: 4 }, { x: 2, y: 1, z: 2 }
+        ] },
+        { clone: { type: "wire", face: "NY", connections: "vertical" }, space: "coordinates", at: [
+          { x: 6, y: 4, z: 0 }, { x: 6, y: 4, z: 1 }, { x: 6, y: 4, z: 2 }, { x: 6, y: 4, z: 3 },
+          { x: 6, y: 4, z: 4 }, { x: 6, y: 4, z: 5 }, { x: 6, y: 4, z: 6 }
+        ] },
+        { clone: { type: "wire", face: "PY", connections: "vertical" }, space: "coordinates", at: [
+          { x: 6, y: 0, z: 0 }, { x: 6, y: 0, z: 1 }, { x: 6, y: 0, z: 2 }, { x: 6, y: 0, z: 3 },
+          { x: 6, y: 0, z: 4 }, { x: 6, y: 0, z: 5 }, { x: 6, y: 0, z: 6 }
+        ] },
+        { clone: { type: "wire", face: "PZ", connections: "vertical" }, space: "coordinates", at: [
+          { x: 6, y: 0, z: 0 }, { x: 6, y: 1, z: 0 }, { x: 6, y: 2, z: 0 }, { x: 6, y: 3, z: 0 }, { x: 6, y: 4, z: 0 }
+        ] },
+        { clone: { type: "wire", face: "NZ", connections: "vertical" }, space: "coordinates", at: [
+          { x: 6, y: 0, z: 6 }, { x: 6, y: 1, z: 6 }, { x: 6, y: 2, z: 6 }, { x: 6, y: 3, z: 6 }, { x: 6, y: 4, z: 6 }
+        ] },
+        { clone: { type: "bomb" }, space: "coordinates", at: [
+          { x: 6, y: 0, z: 2 }, { x: 5, y: 0, z: 4 }, { x: 4, y: 0, z: 2 },
+          { x: 3, y: 0, z: 4 }, { x: 2, y: 0, z: 2 }
+        ] }
+      ]
+    },
+    throw: {
+      size: { x: 5, y: 7, z: 7 },
+      intro: "throw",
+      help: "$scale(1.5)mission:\nget to the exit!\n\nuse the stones to reach it\n\npush a stone and it will fall down\nif nothing is below it\n\nbut remember:\nyou decide where down and below is!",
+      player: { position: { x: 0, y: 1, z: 2 }, orientation: "throwStart", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 0, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "wall" }, space: "position", at: [{ x: -2, y: 0, z: 2 }] },
+        { clone: { type: "stone" }, space: "position", at: [
+          { x: 0, y: 1, z: 3 },
+          { x: 0, y: -1, z: 3 }
+        ] }
+      ]
+    }
+  };
 
   var colorSchemes = {
     tron_scheme: {
@@ -277,5 +447,5 @@
     }
   };
 
-  return { themes: themes, levelDefinitions: levelDefinitions, colorSchemes: colorSchemes };
+  return { themes: themes, levelDefinitions: levelDefinitions, levelTemplates: levelTemplates, colorSchemes: colorSchemes };
 }));

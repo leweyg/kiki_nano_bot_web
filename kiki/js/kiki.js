@@ -9,6 +9,7 @@
   staticData = staticData || {};
   var themes = staticData.themes || ["mint", "copper", "sky", "violet", "lime", "coral"];
   var colorSchemes = staticData.colorSchemes || {};
+  var levelTemplates = staticData.levelTemplates || {};
   var actionTimings = {
     "move forward": 200,
     "move backward": 200,
@@ -38,32 +39,6 @@
       y: position.y + Math.floor(size.y / 2),
       z: position.z + Math.floor(size.z / 2)
     };
-  }
-
-  function pos(x, y, z) { return { x: x, y: y, z: z }; }
-  function center(size) { return pos(Math.floor(size.x / 2), Math.floor(size.y / 2), Math.floor(size.z / 2)); }
-  function inside(size, position) {
-    return position.x >= 0 && position.y >= 0 && position.z >= 0 &&
-      position.x < size.x && position.y < size.y && position.z < size.z;
-  }
-  function objectSpec(type, coordinates, extra) {
-    var object = { type: type, coordinates: copyPosition(coordinates) };
-    if (extra) Object.keys(extra).forEach(function (name) { object[name] = extra[name]; });
-    return object;
-  }
-  function addObjectLine(size, objects, type, start, end, extra) {
-    var dx = end.x - start.x;
-    var dy = end.y - start.y;
-    var dz = end.z - start.z;
-    var steps = Math.max(Math.abs(dx), Math.abs(dy), Math.abs(dz));
-    for (var index = 0; index <= steps; index += 1) {
-      var coordinates = pos(
-        Math.round(start.x + dx * index / steps),
-        Math.round(start.y + dy * index / steps),
-        Math.round(start.z + dz * index / steps)
-      );
-      if (inside(size, coordinates)) objects.push(objectSpec(type, coordinates, extra));
-    }
   }
 
   function applyDefinition(level, definition) {
@@ -101,242 +76,77 @@
     return mergeColorScheme(defaultScheme, requestedScheme);
   }
 
-  function makeIndex00StartLevel(index, definition) {
-    var size = { x: 7, y: 7, z: 11 };
-    var objectSpecs = [
-      { type: "wall", position: { x: 0, y: 0, z: -2 } },
-      { type: "wall", position: { x: 0, y: 0, z: -4 } },
-      { type: "wall", position: { x: 0, y: 0, z: 1 } }
-    ];
-    var exits = [{ name: "exit", active: true, position: { x: 0, y: 0, z: 3 } }];
-    objectSpecs.forEach(function (object) { object.coordinates = decenter(size, object.position); });
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return applyDefinition({
-      id: "start",
-      title: "start",
-      index: index,
-      theme: "mint",
-      source: "kiki/py/levels/start.py",
-      scheme: "default_scheme",
-      size: size,
-      intro: "start",
-      help: [
-        "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\njump on the stones",
-        "to jump,\npress \"$key(jump)\"\nwhile moving",
-        "to move, press \"$key(move forward)\" or \"$key(move backward)\",\n\nto turn, press \"$key(turn left)\" or \"$key(turn right)\""
-      ],
-      player: {
-        coordinates: { x: 3, y: 0, z: 3 },
-        orientation: "roty90",
-        nostatus: false
-      },
-      start: { x: 3, y: 0, z: 3 },
-      exits: exits,
-      exit: exits[0].coordinates,
-      objects: objectSpecs,
-      walls: objectSpecs.map(function (object) { return object.coordinates; })
-    }, definition);
+  function cloneValue(value) {
+    if (Array.isArray(value)) return value.map(cloneValue);
+    if (value && typeof value === "object") {
+      var clone = {};
+      Object.keys(value).forEach(function (key) { clone[key] = cloneValue(value[key]); });
+      return clone;
+    }
+    return value;
   }
 
-  function makeIndex01StepsLevel(index, definition) {
-    var size = { x: 7, y: 7, z: 13 };
-    var objectSpecs = [
-      { type: "wall", position: { x: 0, y: 0, z: 3 } },
-      { type: "wall", position: { x: 0, y: -1, z: 1 } },
-      { type: "wall", position: { x: 0, y: -2, z: -1 } },
-      { type: "wall", position: { x: 0, y: -3, z: -3 } }
-    ];
-    var exits = [{ name: "exit", active: true, position: { x: 0, y: 1, z: 3 } }];
-    objectSpecs.forEach(function (object) { object.coordinates = decenter(size, object.position); });
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return applyDefinition({
-      id: "steps",
-      title: "steps",
-      index: index,
-      theme: "sky",
-      source: "kiki/py/levels/steps.py",
-      scheme: "blue_scheme",
-      size: size,
-      intro: "steps",
-      help: [
-        "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\njump on the stones",
-        "to jump,\npress \"$key(jump)\"\nwhile moving",
-        "to move, press \"$key(move forward)\" or \"$key(move backward)\",\n\nto turn, press \"$key(turn left)\" or \"$key(turn right)\""
-      ],
-      player: { coordinates: { x: 3, y: 0, z: 6 }, nostatus: false },
-      start: { x: 3, y: 0, z: 6 },
-      exits: exits,
-      exit: exits[0].coordinates,
-      objects: objectSpecs,
-      walls: objectSpecs.map(function (object) { return object.coordinates; })
-    }, definition);
+  function coordinatesFromTemplate(size, space, value) {
+    if (value.coordinates) return copyPosition(value.coordinates);
+    if (value.position) return decenter(size, value.position);
+    if (space === "position") return decenter(size, value);
+    return copyPosition(value);
   }
 
-  function makeIndex02MoveLevel(index, definition) {
-    var size = { x: 7, y: 7, z: 7 };
-    var stones = [
-      { x: 2, y: 4, z: 0 }, { x: 4, y: 4, z: 0 }, { x: 4, y: 2, z: 0 }, { x: 2, y: 2, z: 0 },
-      { x: 2, y: 3, z: 0 }, { x: 4, y: 3, z: 0 }, { x: 3, y: 2, z: 0 }, { x: 3, y: 4, z: 0 },
-      { x: 3, y: 3, z: 1 }
-    ];
-    var objects = stones.map(function (coordinates) { return { type: "stone", coordinates: coordinates }; });
-    objects.push({ type: "switch", name: "exit switch", active: false, toggles: ["exit"], coordinates: { x: 3, y: 3, z: 0 } });
-    var exits = [{ name: "exit", active: false, position: { x: 0, y: 0, z: 0 } }];
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return applyDefinition({
-      id: "move",
-      title: "move",
-      index: index,
-      theme: "coral",
-      source: "kiki/py/levels/move.py",
-      scheme: "red_scheme",
-      size: size,
-      intro: "move",
-      help: [
-        "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the switch\n\nto activate the switch,\nshoot it\n\nto be able to shoot the switch,\nmove the stone",
-        "to move a stone, press \"$key(push)\" while moving\n\nto shoot, press \"$key(shoot)\""
-      ],
-      player: { coordinates: { x: 3, y: 5, z: 5 }, orientation: "roty180", nostatus: false },
-      start: { x: 3, y: 5, z: 5 },
-      exits: exits,
-      exit: exits[0].coordinates,
-      objects: objects,
-      walls: []
-    }, definition);
-  }
-
-  function makeIndex03ElectroLevel(index, definition) {
-    var size = { x: 9, y: 7, z: 9 };
-    var c = center(size);
-    var objects = [];
-    var exits = [{ name: "exit", active: false, position: pos(0, 0, 0) }];
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-
-    addObjectLine(size, objects, "wireStone", decenter(size, pos(-2, Math.floor(size.y / 2), 0)), decenter(size, pos(-2, 0, 0)));
-    addObjectLine(size, objects, "wireStone", decenter(size, pos(2, Math.floor(size.y / 2), 0)), decenter(size, pos(2, 0, 0)));
-    addObjectLine(size, objects, "wireStone", decenter(size, pos(2, 0, 0)), decenter(size, pos(0, 0, 0)));
-    addObjectLine(size, objects, "wireStone", decenter(size, pos(-2, 0, 0)), decenter(size, pos(0, 0, 0)));
-
-    objects.push(objectSpec("gear", pos(c.x - 1, 0, c.z - 1), { face: "PY" }));
-    objects.push(objectSpec("generator", pos(c.x + 1, 0, c.z + 1), { face: "PY", active: true }));
-    objects.push(objectSpec("motorCylinder", pos(c.x, 1, c.z), { face: "PY" }));
-    objects.push(objectSpec("motorGear", pos(c.x, 0, c.z), { face: "PY" }));
-
-    addObjectLine(size, objects, "wire", pos(c.x - 1, 0, c.z - 2), pos(c.x + 2, 0, c.z - 2), { face: "PY", connections: 10 });
-    addObjectLine(size, objects, "wire", pos(c.x - 1, 0, c.z + 2), pos(c.x + 2, 0, c.z + 2), { face: "PY", connections: 10 });
-    addObjectLine(size, objects, "wire", pos(c.x - 2, 0, c.z - 1), pos(c.x - 2, 0, c.z + 2), { face: "PY", connections: 5 });
-    addObjectLine(size, objects, "wire", pos(c.x + 2, 0, c.z - 1), pos(c.x + 2, 0, c.z + 2), { face: "PY", connections: 5 });
-    objects.push(objectSpec("wire", pos(c.x - 2, 0, c.z - 2), { face: "PY", connections: 6 }));
-    objects.push(objectSpec("wire", pos(c.x - 2, 0, c.z + 2), { face: "PY", connections: 3 }));
-    objects.push(objectSpec("wire", pos(c.x + 2, 0, c.z + 2), { face: "PY", connections: 9 }));
-    objects.push(objectSpec("wire", pos(c.x + 2, 0, c.z - 2), { face: "PY", connections: 12 }));
-
-    addObjectLine(size, objects, "wire", pos(0, 0, c.z), pos(0, size.y, c.z), { face: "PX", connections: 5 });
-    addObjectLine(size, objects, "wire", pos(size.x - 1, 0, c.z), pos(size.x - 1, size.y, c.z), { face: "NX", connections: 5 });
-    addObjectLine(size, objects, "wire", pos(0, size.y - 1, c.z), pos(c.x - 2, size.y - 1, c.z), { face: "NY", connections: 10 });
-    addObjectLine(size, objects, "wire", pos(size.x - 2, size.y - 1, c.z), pos(size.x, size.y - 1, c.z), { face: "NY", connections: 10 });
-    addObjectLine(size, objects, "wire", pos(0, 0, c.z), pos(c.x - 2, 0, c.z), { face: "PY", connections: 10 });
-    addObjectLine(size, objects, "wire", pos(size.x - 2, 0, c.z), pos(size.x, 0, c.z), { face: "PY", connections: 10 });
-    objects.push(objectSpec("wire", pos(c.x - 2, 0, c.z), { face: "PY", connections: 13 }));
-    objects.push(objectSpec("wire", pos(c.x + 2, 0, c.z), { face: "PY", connections: 7 }));
-    objects = objects.filter(function (object) {
-      return !(object.type === "wireStone" && object.coordinates.x === exits[0].coordinates.x &&
-        object.coordinates.y === exits[0].coordinates.y && object.coordinates.z === exits[0].coordinates.z);
+  function templateInstanceOverrides(value) {
+    var overrides = {};
+    Object.keys(value || {}).forEach(function (key) {
+      if (key !== "coordinates" && key !== "position") overrides[key] = cloneValue(value[key]);
     });
-
-    return applyDefinition({
-      id: "electro",
-      title: "electro",
-      index: index,
-      theme: "lime",
-      source: "kiki/py/levels/electro.py",
-      scheme: "metal_scheme",
-      size: size,
-      intro: "electro",
-      powerCondition: "connectedMotor",
-      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"],
-      help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit\nfeed it with electricity:\n\nconnect the generator\nwith the motor",
-      player: { coordinates: pos(2, 0, 4), orientation: "rotz180", nostatus: false },
-      start: pos(2, 0, 4),
-      exits: exits,
-      exit: exits[0].coordinates,
-      objects: objects,
-      walls: []
-    }, definition);
+    return overrides;
   }
 
-  function makeIndex04ElevateLevel(index, definition) {
-    var size = { x: 9, y: 5, z: 7 };
-    var c = center(size);
-    var objects = [];
-    var exits = [{ name: "exit", active: false, position: pos(2, -2, 0) }];
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-
-    objects.push(objectSpec("motorGear", pos(c.x - 3, size.y - 1, c.z), { face: "NY" }));
-    objects.push(objectSpec("motorCylinder", pos(c.x - 3, size.y - 2, c.z), { face: "NY" }));
-    objects.push(objectSpec("generator", pos(c.x + 2, 1, c.z - 1), { face: "NY", active: true, circuitPart: true }));
-    objects.push(objectSpec("gear", pos(c.x + 1, 1, c.z + 1), { face: "NY", circuitPart: true }));
-    objects.push(objectSpec("gear", pos(c.x, 1, c.z - 1), { face: "NY", circuitPart: true }));
-    objects.push(objectSpec("gear", pos(c.x - 1, 1, c.z + 1), { face: "NY", circuitPart: true }));
-    objects.push(objectSpec("gear", pos(c.x - 2, 1, c.z - 1), { face: "NY", circuitPart: true }));
-
-    addObjectLine(size, objects, "wire", pos(c.x + 2, size.y - 1, 0), pos(c.x + 2, size.y - 1, size.z), { face: "NY", connections: "vertical" });
-    addObjectLine(size, objects, "wire", pos(c.x + 2, 0, 0), pos(c.x + 2, 0, size.z), { face: "PY", connections: "vertical" });
-    addObjectLine(size, objects, "wire", pos(c.x + 2, 0, 0), pos(c.x + 2, size.y, 0), { face: "PZ", connections: "vertical" });
-    addObjectLine(size, objects, "wire", pos(c.x + 2, 0, size.z - 1), pos(c.x + 2, size.y, size.z - 1), { face: "NZ", connections: "vertical" });
-
-    objects.push(objectSpec("bomb", pos(c.x + 2, 0, c.z - 1)));
-    objects.push(objectSpec("bomb", pos(c.x + 1, 0, c.z + 1)));
-    objects.push(objectSpec("bomb", pos(c.x, 0, c.z - 1)));
-    objects.push(objectSpec("bomb", pos(c.x - 1, 0, c.z + 1)));
-    objects.push(objectSpec("bomb", pos(c.x - 2, 0, c.z - 1)));
-
-    return applyDefinition({
-      id: "elevate",
-      title: "elevate",
-      index: index,
-      theme: "copper",
-      source: "kiki/py/levels/elevate.py",
-      scheme: "bronze_scheme",
-      size: size,
-      intro: "elevate",
-      powerCondition: "elevatedCircuit",
-      solverActions: ["move forward", "move backward", "turn left", "turn right", "shoot"],
-      help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity\n\nuse the bombs\nto elevate the gears\nand the generator\n\nthe bombs will detonate\nif you shoot them",
-      player: { coordinates: decenter(size, pos(3, -2, 0)), orientation: "roty90", nostatus: false },
-      start: decenter(size, pos(3, -2, 0)),
-      exits: exits,
-      exit: exits[0].coordinates,
-      objects: objects,
-      walls: []
-    }, definition);
+  function expandTemplateInstances(size, groups) {
+    var instances = [];
+    (groups || []).forEach(function (group) {
+      var clone = cloneValue(group.clone || {});
+      (group.at || []).forEach(function (location) {
+        var instance = cloneValue(clone);
+        var overrides = templateInstanceOverrides(location);
+        Object.keys(overrides).forEach(function (key) { instance[key] = overrides[key]; });
+        instance.coordinates = coordinatesFromTemplate(size, group.space, location);
+        instances.push(instance);
+      });
+    });
+    return instances;
   }
 
-  function makeIndex05ThrowLevel(index, definition) {
-    var size = { x: 5, y: 7, z: 7 };
-    var objects = [
-      objectSpec("wall", decenter(size, pos(-2, 0, 2))),
-      objectSpec("stone", decenter(size, pos(0, 1, 3))),
-      objectSpec("stone", decenter(size, pos(0, -1, 3)))
-    ];
-    var exits = [{ name: "exit", active: true, position: pos(0, 0, 0) }];
-    exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
+  function compileTemplatePlayer(size, playerTemplate) {
+    var player = cloneValue(playerTemplate || {});
+    player.coordinates = coordinatesFromTemplate(size, player.coordinates ? "coordinates" : "position", player);
+    delete player.position;
+    return player;
+  }
+
+  function compileLevelTemplate(template, definition) {
+    var size = cloneValue(template.size);
+    var player = compileTemplatePlayer(size, template.player);
+    var start = template.start ? coordinatesFromTemplate(size, template.start.coordinates ? "coordinates" : "position", template.start) : copyPosition(player.coordinates);
+    var exits = expandTemplateInstances(size, template.exits);
+    var objects = expandTemplateInstances(size, template.objects);
     return applyDefinition({
-      id: "throw",
-      title: "throw",
-      index: index,
-      theme: "violet",
-      source: "kiki/py/levels/throw.py",
-      scheme: "tron_scheme",
+      id: definition.id,
+      title: definition.title,
+      index: definition.index,
+      theme: definition.theme,
+      source: definition.source,
+      scheme: definition.scheme,
       size: size,
-      intro: "throw",
-      help: "$scale(1.5)mission:\nget to the exit!\n\nuse the stones to reach it\n\npush a stone and it will fall down\nif nothing is below it\n\nbut remember:\nyou decide where down and below is!",
-      player: { coordinates: decenter(size, pos(0, 1, 2)), orientation: "throwStart", nostatus: false },
-      start: decenter(size, pos(0, 1, 2)),
+      intro: template.intro,
+      powerCondition: template.powerCondition,
+      solverActions: cloneValue(template.solverActions),
+      help: cloneValue(template.help),
+      player: player,
+      start: start,
       exits: exits,
-      exit: exits[0].coordinates,
+      exit: exits[0] && copyPosition(exits[0].coordinates),
       objects: objects,
-      walls: objects.filter(function (object) { return object.type === "wall"; }).map(function (object) { return object.coordinates; })
+      walls: objects.filter(function (object) { return object.type === "wall"; }).map(function (object) { return copyPosition(object.coordinates); })
     }, definition);
   }
 
@@ -379,16 +189,8 @@
   }
 
   function makeLevelFromDefinition(definition) {
-    var levelFactories = {
-      makeIndex00StartLevel: makeIndex00StartLevel,
-      makeIndex01StepsLevel: makeIndex01StepsLevel,
-      makeIndex02MoveLevel: makeIndex02MoveLevel,
-      makeIndex03ElectroLevel: makeIndex03ElectroLevel,
-      makeIndex04ElevateLevel: makeIndex04ElevateLevel,
-      makeIndex05ThrowLevel: makeIndex05ThrowLevel
-    };
-    var createLevel = definition.factory && levelFactories[definition.factory];
-    var level = createLevel ? createLevel(definition.index, definition) : makeGeneratedLevel(definition.id, definition.index, definition);
+    var template = levelTemplates[definition.id];
+    var level = template ? compileLevelTemplate(template, definition) : makeGeneratedLevel(definition.id, definition.index, definition);
     level.colorScheme = getColorScheme(level.scheme);
     return level;
   }
