@@ -73,6 +73,12 @@
       border-color: var(--coral)
     }
 
+    a.secondary {
+      border: 0px;
+      border-color: transparent;
+      text-decoration: underline;
+    }
+
     section {
       border-top: 1px solid var(--line);
       padding-top: 24px;
@@ -151,13 +157,15 @@
 
 <body>
   <main>
-    <div class="eyebrow">A small machine with a big way out</div>
-    <h1>Kiki<br>the Nano Bot</h1>
-    <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version
+    <h3><pre>Kiki the Nano Bot</pre></h3>
+    <div class="eyebrow">3D puzzle exploring game, combining Sokoban and Kula-World</div>
+    
+    <p>Navigate a chain of compact puzzle arenas, push through the walls, activate the chained components, and find the glowing exit. The web version
       keeps the game state shared between the 3D client and an offline validator.</p>
-    <div class="actions"><a class="primary" href="play.html">Play the first level</a><a id="continue-link"
+    <div class="actions"><a class="primary" href="play.html">Play</a><a id="continue-link"
         href="play.html">Continue @ 01 start</a><a id="source-link"
-        href="https://github.com/leweyg/kiki_nano_bot_web">Source code</a></div>
+        href="https://github.com/leweyg/kiki_nano_bot_web" class="secondary">Code</a>
+      <a href="https://kiki.sourceforge.net/" class="secondary">Original</a></div>
     <section>
       <div class="eyebrow">50 arenas</div>
       <h2>Choose a level</h2>

@@ -289,7 +289,7 @@
   <div id="hud"></div>
   <div class="controls">
     <div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button
-        class="control-button" id="shoot">SHOOT</button></div>
+        class="control-button" id="shoot">ENERGY</button></div>
     <div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span
         class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span
         class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob"
@@ -595,7 +595,7 @@
     let advancingLevel = false;
     let suppressInputUntil = Number(sessionStorage.getItem('kikiSuppressInputUntil') || 0);
     sessionStorage.removeItem('kikiSuppressInputUntil');
-    const heldInput = { move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null, push: false };
+    const heldInput = { move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null };
     const JUMP_GRACE_MS = 220;
     const DEBUG_ENABLED_KEY = 'kiki.debug.path.enabled';
     const DEBUG_LATEST_KEY = 'kiki.debug.path.latest';
@@ -1151,8 +1151,6 @@
       return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
     }
     function actionForMove(direction) {
-      if (heldInput.push && direction === 'up') return 'push forward';
-      if (heldInput.push && direction === 'down') return 'push backward';
       return canJumpForward(direction) ? 'jump forward' : direction;
     }
     function clearPendingJump() {
@@ -1310,7 +1308,22 @@
       if (event.key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); return; }
       if (event.key === 'Shift') {
         event.preventDefault();
-        heldInput.push = true;
+        if (!event.repeat) act('jump forward');
+        return;
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        if (!event.repeat) act('jump far forward');
+        return;
+      }
+      if (event.key === '/' || event.code === 'Slash') {
+        event.preventDefault();
+        if (!event.repeat) act('shoot');
+        return;
+      }
+      if (event.key === "'" || event.code === 'Quote') {
+        event.preventDefault();
+        if (!event.repeat) act(heldInput.move === 'down' ? 'push backward' : 'push forward');
         return;
       }
       if (event.key === ' ') {
@@ -1338,7 +1351,6 @@
       const map = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
       if (event.key === 'Shift') {
         event.preventDefault();
-        heldInput.push = false;
         return;
       }
       if (event.key === ' ') {
