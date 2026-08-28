@@ -10,6 +10,8 @@
   var themes = staticData.themes || ["mint", "copper", "sky", "violet", "lime", "coral"];
   var colorSchemes = staticData.colorSchemes || {};
   var levelTemplates = staticData.levelTemplates || {};
+  var gameItems = staticData.gameItems || [];
+  var sourceUrl = staticData.sourceUrl || "";
   var actionTimings = {
     "move forward": 200,
     "move backward": 200,
@@ -756,6 +758,8 @@
     levels: levels,
     levelDefinitions: levelDefinitions,
     levelNames: levelNames,
+    gameItems: gameItems,
+    sourceUrl: sourceUrl,
     colorSchemes: colorSchemes,
     actionTimings: actionTimings,
     getColorScheme: getColorScheme,

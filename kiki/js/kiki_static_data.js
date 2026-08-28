@@ -228,6 +228,139 @@
     }
   };
 
+  var gameItems = [
+    {
+      id: "player",
+      title: "Kiki",
+      firstLevel: "start",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "The controlled bot. Movement, turning, jumping, falling, shooting, and pushing are implemented; energy, health, death, and richer status systems are still future work."
+    },
+    {
+      id: "exit",
+      title: "Exit gate",
+      firstLevel: "start",
+      status: "ported",
+      statusLabel: "Ported",
+      description: "The level goal. Active and inactive gates work, including activation by switches and simplified power checks."
+    },
+    {
+      id: "wall",
+      title: "Wall",
+      type: "wall",
+      firstLevel: "start",
+      status: "ported",
+      statusLabel: "Ported",
+      description: "Static blocking cells used as floors, walls, ledges, and puzzle geometry."
+    },
+    {
+      id: "stone",
+      title: "Stone",
+      type: "stone",
+      firstLevel: "move",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Pushable blocks with gravity. Core pushing and falling behavior is available; original per-stone colors and special variants are not complete yet."
+    },
+    {
+      id: "switch",
+      title: "Switch",
+      type: "switch",
+      firstLevel: "move",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Shootable trigger. Basic toggling works for exits; counters, actions, and multi-switch scripts from later levels are still simplified."
+    },
+    {
+      id: "bullet",
+      title: "Bullet",
+      firstLevel: "move",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Straight-line shots can hit switches and bombs and have a visible effect. Full original collision responses and sound behavior are still incomplete."
+    },
+    {
+      id: "wireStone",
+      title: "Wire stone",
+      type: "wireStone",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "A pushable conductive stone. It participates in simplified circuit logic and block movement."
+    },
+    {
+      id: "wire",
+      title: "Wire",
+      type: "wire",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Conductive face segment. Static circuit propagation works, but original connection geometry and animation are only approximated."
+    },
+    {
+      id: "gear",
+      title: "Gear",
+      type: "gear",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Conductive circuit object with a simple visual mesh. Mechanical rotation and full original behavior are not complete."
+    },
+    {
+      id: "generator",
+      title: "Generator",
+      type: "generator",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Power source for circuit puzzles. It feeds the simplified power graph used by current JavaScript levels."
+    },
+    {
+      id: "motorGear",
+      title: "Motor gear",
+      type: "motorGear",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Powered circuit endpoint. It can satisfy current exit-power conditions, with simplified mechanics and visuals."
+    },
+    {
+      id: "motorCylinder",
+      title: "Motor cylinder",
+      type: "motorCylinder",
+      firstLevel: "electro",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Powered circuit endpoint paired with motor gears. It has a basic powered visual state."
+    },
+    {
+      id: "bomb",
+      title: "Bomb",
+      type: "bomb",
+      firstLevel: "elevate",
+      status: "partial",
+      statusLabel: "Playable",
+      description: "Shootable explosive object. It can push adjacent objects and chain into other bombs, but the original splitter/explosion details are simplified."
+    },
+    {
+      id: "light",
+      title: "Light",
+      firstLevel: "borg",
+      status: "missing",
+      statusLabel: "Not ported",
+      description: "Original level lighting object. Browser lighting currently comes from the renderer, not from level-authored light objects."
+    },
+    {
+      id: "mutant",
+      title: "Mutant bot",
+      firstLevel: "borg",
+      status: "missing",
+      statusLabel: "Not ported",
+      description: "Enemy bot from the original game. Movement AI, hazards, damage, and death behavior are not implemented in the JavaScript port yet."
+    }
+  ];
+
   var colorSchemes = {
     tron_scheme: {
       KikiWorld: { base: [0.0, 0.0, 0.3], plate: [0.05, 0.05, 0.2] },
@@ -447,5 +580,12 @@
     }
   };
 
-  return { themes: themes, levelDefinitions: levelDefinitions, levelTemplates: levelTemplates, colorSchemes: colorSchemes };
+  return {
+    themes: themes,
+    levelDefinitions: levelDefinitions,
+    levelTemplates: levelTemplates,
+    gameItems: gameItems,
+    sourceUrl: "https://github.com/leweyg/kiki_nano_bot_web",
+    colorSchemes: colorSchemes
+  };
 }));
