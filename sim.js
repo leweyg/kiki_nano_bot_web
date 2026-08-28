@@ -40,6 +40,7 @@ function assertStartJumpExitSweep() {
 Kiki.levels.forEach(function (level) {
   var path = Kiki.solve(level);
   var game = new Kiki.Game(level);
+  game.applyGravity();
   if (!path) { failed.push(level.id + " (no route)"); return; }
   path.forEach(function (action) { game.action(action); });
   if (!game.won) failed.push(level.id + " (route did not finish)");

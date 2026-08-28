@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
 <style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--paper);color:var(--ink);font:14px monospace}body{position:fixed;inset:0}canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none}button,a{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,header button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;width:min(100vw - 24px,560px);display:grid;grid-template-columns:minmax(72px,96px) minmax(148px,220px) minmax(72px,96px);gap:14px;align-items:end;justify-content:center;transform:translateX(-50%);touch-action:none}.action-stack{display:flex;flex-direction:column;gap:8px}.jump-actions{gap:0}.control-button,.touchpad{color:#fff;background:transparent;font:inherit;text-decoration:none}.control-button{min-height:46px;min-width:72px;padding:8px 10px;border:1px solid rgba(224,224,192,.72);border-radius:6px;line-height:1.1}.jump-actions .control-button{border-radius:0}.jump-actions .control-button:first-child{border-radius:6px 6px 0 0}.jump-actions .control-button:last-child{border-radius:0 0 6px 6px}.jump-actions .control-button:not(:last-child){border-bottom:0}.touchpad{position:relative;aspect-ratio:1/1;width:100%;min-width:148px;max-width:220px;border:0;border-radius:8px;display:grid;place-items:center;touch-action:none}.touchpad::before,.touchpad::after{content:"";position:absolute;background:rgba(224,224,192,.28)}.touchpad::before{left:18%;right:18%;top:50%;height:1px}.touchpad::after{top:18%;bottom:18%;left:50%;width:1px}.touchpad-mark{position:absolute;color:#e0e0c0;opacity:.88}.touchpad-mark.up{top:12px}.touchpad-mark.down{bottom:12px}.touchpad-mark.left{left:14px}.touchpad-mark.right{right:14px}.touchpad-knob{width:42px;height:42px;border:1px solid rgba(255,128,0,.9);border-radius:50%;transform:translate(var(--pad-x,0),var(--pad-y,0));transition:transform 80ms linear}.touchpad.active .touchpad-knob{transition:none}.won{border-color:#dede45!important;color:#ffff8a!important}@media(max-width:600px){header{padding:12px}.controls{bottom:calc(10px + env(safe-area-inset-bottom));width:100%;padding:0 10px;grid-template-columns:minmax(62px,76px) minmax(136px,1fr) minmax(62px,76px);gap:8px}.control-button{min-width:62px;min-height:42px;padding:7px 6px}.touchpad{min-width:136px;max-width:190px;justify-self:center}}
-</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">JUMP<br>+FAR</button><button class="control-button" data-action="jump forward">JUMP<br>+FWD</button><button class="control-button" data-action="jump">JUMP</button></div></div>
+</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">+FAR</button><button class="control-button" data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div></div>
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
@@ -29,6 +29,8 @@ cameraLight.target = new THREE.Object3D();
 scene.add(cameraLight, cameraLight.target);
 const board = new THREE.Group();
 scene.add(board);
+const effects = new THREE.Group();
+scene.add(effects);
 const DEFAULT_GATE_COLOR = 0xffff00;
 const materials = {
   floorA: new THREE.MeshStandardMaterial({color: 0x555555, roughness: .55, metalness: .05}),
@@ -38,6 +40,13 @@ const materials = {
   switchRing: new THREE.MeshStandardMaterial({color: 0xa0b8ff, emissive: 0x182c64, emissiveIntensity: .25, roughness: .34}),
   switchCore: new THREE.MeshStandardMaterial({color: 0x80f0ff, emissive: 0x00a0ff, emissiveIntensity: .7, roughness: .24}),
   switchOffCore: new THREE.MeshStandardMaterial({color: 0x39465c, emissive: 0x101824, emissiveIntensity: .25, roughness: .48}),
+  wire: new THREE.MeshStandardMaterial({color: 0x2aaad0, emissive: 0x082530, emissiveIntensity: .18, roughness: .38}),
+  wireActive: new THREE.MeshStandardMaterial({color: 0x80f0ff, emissive: 0x00c8ff, emissiveIntensity: .75, roughness: .24}),
+  gear: new THREE.MeshStandardMaterial({color: 0xc9c4aa, metalness: .18, roughness: .36}),
+  generator: new THREE.MeshStandardMaterial({color: 0x77d68d, emissive: 0x0c3a16, emissiveIntensity: .32, metalness: .12, roughness: .32}),
+  motor: new THREE.MeshStandardMaterial({color: 0xd0a14a, emissive: 0x4a2a06, emissiveIntensity: .22, metalness: .16, roughness: .34}),
+  bomb: new THREE.MeshStandardMaterial({color: 0x2f3038, emissive: 0x4a1010, emissiveIntensity: .3, roughness: .28}),
+  bullet: new THREE.MeshStandardMaterial({color: 0xffa35a, emissive: 0xff5c00, emissiveIntensity: .9, transparent: true, opacity: .82, roughness: .2}),
   borderA: new THREE.MeshStandardMaterial({color: 0x777777, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
   borderB: new THREE.MeshStandardMaterial({color: 0x8a8a8a, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
   botBody: new THREE.MeshStandardMaterial({color: 0xff8000, roughness: .42, metalness: .08}),
@@ -151,6 +160,51 @@ function addSwitch(level, object){
   group.position.copy(centered(level, object.coordinates, 0));
   board.add(group);
 }
+function addWire(level, object){
+  const size = object.face === 'PX' || object.face === 'NX' ? new THREE.Vector3(.08, .72, .18)
+    : object.face === 'PZ' || object.face === 'NZ' ? new THREE.Vector3(.18, .72, .08)
+    : new THREE.Vector3(.72, .08, .18);
+  const mesh = addBox(centered(level, object.coordinates, 0), size, object.active || object.powered ? materials.wireActive : materials.wire);
+  if (object.face === 'PX') mesh.position.x += .45;
+  else if (object.face === 'NX') mesh.position.x -= .45;
+  else if (object.face === 'PZ') mesh.position.z += .45;
+  else if (object.face === 'NZ') mesh.position.z -= .45;
+  else if (object.face === 'NY') mesh.position.y -= .45;
+  else mesh.position.y += .45;
+}
+function addWireStone(level, object){
+  addCube(centered(level, object.coordinates, 0), .9, materials.stone);
+  addWire(level, Object.assign({}, object, {type: 'wire', active: object.powered}));
+}
+function addGear(level, object){
+  const group = new THREE.Group();
+  const teeth = new THREE.Mesh(new THREE.TorusGeometry(.32, .06, 8, 12), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
+  const hub = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .18, 16), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
+  hub.rotation.x = Math.PI / 2;
+  group.add(teeth, hub);
+  group.position.copy(centered(level, object.coordinates, 0));
+  board.add(group);
+}
+function addMotorCylinder(level, object){
+  const group = new THREE.Group();
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motor);
+  const rod = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .88, 12), object.powered ? materials.wireActive : materials.gear);
+  shell.rotation.x = Math.PI / 2;
+  rod.rotation.x = Math.PI / 2;
+  rod.position.z = object.powered ? .12 : 0;
+  group.add(shell, rod);
+  group.position.copy(centered(level, object.coordinates, 0));
+  board.add(group);
+}
+function addBomb(level, object){
+  const group = new THREE.Group();
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), materials.bomb);
+  const belt = new THREE.Mesh(new THREE.TorusGeometry(.35, .025, 8, 24), materials.wire);
+  belt.rotation.x = Math.PI / 2;
+  group.add(core, belt);
+  group.position.copy(centered(level, object.coordinates, 0));
+  board.add(group);
+}
 function addGate(level, exit){
   const color = DEFAULT_GATE_COLOR;
   const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: exit.active ? .4 : .08, roughness: .35, transparent: true, opacity: exit.active ? 1 : .18});
@@ -165,12 +219,16 @@ function addGate(level, exit){
 }
 const botMesh = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
 botMesh.matrixAutoUpdate = false;
+const bulletMesh = new THREE.Mesh(new THREE.SphereGeometry(.1, 16, 10), materials.bullet);
+bulletMesh.visible = false;
+effects.add(bulletMesh);
 const TIRE_VISUAL_SCALE = .25;
 const TIRE_HALF_TURN = Math.PI * TIRE_VISUAL_SCALE;
 const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2 * TIRE_VISUAL_SCALE;
 let tireAngles = {left: 0, right: 0};
 let visualState = withTires(snapshot(game), tireAngles);
 let activeAnimation = null;
+let activeShot = null;
 let queuedAction = null;
 let cameraReady = false;
 let advancingLevel = false;
@@ -189,7 +247,12 @@ function buildStaticScene(){
   (game.objects || []).forEach(object => {
     if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall);
     else if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
+    else if (object.type === 'wireStone') addWireStone(level, object);
+    else if (object.type === 'wire') addWire(level, object);
     else if (object.type === 'switch') addSwitch(level, object);
+    else if (object.type === 'gear' || object.type === 'generator' || object.type === 'motorGear') addGear(level, object);
+    else if (object.type === 'motorCylinder') addMotorCylinder(level, object);
+    else if (object.type === 'bomb') addBomb(level, object);
   });
   (game.exits || [{active: true, coordinates: level.exit}]).forEach(exit => {
     addGate(level, exit);
@@ -448,6 +511,48 @@ function stateAtAnimation(animation, now){
   }
   return animation.to;
 }
+function startShotEffect(shot){
+  if (!shot) return;
+  activeShot = {
+    startedAt: performance.now(),
+    start: copyPosition(shot.start),
+    end: copyPosition(shot.end),
+    impact: shot.impact && copyPosition(shot.impact),
+    flyDuration: Math.max(40, shot.flyDuration || 40),
+    explodeDuration: shot.explodeDuration || 200,
+    level: game.level
+  };
+  bulletMesh.visible = true;
+  bulletMesh.scale.setScalar(1);
+}
+function updateShotEffect(now){
+  if (!activeShot) {
+    bulletMesh.visible = false;
+    return;
+  }
+  const elapsed = now - activeShot.startedAt;
+  if (elapsed <= activeShot.flyDuration) {
+    const t = Math.min(1, elapsed / activeShot.flyDuration);
+    bulletMesh.position.copy(centered(activeShot.level, lerpPosition(activeShot.start, activeShot.end, t), 0));
+    bulletMesh.scale.setScalar(1);
+    bulletMesh.material.opacity = .82;
+    bulletMesh.visible = true;
+    return;
+  }
+  const explodeElapsed = elapsed - activeShot.flyDuration;
+  if (explodeElapsed <= activeShot.explodeDuration) {
+    const t = Math.min(1, explodeElapsed / activeShot.explodeDuration);
+    const impact = activeShot.impact || activeShot.end;
+    bulletMesh.position.copy(centered(activeShot.level, impact, 0));
+    bulletMesh.scale.setScalar(1 + t * 4);
+    bulletMesh.material.opacity = .82 * (1 - t);
+    bulletMesh.visible = true;
+    return;
+  }
+  activeShot = null;
+  bulletMesh.visible = false;
+  bulletMesh.material.opacity = .82;
+}
 function finishAnimation(){
   activeAnimation = null;
   visualState = withTires(snapshot(game), tireAngles);
@@ -509,6 +614,7 @@ function draw(now){
     if (now - activeAnimation.startedAt >= activeAnimation.totalDuration) finishAnimation();
   }
   updateBot(game.level, visualState);
+  updateShotEffect(now);
   updateCamera(game.level, visualState);
   updateHud();
   renderer.render(scene, camera);
@@ -522,10 +628,12 @@ function act(direction){
   const before = game.clone();
   const from = snapshot(before);
   if (!game.action(direction)) return;
+  const shot = game.lastShot && copyPosition(game.lastShot.start) ? game.lastShot : null;
   const to = snapshot(game);
   const segments = buildAnimation(direction, from, to, before);
   startAnimation(segments, to);
   buildStaticScene();
+  if (direction === 'shoot') startShotEffect(shot);
   updateHud();
 }
 function continueHeldInput(){
