@@ -98,6 +98,8 @@ const materials = {
   gateInactive: materialFromScheme('KikiGate', 'base', '#ffff00', {emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
   gateSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true}),
   gateInactiveSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
+  mutantBody: materialFromScheme('KikiMutant', 'base', '#800000', {roughness: .46, metalness: .06}),
+  mutantTire: materialFromScheme('KikiMutant', 'tire', '#202020', {roughness: .62}),
   room: materialFromScheme('KikiWorld', 'base', '#212121', {roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide}),
   roomLine: lineMaterialFromScheme('KikiWorld', 'plate', '#808080', {transparent: true, opacity: .45})
 };
@@ -249,6 +251,12 @@ function addBomb(level, object){
   const belt = new THREE.Mesh(new THREE.TorusGeometry(.35, .025, 8, 24), materials.wire);
   belt.rotation.x = Math.PI / 2;
   group.add(core, belt);
+  group.position.copy(centered(level, object.coordinates, 0));
+  board.add(group);
+}
+function addMutant(level, object){
+  const group = KikiMeshes.createBot(THREE, {body: materials.mutantBody, tire: materials.mutantTire});
+  group.scale.setScalar(.82);
   group.position.copy(centered(level, object.coordinates, 0));
   board.add(group);
 }
@@ -471,6 +479,7 @@ function buildStaticScene(){
     else if (object.type === 'gear' || object.type === 'generator' || object.type === 'motorGear') addGear(level, object);
     else if (object.type === 'motorCylinder') addMotorCylinder(level, object);
     else if (object.type === 'bomb') addBomb(level, object);
+    else if (object.type === 'mutant') addMutant(level, object);
   });
   (game.exits || [{active: true, coordinates: level.exit}]).forEach(exit => {
     addGate(level, exit);

@@ -35,11 +35,23 @@ The proting should be firstly translating the level files into json or javascrip
 
 # Implementation Roadmap
 
-The current web files provide a working scaffold: `index.html`, `play.html`, `sim.html`, `sim.js`, and `sim_test.sh`. The current JavaScript levels are deterministic placeholder layouts, so they are useful for testing the shared state and renderer but are not yet ports of the original puzzles.
+The current web files provide a working scaffold: `index.html`, `play.html`, `sim.html`, `sim.js`, and `sim_test.sh`. The first levels are authored from the original sources, while later unported levels still fall back to deterministic placeholder layouts that are useful for testing the shared state and renderer.
 
 General iteration loop will be:
 
 - Port each level, starting at the first, check that required game world and control mechanics are working, and tested in sim, then check that the 3D rendering is as expected, and then move onto the next level. If it's clear that future feature should be implimented early do that.
+
+# Current Porting Notes
+
+The first authored JavaScript level-data pass now covers the original level sequence from `start` through `switch`, stopping before `borg`. These levels use static clone/instance groups in `kiki/js/kiki_static_data.js` rather than procedural runtime creation, and keep each level's original color scheme.
+
+Known gaps from this pass:
+
+- `escape`, `gamma`, `cube`, and `switch` have original 3D volume, but the headless solver is not yet authoritative for their full movement routes.
+- `gears` uses the current simplified circuit model. Static circuit objects render, but original wire face connectivity and animated mechanical behavior are still approximate.
+- `gamma` includes its early mutant as visible blocking volume only. Mutant AI, hazard/damage handling, and scripted behavior are deferred until the larger `borg` pass.
+- `gamma`'s color-cycling switch is represented as a switch object, but arbitrary switch callbacks are not implemented yet.
+- Multi-switch exit activation is now data-driven through declarative switch groups, but original event/action timing remains simplified.
 
 The remaining implementation work is:
 

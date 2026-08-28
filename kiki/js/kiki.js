@@ -141,6 +141,7 @@
       size: size,
       intro: template.intro,
       powerCondition: template.powerCondition,
+      switchConditions: cloneValue(template.switchConditions),
       solverActions: cloneValue(template.solverActions),
       help: cloneValue(template.help),
       player: player,
@@ -220,7 +221,8 @@
   function objectBlocks(object) {
     return object.type === "wall" || object.type === "stone" || object.type === "wireStone" ||
       object.type === "switch" || object.type === "gear" || object.type === "generator" ||
-      object.type === "motorCylinder" || object.type === "motorGear" || object.type === "bomb";
+      object.type === "motorCylinder" || object.type === "motorGear" || object.type === "bomb" ||
+      object.type === "mutant";
   }
   function isPushableObject(object) {
     return object && (object.type === "stone" || object.type === "wireStone" || object.type === "bomb");
@@ -238,7 +240,7 @@
       toggles: object.toggles ? object.toggles.slice() : undefined,
       coordinates: copyPosition(object.coordinates || object.position || object)
     };
-    ["face", "connections", "circuitPart", "powered", "splitted"].forEach(function (name) {
+    ["face", "connections", "circuitPart", "powered", "splitted", "switchGroup"].forEach(function (name) {
       if (object[name] !== undefined) clone[name] = object[name];
     });
     return clone;
@@ -250,8 +252,10 @@
   function vectorKey(a) { return a.x + "," + a.y + "," + a.z; }
   function orientationForName(name) {
     if (name === "rot0") return { dir: vec(0, 0, 1), up: vec(0, 1, 0) };
+    if (name === "roty90") return { dir: vec(1, 0, 0), up: vec(0, 1, 0) };
     if (name === "roty180") return { dir: vec(0, 0, -1), up: vec(0, 1, 0) };
     if (name === "roty270") return { dir: vec(-1, 0, 0), up: vec(0, 1, 0) };
+    if (name === "rotx180") return { dir: vec(0, 0, -1), up: vec(0, -1, 0) };
     if (name === "rotz180") return { dir: vec(-1, 0, 0), up: vec(0, -1, 0) };
     if (name === "throwStart") return { dir: vec(0, 0, -1), up: vec(1, 0, 0) };
     return { dir: vec(1, 0, 0), up: vec(0, 1, 0) };
@@ -596,6 +600,12 @@
   Game.prototype.toggleSwitch = function (object) {
     object.active = !object.active;
     (object.toggles || []).forEach(function (targetName) { this.toggleExit(targetName); }, this);
+    (this.level.switchConditions || []).forEach(function (condition) {
+      var activeCount = this.objects.filter(function (candidate) {
+        return candidate.type === "switch" && candidate.switchGroup === condition.group && candidate.active;
+      }).length;
+      this.setExitActive(condition.exit || "exit", activeCount === condition.activeCount);
+    }, this);
     this.rebuildOccupants();
   };
   Game.prototype.explodeBomb = function (bomb) {

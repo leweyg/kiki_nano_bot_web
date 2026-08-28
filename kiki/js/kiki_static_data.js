@@ -225,6 +225,197 @@
           { x: 0, y: -1, z: 3 }
         ] }
       ]
+    },
+    gold: {
+      size: { x: 3, y: 11, z: 3 },
+      intro: "gold",
+      help: "$scale(1.5)mission:\nget to the exit!\n\njump up the gold blocks",
+      player: { position: { x: 0, y: -4, z: 0 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 4, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "stone" }, space: "coordinates", at: [
+          { x: 1, y: 3, z: 1 }, { x: 1, y: 3, z: 2 }, { x: 2, y: 3, z: 1 }, { x: 2, y: 3, z: 2 },
+          { x: 1, y: 5, z: 1 }, { x: 1, y: 5, z: 2 }, { x: 2, y: 5, z: 1 }, { x: 2, y: 5, z: 2 },
+          { x: 1, y: 7, z: 1 }, { x: 1, y: 7, z: 2 }, { x: 2, y: 7, z: 1 }, { x: 2, y: 7, z: 2 },
+          { x: 1, y: 9, z: 1 }, { x: 1, y: 9, z: 2 }, { x: 2, y: 9, z: 1 }, { x: 2, y: 9, z: 2 }
+        ] }
+      ]
+    },
+    jump: {
+      size: { x: 7, y: 7, z: 13 },
+      intro: "jump",
+      help: "$scale(1.5)mission:\nget to the exit!\n\njump through the opening",
+      player: { position: { x: 0, y: 0, z: 5 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 0, z: 4 }] }
+      ],
+      objects: [
+        { clone: { type: "wall" }, space: "coordinates", at: [
+          { x: 3, y: 3, z: 1 }, { x: 3, y: 3, z: 3 }, { x: 3, y: 3, z: 6 },
+          { x: 3, y: 4, z: 10 }, { x: 4, y: 3, z: 10 }, { x: 2, y: 3, z: 10 }, { x: 3, y: 2, z: 10 }
+        ] }
+      ]
+    },
+    escape: {
+      size: { x: 7, y: 9, z: 7 },
+      intro: "escape",
+      help: "$scale(1.5)mission:\nactivate the exit!\n\nshoot the switch and escape the frame",
+      player: { position: { x: 0, y: 0, z: 0 }, orientation: "rotx180", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 0, y: -3, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "switch", name: "exit switch", active: false, toggles: ["exit"] }, space: "position", at: [
+          { x: 0, y: -2, z: 0 }
+        ] },
+        { clone: { type: "stone" }, space: "coordinates", at: [
+          { x: 3, y: 8, z: 3 }, { x: 4, y: 8, z: 3 }, { x: 3, y: 8, z: 4 }, { x: 3, y: 8, z: 2 },
+          { x: 2, y: 8, z: 3 }, { x: 1, y: 8, z: 1 }, { x: 2, y: 8, z: 1 }, { x: 3, y: 8, z: 1 },
+          { x: 4, y: 8, z: 1 }, { x: 5, y: 8, z: 1 }, { x: 5, y: 8, z: 2 }, { x: 5, y: 8, z: 3 },
+          { x: 5, y: 8, z: 4 }, { x: 5, y: 8, z: 5 }, { x: 4, y: 8, z: 5 }, { x: 3, y: 8, z: 5 },
+          { x: 2, y: 8, z: 5 }, { x: 1, y: 8, z: 5 }, { x: 1, y: 8, z: 4 }, { x: 1, y: 8, z: 3 },
+          { x: 1, y: 8, z: 2 }
+        ] },
+        { clone: { type: "wall" }, space: "coordinates", at: [
+          { x: 4, y: 4, z: 3 }, { x: 3, y: 4, z: 4 }, { x: 2, y: 4, z: 3 }, { x: 3, y: 4, z: 2 },
+          { x: 4, y: 3, z: 3 }, { x: 3, y: 3, z: 4 }, { x: 2, y: 3, z: 3 }, { x: 3, y: 3, z: 2 },
+          { x: 4, y: 3, z: 4 }, { x: 2, y: 3, z: 4 }, { x: 2, y: 3, z: 2 }, { x: 4, y: 3, z: 2 },
+          { x: 4, y: 2, z: 3 }, { x: 3, y: 2, z: 4 }, { x: 2, y: 2, z: 3 }, { x: 3, y: 2, z: 2 }
+        ] }
+      ]
+    },
+    gears: {
+      size: { x: 9, y: 9, z: 9 },
+      intro: "gears",
+      powerCondition: "connectedMotor",
+      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"],
+      help: "$scale(1.5)mission:\nactivate the exit!\n\nconnect the generator with the motor and close the circuit with the wire stones",
+      player: { position: { x: 0, y: 0, z: 0 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 0, y: 4, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "wireStone" }, space: "coordinates", at: [
+          { x: 3, y: 4, z: 4 }, { x: 5, y: 4, z: 4 }, { x: 4, y: 3, z: 4 },
+          { x: 4, y: 5, z: 4 }, { x: 4, y: 4, z: 3 }, { x: 4, y: 4, z: 5 }
+        ] },
+        { clone: { type: "gear", face: "PY" }, space: "coordinates", at: [
+          { x: 3, y: 0, z: 3 }, { x: 5, y: 0, z: 3 }, { x: 3, y: 0, z: 5 }
+        ] },
+        { clone: { type: "generator", face: "PY", active: true }, space: "coordinates", at: [{ x: 5, y: 0, z: 5 }] },
+        { clone: { type: "motorCylinder", face: "PY" }, space: "coordinates", at: [{ x: 4, y: 1, z: 4 }] },
+        { clone: { type: "motorGear", face: "PY" }, space: "coordinates", at: [{ x: 4, y: 0, z: 4 }] },
+        { clone: { type: "wire", face: "PY", connections: 10 }, space: "coordinates", at: [
+          { x: 2, y: 0, z: 1 }, { x: 3, y: 0, z: 1 }, { x: 4, y: 0, z: 1 }, { x: 5, y: 0, z: 1 }, { x: 6, y: 0, z: 1 },
+          { x: 2, y: 0, z: 7 }, { x: 3, y: 0, z: 7 }, { x: 4, y: 0, z: 7 }, { x: 5, y: 0, z: 7 }, { x: 6, y: 0, z: 7 }
+        ] },
+        { clone: { type: "wire", face: "PY", connections: 5 }, space: "coordinates", at: [
+          { x: 1, y: 0, z: 2 }, { x: 1, y: 0, z: 3 }, { x: 1, y: 0, z: 4 }, { x: 1, y: 0, z: 5 }, { x: 1, y: 0, z: 6 },
+          { x: 7, y: 0, z: 2 }, { x: 7, y: 0, z: 3 }, { x: 7, y: 0, z: 4 }, { x: 7, y: 0, z: 5 }, { x: 7, y: 0, z: 6 }
+        ] },
+        { clone: { type: "wire", face: "PY", connections: 6 }, space: "coordinates", at: [{ x: 1, y: 0, z: 1 }] },
+        { clone: { type: "wire", face: "PY", connections: 3 }, space: "coordinates", at: [{ x: 1, y: 0, z: 7 }] },
+        { clone: { type: "wire", face: "PY", connections: 9 }, space: "coordinates", at: [{ x: 7, y: 0, z: 7 }] },
+        { clone: { type: "wire", face: "PY", connections: 12 }, space: "coordinates", at: [{ x: 7, y: 0, z: 1 }] },
+        { clone: { type: "wire", face: "PX", connections: 1 }, space: "coordinates", at: [{ x: 0, y: 0, z: 4 }] },
+        { clone: { type: "wire", face: "NX", connections: 1 }, space: "coordinates", at: [{ x: 8, y: 0, z: 4 }] },
+        { clone: { type: "wire", face: "PX", connections: 5 }, space: "coordinates", at: [
+          { x: 0, y: 1, z: 4 }, { x: 0, y: 2, z: 4 }, { x: 0, y: 3, z: 4 }, { x: 0, y: 4, z: 4 },
+          { x: 0, y: 5, z: 4 }, { x: 0, y: 6, z: 4 }, { x: 0, y: 7, z: 4 }, { x: 0, y: 8, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "NX", connections: 5 }, space: "coordinates", at: [
+          { x: 8, y: 1, z: 4 }, { x: 8, y: 2, z: 4 }, { x: 8, y: 3, z: 4 }, { x: 8, y: 4, z: 4 },
+          { x: 8, y: 5, z: 4 }, { x: 8, y: 6, z: 4 }, { x: 8, y: 7, z: 4 }, { x: 8, y: 8, z: 4 }
+        ] },
+        { clone: { type: "wire", face: "NY", connections: 10 }, space: "coordinates", at: [
+          { x: 0, y: 8, z: 4 }, { x: 1, y: 8, z: 4 }, { x: 2, y: 8, z: 4 }, { x: 3, y: 8, z: 4 }, { x: 4, y: 8, z: 4 },
+          { x: 5, y: 8, z: 4 }, { x: 6, y: 8, z: 4 }, { x: 7, y: 8, z: 4 }, { x: 8, y: 8, z: 4 }
+        ] }
+      ]
+    },
+    gamma: {
+      size: { x: 10, y: 10, z: 10 },
+      intro: "gamma",
+      switchConditions: [{ group: "exitCounter", exit: "exit", activeCount: 4 }],
+      help: "$scale(1.5)mission:\nactivate the exit!\n\nshoot at the switches to activate the exit",
+      player: { coordinates: { x: 0, y: 5, z: 0 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "coordinates", at: [{ x: 2, y: 7, z: 4 }] }
+      ],
+      objects: [
+        { clone: { type: "switch", name: "color switch", active: false }, space: "coordinates", at: [{ x: 9, y: 0, z: 0 }] },
+        { clone: { type: "switch", active: false, switchGroup: "exitCounter" }, space: "coordinates", at: [
+          { x: 0, y: 0, z: 0 }, { x: 7, y: 4, z: 4 }, { x: 4, y: 4, z: 7 }, { x: 4, y: 7, z: 6 }
+        ] },
+        { clone: { type: "mutant" }, space: "coordinates", at: [{ x: 5, y: 0, z: 0 }] },
+        { clone: { type: "wall" }, space: "coordinates", at: [
+          { x: 0, y: 0, z: 1 }, { x: 1, y: 0, z: 1 }, { x: 2, y: 0, z: 1 }, { x: 3, y: 0, z: 1 }, { x: 4, y: 0, z: 1 },
+          { x: 5, y: 0, z: 1 }, { x: 6, y: 0, z: 1 }, { x: 7, y: 0, z: 1 }, { x: 8, y: 0, z: 1 }, { x: 9, y: 0, z: 1 },
+          { x: 0, y: 1, z: 0 }, { x: 1, y: 1, z: 0 }, { x: 2, y: 1, z: 0 }, { x: 3, y: 1, z: 0 }, { x: 4, y: 1, z: 0 },
+          { x: 5, y: 1, z: 0 }, { x: 6, y: 1, z: 0 }, { x: 7, y: 1, z: 0 }, { x: 8, y: 1, z: 0 }, { x: 9, y: 1, z: 0 },
+          { x: 0, y: 2, z: 2 }, { x: 1, y: 2, z: 2 }, { x: 2, y: 2, z: 2 }, { x: 3, y: 2, z: 2 }, { x: 4, y: 2, z: 2 },
+          { x: 5, y: 2, z: 2 }, { x: 6, y: 2, z: 2 }, { x: 2, y: 2, z: 3 }, { x: 2, y: 2, z: 4 }, { x: 2, y: 2, z: 5 },
+          { x: 2, y: 2, z: 6 }, { x: 2, y: 3, z: 4 }, { x: 2, y: 4, z: 4 }, { x: 2, y: 5, z: 4 }, { x: 2, y: 6, z: 4 },
+          { x: 3, y: 4, z: 4 }, { x: 4, y: 4, z: 4 }, { x: 5, y: 4, z: 4 }, { x: 4, y: 4, z: 5 }, { x: 4, y: 4, z: 6 },
+          { x: 4, y: 5, z: 6 }
+        ] }
+      ]
+    },
+    cube: {
+      size: { x: 5, y: 5, z: 5 },
+      intro: "cube",
+      help: "reach the exit!",
+      player: { coordinates: { x: 2, y: 0, z: 0 }, orientation: "rot0", nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: true }, space: "position", at: [{ x: 0, y: 2, z: 2 }] }
+      ],
+      objects: [
+        { clone: { type: "stone" }, space: "coordinates", at: [
+          { x: 0, y: 0, z: 1 }, { x: 0, y: 0, z: 3 }, { x: 0, y: 1, z: 0 }, { x: 0, y: 1, z: 2 }, { x: 0, y: 1, z: 4 },
+          { x: 0, y: 2, z: 1 }, { x: 0, y: 2, z: 3 }, { x: 0, y: 3, z: 0 }, { x: 0, y: 3, z: 2 }, { x: 0, y: 3, z: 4 },
+          { x: 0, y: 4, z: 1 }, { x: 0, y: 4, z: 3 }, { x: 1, y: 0, z: 0 }, { x: 1, y: 0, z: 2 }, { x: 1, y: 0, z: 4 },
+          { x: 1, y: 1, z: 1 }, { x: 1, y: 1, z: 3 }, { x: 1, y: 2, z: 0 }, { x: 1, y: 2, z: 2 }, { x: 1, y: 2, z: 4 },
+          { x: 1, y: 3, z: 1 }, { x: 1, y: 3, z: 3 }, { x: 1, y: 4, z: 0 }, { x: 1, y: 4, z: 2 }, { x: 1, y: 4, z: 4 },
+          { x: 2, y: 0, z: 1 }, { x: 2, y: 0, z: 3 }, { x: 2, y: 1, z: 0 }, { x: 2, y: 1, z: 2 }, { x: 2, y: 1, z: 4 },
+          { x: 2, y: 2, z: 1 }, { x: 2, y: 2, z: 3 }, { x: 2, y: 3, z: 0 }, { x: 2, y: 3, z: 2 }, { x: 2, y: 3, z: 4 },
+          { x: 2, y: 4, z: 1 }, { x: 2, y: 4, z: 3 }, { x: 3, y: 0, z: 0 }, { x: 3, y: 0, z: 2 }, { x: 3, y: 0, z: 4 },
+          { x: 3, y: 1, z: 1 }, { x: 3, y: 1, z: 3 }, { x: 3, y: 2, z: 0 }, { x: 3, y: 2, z: 2 }, { x: 3, y: 2, z: 4 },
+          { x: 3, y: 3, z: 1 }, { x: 3, y: 3, z: 3 }, { x: 3, y: 4, z: 0 }, { x: 3, y: 4, z: 2 }, { x: 3, y: 4, z: 4 },
+          { x: 4, y: 0, z: 1 }, { x: 4, y: 0, z: 3 }, { x: 4, y: 1, z: 0 }, { x: 4, y: 1, z: 2 }, { x: 4, y: 1, z: 4 },
+          { x: 4, y: 2, z: 1 }, { x: 4, y: 2, z: 3 }, { x: 4, y: 3, z: 0 }, { x: 4, y: 3, z: 2 }, { x: 4, y: 3, z: 4 },
+          { x: 4, y: 4, z: 1 }, { x: 4, y: 4, z: 3 }
+        ] }
+      ]
+    },
+    switch: {
+      size: { x: 7, y: 7, z: 7 },
+      intro: "switch",
+      switchConditions: [{ group: "exitCounter", exit: "exit", activeCount: 4 }],
+      help: [
+        "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the 4 switches\n\nto activate the switches,\nshoot them",
+        "to move the center stone,\n\nuse the bomb.\n\nthe bomb will detonate if you shoot it"
+      ],
+      player: { coordinates: { x: 3, y: 0, z: 3 }, nostatus: false },
+      exits: [
+        { clone: { name: "exit", active: false }, space: "position", at: [{ x: 0, y: -1, z: 0 }] }
+      ],
+      objects: [
+        { clone: { type: "stone" }, space: "coordinates", at: [
+          { x: 3, y: 3, z: 3 }, { x: 3, y: 5, z: 3 }
+        ] },
+        { clone: { type: "bomb" }, space: "coordinates", at: [{ x: 3, y: 1, z: 3 }] },
+        { clone: { type: "wall" }, space: "coordinates", at: [
+          { x: 3, y: 2, z: 6 }, { x: 3, y: 4, z: 6 }, { x: 4, y: 3, z: 6 }, { x: 2, y: 3, z: 6 },
+          { x: 6, y: 2, z: 3 }, { x: 6, y: 4, z: 3 }, { x: 6, y: 3, z: 4 }, { x: 6, y: 3, z: 2 },
+          { x: 3, y: 2, z: 1 }, { x: 3, y: 4, z: 1 }, { x: 4, y: 3, z: 1 }, { x: 2, y: 3, z: 1 },
+          { x: 1, y: 2, z: 3 }, { x: 1, y: 4, z: 3 }, { x: 1, y: 3, z: 4 }, { x: 1, y: 3, z: 2 }
+        ] },
+        { clone: { type: "switch", active: false, switchGroup: "exitCounter" }, space: "coordinates", at: [
+          { x: 1, y: 3, z: 3 }, { x: 6, y: 3, z: 3 }, { x: 3, y: 3, z: 1 }, { x: 3, y: 3, z: 6 }
+        ] }
+      ]
     }
   };
 
@@ -270,7 +461,7 @@
       firstLevel: "move",
       status: "partial",
       statusLabel: "Playable",
-      description: "Shootable trigger. Basic toggling works for exits; counters, actions, and multi-switch scripts from later levels are still simplified."
+      description: "Shootable trigger. Direct exit toggles and declarative active-count switch groups work; arbitrary scripted callbacks, including color-cycling switches, are still simplified."
     },
     {
       id: "bullet",
@@ -354,10 +545,10 @@
     {
       id: "mutant",
       title: "Mutant bot",
-      firstLevel: "borg",
+      firstLevel: "gamma",
       status: "missing",
-      statusLabel: "Not ported",
-      description: "Enemy bot from the original game. Movement AI, hazards, damage, and death behavior are not implemented in the JavaScript port yet."
+      statusLabel: "Placeholder",
+      description: "Enemy bot from the original game. It now has visible blocking volume where early levels place it; movement AI, hazards, damage, and death behavior are not implemented yet."
     }
   ];
 
