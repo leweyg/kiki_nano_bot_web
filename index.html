@@ -1,30 +1,190 @@
 <!doctype html>
 <html lang="en">
+
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Kiki the Nano Bot</title>
   <style>
-    :root{--ink:#17221f;--paper:#f3f0e8;--mint:#b9d6c5;--coral:#d96d54;--line:#c4c9bc;--green:#25483c}*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px Georgia,serif}main{max-width:1080px;margin:auto;padding:8vh 6vw}.eyebrow{font:12px monospace;letter-spacing:2px;text-transform:uppercase;color:#65736a}h1{font-size:clamp(3.5rem,10vw,8rem);line-height:.85;margin:20px 0;color:var(--green);font-weight:normal}p{max-width:560px;line-height:1.55}.actions{display:flex;gap:12px;margin:32px 0;flex-wrap:wrap}a{display:inline-block;padding:13px 18px;border:1px solid var(--ink);color:var(--ink);text-decoration:none}a.primary{background:var(--coral);color:#fff;border-color:var(--coral)}section{border-top:1px solid var(--line);padding-top:24px;margin-top:60px}.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}.levels a{padding:10px;font:13px monospace}.note{color:#65736a;font-size:14px}.items{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}.item{display:block;padding:12px;border:1px solid var(--line);background:rgba(255,255,255,.22)}.item-title{display:flex;justify-content:space-between;gap:12px;align-items:baseline;font:13px monospace;text-transform:uppercase}.status{padding:2px 6px;border:1px solid currentColor;font-size:11px;white-space:nowrap}.status-ported{color:#397457}.status-partial{color:#9a6422}.status-missing{color:#ae443b}.item p{margin:10px 0 0;font:14px/1.4 Georgia,serif}.item-level{margin-top:10px;font:12px monospace;color:#65736a}
+    :root {
+      --ink: #17221f;
+      --paper: #f3f0e8;
+      --mint: #b9d6c5;
+      --coral: #d96d54;
+      --line: #c4c9bc;
+      --green: #25483c
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font: 16px Georgia, serif
+    }
+
+    main {
+      max-width: 1080px;
+      margin: auto;
+      padding: 8vh 6vw
+    }
+
+    .eyebrow {
+      font: 12px monospace;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #65736a
+    }
+
+    h1 {
+      font-size: clamp(3.5rem, 10vw, 8rem);
+      line-height: .85;
+      margin: 20px 0;
+      color: var(--green);
+      font-weight: normal
+    }
+
+    p {
+      max-width: 560px;
+      line-height: 1.55
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin: 32px 0;
+      flex-wrap: wrap
+    }
+
+    a {
+      display: inline-block;
+      padding: 13px 18px;
+      border: 1px solid var(--ink);
+      color: var(--ink);
+      text-decoration: none
+    }
+
+    a.primary {
+      background: var(--coral);
+      color: #fff;
+      border-color: var(--coral)
+    }
+
+    section {
+      border-top: 1px solid var(--line);
+      padding-top: 24px;
+      margin-top: 60px
+    }
+
+    .levels {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 8px
+    }
+
+    .levels a {
+      padding: 10px;
+      font: 13px monospace
+    }
+
+    .note {
+      color: #65736a;
+      font-size: 14px
+    }
+
+    .items {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 10px
+    }
+
+    .item {
+      display: block;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .22)
+    }
+
+    .item-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      font: 13px monospace;
+      text-transform: uppercase
+    }
+
+    .status {
+      padding: 2px 6px;
+      border: 1px solid currentColor;
+      font-size: 11px;
+      white-space: nowrap
+    }
+
+    .status-ported {
+      color: #397457
+    }
+
+    .status-partial {
+      color: #9a6422
+    }
+
+    .status-missing {
+      color: #ae443b
+    }
+
+    .item p {
+      margin: 10px 0 0;
+      font: 14px/1.4 Georgia, serif
+    }
+
+    .item-level {
+      margin-top: 10px;
+      font: 12px monospace;
+      color: #65736a
+    }
   </style>
 </head>
-<body><main>
-  <div class="eyebrow">A small machine with a big way out</div>
-  <h1>Kiki<br>the Nano Bot</h1>
-  <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version keeps the game state shared between the 3D client and an offline validator.</p>
-  <div class="actions"><a class="primary" href="play.html">Play the first level</a><a id="continue-link" href="play.html">Continue @ 01 start</a><a id="source-link" href="https://github.com/leweyg/kiki_nano_bot_web">Source code</a></div>
-  <section><div class="eyebrow">50 arenas</div><h2>Choose a level</h2><div class="levels" id="levels"></div><p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p></section>
-  <section><div class="eyebrow">Porting checklist</div><h2>Game Items</h2><div class="items" id="game-items"></div></section>
-</main><script src="kiki/js/kiki_static_data.js"></script><script src="kiki/js/kiki.js"></script><script>
-  var CONTINUE_LEVEL_KEY = "kikiContinueLevel";
-  function readCookie(name){var match=document.cookie.match(new RegExp("(?:^|; )"+name.replace(/[.$?*|{}()[\]\\/+^]/g,"\\$&")+"=([^;]*)"));return match ? decodeURIComponent(match[1]) : null;}
-  function savedLevelIndex(){var saved=null;try{saved=localStorage.getItem(CONTINUE_LEVEL_KEY);}catch(error){}if(saved === null) saved=readCookie(CONTINUE_LEVEL_KEY);var index=Kiki.getLevelIndex(saved);return Kiki.levels[index] ? index : 0;}
-  document.getElementById("levels").innerHTML = Kiki.levels.map(function(level){return '<a href="play.html?level='+level.index+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+level.title+'</a>';}).join('');
-  var continueLevel = Kiki.getLevel(savedLevelIndex());
-  document.getElementById("continue-link").href = "play.html?level=" + continueLevel.index;
-  document.getElementById("continue-link").textContent = "Continue @ " + String(continueLevel.index+1).padStart(2,'0') + " " + continueLevel.title;
-  document.getElementById("source-link").href = Kiki.sourceUrl || "https://github.com/leweyg/kiki_nano_bot_web";
-  function escapeHtml(value){return String(value || "").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
-  function levelLink(id){var level=Kiki.getLevel(id);return '<a href="play.html?level='+level.index+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+escapeHtml(level.title)+'</a>';}
-  document.getElementById("game-items").innerHTML = Kiki.gameItems.map(function(item){return '<div class="item"><div class="item-title"><strong>'+escapeHtml(item.title)+'</strong><span class="status status-'+escapeHtml(item.status)+'">'+escapeHtml(item.statusLabel)+'</span></div><p>'+escapeHtml(item.description)+'</p><div class="item-level">first seen: '+levelLink(item.firstLevel)+'</div></div>';}).join('');
-</script></body></html>
+
+<body>
+  <main>
+    <div class="eyebrow">A small machine with a big way out</div>
+    <h1>Kiki<br>the Nano Bot</h1>
+    <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version
+      keeps the game state shared between the 3D client and an offline validator.</p>
+    <div class="actions"><a class="primary" href="play.html">Play the first level</a><a id="continue-link"
+        href="play.html">Continue @ 01 start</a><a id="source-link"
+        href="https://github.com/leweyg/kiki_nano_bot_web">Source code</a></div>
+    <section>
+      <div class="eyebrow">50 arenas</div>
+      <h2>Choose a level</h2>
+      <div class="levels" id="levels"></div>
+      <p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p>
+    </section>
+    <section>
+      <div class="eyebrow">Porting checklist</div>
+      <h2>Game Items</h2>
+      <div class="items" id="game-items"></div>
+    </section>
+  </main>
+  <script src="kiki/js/kiki_static_data.js"></script>
+  <script src="kiki/js/kiki.js"></script>
+  <script>
+    var CONTINUE_LEVEL_KEY = "kikiContinueLevel";
+    function readCookie(name) { var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)")); return match ? decodeURIComponent(match[1]) : null; }
+    function savedLevelIndex() { var saved = null; try { saved = localStorage.getItem(CONTINUE_LEVEL_KEY); } catch (error) { } if (saved === null) saved = readCookie(CONTINUE_LEVEL_KEY); var index = Kiki.getLevelIndex(saved); return Kiki.levels[index] ? index : 0; }
+    document.getElementById("levels").innerHTML = Kiki.levels.map(function (level) { return '<a href="play.html?level=' + level.index + '">' + String(level.index + 1).padStart(2, '0') + ' &nbsp;' + level.title + '</a>'; }).join('');
+    var continueLevel = Kiki.getLevel(savedLevelIndex());
+    document.getElementById("continue-link").href = "play.html?level=" + continueLevel.index;
+    document.getElementById("continue-link").textContent = "Continue @ " + String(continueLevel.index + 1).padStart(2, '0') + " " + continueLevel.title;
+    document.getElementById("source-link").href = Kiki.sourceUrl || "https://github.com/leweyg/kiki_nano_bot_web";
+    function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; }); }
+    function levelLink(id) { var level = Kiki.getLevel(id); return '<a href="play.html?level=' + level.index + '">' + String(level.index + 1).padStart(2, '0') + ' &nbsp;' + escapeHtml(level.title) + '</a>'; }
+    document.getElementById("game-items").innerHTML = Kiki.gameItems.map(function (item) { return '<div class="item"><div class="item-title"><strong>' + escapeHtml(item.title) + '</strong><span class="status status-' + escapeHtml(item.status) + '">' + escapeHtml(item.statusLabel) + '</span></div><p>' + escapeHtml(item.description) + '</p><div class="item-level">first seen: ' + levelLink(item.firstLevel) + '</div></div>'; }).join('');
+  </script>
+</body>
+
+</html>

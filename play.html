@@ -1,1075 +1,1377 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
-<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--paper);color:var(--ink);font:14px monospace}body{position:fixed;inset:0}canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none}button,a,label,input{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,header button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}.debug-toggle{position:fixed;z-index:4;top:58px;right:22px;display:flex;gap:7px;align-items:center;color:#c8c8a8;background:rgba(43,43,43,.78);border:1px solid rgba(112,112,112,.8);padding:7px 9px;font:12px monospace;text-transform:uppercase;pointer-events:auto}.debug-toggle input{width:14px;height:14px;margin:0;accent-color:var(--accent)}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;width:min(100vw - 24px,560px);display:grid;grid-template-columns:minmax(72px,96px) minmax(148px,220px) minmax(72px,96px);gap:14px;align-items:end;justify-content:center;transform:translateX(-50%);touch-action:none}.action-stack{display:flex;flex-direction:column;gap:8px}.jump-actions{gap:0}.control-button,.touchpad{color:#fff;background:transparent;font:inherit;text-decoration:none}.control-button{min-height:46px;min-width:72px;padding:8px 10px;border:1px solid rgba(224,224,192,.72);border-radius:6px;line-height:1.1}.jump-actions .control-button{border-radius:0}.jump-actions .control-button:first-child{border-radius:6px 6px 0 0}.jump-actions .control-button:last-child{border-radius:0 0 6px 6px}.jump-actions .control-button:not(:last-child){border-bottom:0}.touchpad{position:relative;aspect-ratio:1/1;width:100%;min-width:148px;max-width:220px;border:0;border-radius:8px;display:grid;place-items:center;touch-action:none}.touchpad::before,.touchpad::after{content:"";position:absolute;background:rgba(224,224,192,.28)}.touchpad::before{left:18%;right:18%;top:50%;height:1px}.touchpad::after{top:18%;bottom:18%;left:50%;width:1px}.touchpad-mark{position:absolute;color:#e0e0c0;opacity:.88}.touchpad-mark.up{top:12px}.touchpad-mark.down{bottom:12px}.touchpad-mark.left{left:14px}.touchpad-mark.right{right:14px}.touchpad-knob{width:42px;height:42px;border:1px solid rgba(255,128,0,.9);border-radius:50%;transform:translate(var(--pad-x,0),var(--pad-y,0));transition:transform 80ms linear}.touchpad.active .touchpad-knob{transition:none}.won{border-color:#dede45!important;color:#ffff8a!important}@media(max-width:600px){header{padding:12px}.debug-toggle{top:51px;right:12px}.controls{bottom:calc(10px + env(safe-area-inset-bottom));width:100%;padding:0 10px;grid-template-columns:minmax(62px,76px) minmax(136px,1fr) minmax(62px,76px);gap:8px}.control-button{min-width:62px;min-height:42px;padding:7px 6px}.touchpad{min-width:136px;max-width:190px;justify-self:center}}
-</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">+FAR</button><button class="control-button" data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div></div>
-<label class="debug-toggle"><input id="debug-path-toggle" type="checkbox">debug</label>
-<script id="kiki-debug-trace" type="application/json"></script>
-<script src="kiki/js/kiki_static_data.js"></script><script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
-import * as THREE from './kiki/js/threejs/three.module.js';
-const query = new URLSearchParams(location.search);
-const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
-let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
-const CONTINUE_LEVEL_KEY = 'kikiContinueLevel';
-function rememberLevel(index){
-  const value = String(index);
-  try { localStorage.setItem(CONTINUE_LEVEL_KEY, value); } catch (error) {}
-  document.cookie = CONTINUE_LEVEL_KEY + '=' + encodeURIComponent(value) + '; max-age=31536000; path=/; SameSite=Lax';
-}
-rememberLevel(game.level.index);
-const levelScheme = Kiki.getColorScheme(game.level.scheme);
-function schemeEntry(className, part){
-  return levelScheme && levelScheme[className] && levelScheme[className][part || 'base'];
-}
-function schemeColor(className, part, fallback){
-  const entry = schemeEntry(className, part);
-  if (!entry) return new THREE.Color(fallback);
-  return new THREE.Color(entry[0], entry[1], entry[2]);
-}
-function schemeAlpha(className, part, fallback){
-  const entry = schemeEntry(className, part);
-  return entry && entry.length > 3 ? entry[3] : fallback;
-}
-function materialFromScheme(className, part, fallback, options){
-  const alpha = schemeAlpha(className, part, 1);
-  const materialOptions = Object.assign({color: schemeColor(className, part, fallback)}, options || {});
-  if (alpha < 1 && materialOptions.opacity === undefined) {
-    materialOptions.transparent = true;
-    materialOptions.opacity = alpha;
-  }
-  return new THREE.MeshStandardMaterial(materialOptions);
-}
-function lineMaterialFromScheme(className, part, fallback, options){
-  const alpha = schemeAlpha(className, part, 1);
-  const materialOptions = Object.assign({color: schemeColor(className, part, fallback)}, options || {});
-  if (alpha < 1 && materialOptions.opacity === undefined) {
-    materialOptions.transparent = true;
-    materialOptions.opacity = alpha;
-  }
-  return new THREE.LineBasicMaterial(materialOptions);
-}
-function dimmedMaterial(className, part, fallback, options){
-  const color = schemeColor(className, part, fallback).multiplyScalar(.36);
-  return new THREE.MeshStandardMaterial(Object.assign({color, emissive: color, emissiveIntensity: .2}, options || {}));
-}
-document.documentElement.style.setProperty('--paper', schemeColor('KikiWorld', 'base', '#212121').getStyle());
-document.documentElement.style.setProperty('--ink', schemeColor('KikiText', 'bright', '#e0e0c0').getStyle());
-document.documentElement.style.setProperty('--accent', schemeColor('KikiGate', 'base', '#ff8000').getStyle());
-const scene = new THREE.Scene();
-scene.background = schemeColor('KikiWorld', 'base', '#212121');
-const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
-let cameraMode = 'behind';
-const renderer = new THREE.WebGLRenderer({antialias: true});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.setSize(innerWidth, innerHeight);
-document.body.appendChild(renderer.domElement);
-renderer.domElement.tabIndex = 0;
-renderer.domElement.focus({preventScroll: true});
-addEventListener('pageshow', () => renderer.domElement.focus({preventScroll: true}));
-renderer.domElement.addEventListener('touchmove', event => event.preventDefault(), {passive: false});
-['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'dragstart', 'contextmenu', 'dblclick'].forEach(type => {
-  addEventListener(type, event => event.preventDefault(), {passive: false});
-});
-addEventListener('touchmove', event => event.preventDefault(), {passive: false});
-scene.add(new THREE.HemisphereLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), schemeColor('KikiLight', 'base', '#000000'), .25));
-const keyLight = new THREE.DirectionalLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), .75);
-keyLight.position.set(-3, 6, 4);
-scene.add(keyLight);
-const cameraLight = new THREE.SpotLight(schemeColor('KikiLight', 'specular', '#ffffff'), 2.15, 0, Math.PI / 2, .16, .45);
-cameraLight.target = new THREE.Object3D();
-scene.add(cameraLight, cameraLight.target);
-const board = new THREE.Group();
-scene.add(board);
-const effects = new THREE.Group();
-scene.add(effects);
-const materials = {
-  floorA: materialFromScheme('KikiWorld', 'plate', '#555555', {roughness: .55, metalness: .05}),
-  floorB: materialFromScheme('KikiWorld', 'base', '#666666', {roughness: .55, metalness: .05}),
-  wall: materialFromScheme('KikiWorld', 'base', '#808080', {roughness: .48, metalness: .04}),
-  stone: materialFromScheme('KikiStone', 'base', '#9a9a8a', {roughness: .52, metalness: .03}),
-  switchRing: materialFromScheme('KikiSwitch', 'base', '#a0b8ff', {emissive: schemeColor('KikiSwitch', 'base', '#182c64'), emissiveIntensity: .25, roughness: .34}),
-  switchCore: materialFromScheme('KikiSwitch', 'sphere', '#80f0ff', {emissive: schemeColor('KikiSwitch', 'sphere', '#00a0ff'), emissiveIntensity: .7, roughness: .24}),
-  switchOffCore: dimmedMaterial('KikiSwitch', 'base', '#39465c', {roughness: .48}),
-  wire: materialFromScheme('KikiWire', 'base', '#2aaad0', {emissive: schemeColor('KikiWire', 'base', '#082530'), emissiveIntensity: .18, roughness: .38}),
-  wireActive: materialFromScheme('KikiWire', 'light', '#80f0ff', {emissive: schemeColor('KikiWire', 'light', '#00c8ff'), emissiveIntensity: .75, roughness: .24}),
-  gear: materialFromScheme('KikiGear', 'base', '#c9c4aa', {metalness: .18, roughness: .36}),
-  generator: materialFromScheme('KikiGenerator', 'base', '#77d68d', {emissive: schemeColor('KikiGenerator', 'base', '#0c3a16'), emissiveIntensity: .32, metalness: .12, roughness: .32}),
-  motor: materialFromScheme('KikiMotorGear', 'base', '#d0a14a', {emissive: schemeColor('KikiMotorGear', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34}),
-  motorCylinder: materialFromScheme('KikiMotorCylinder', 'base', '#d0a14a', {emissive: schemeColor('KikiMotorCylinder', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34}),
-  bomb: materialFromScheme('KikiBomb', 'base', '#2f3038', {emissive: schemeColor('KikiBomb', 'base', '#4a1010'), emissiveIntensity: .3, roughness: .28}),
-  bullet: materialFromScheme('KikiPlayer', 'base', '#ffa35a', {emissive: schemeColor('KikiPlayer', 'base', '#ff5c00'), emissiveIntensity: .9, transparent: true, opacity: .82, roughness: .2}),
-  borderA: materialFromScheme('KikiWorld', 'base', '#777777', {roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  borderB: materialFromScheme('KikiWorld', 'plate', '#8a8a8a', {roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  botBody: materialFromScheme('KikiPlayer', 'base', '#ff8000', {roughness: .42, metalness: .08}),
-  botTire: materialFromScheme('KikiPlayer', 'tire', '#800000', {roughness: .62}),
-  gate: materialFromScheme('KikiGate', 'base', '#ffff00', {emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true}),
-  gateInactive: materialFromScheme('KikiGate', 'base', '#ffff00', {emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
-  gateSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true}),
-  gateInactiveSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
-  mutantBody: materialFromScheme('KikiMutant', 'base', '#800000', {roughness: .46, metalness: .06}),
-  mutantTire: materialFromScheme('KikiMutant', 'tire', '#202020', {roughness: .62}),
-  room: materialFromScheme('KikiWorld', 'base', '#212121', {roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide}),
-  roomLine: lineMaterialFromScheme('KikiWorld', 'plate', '#808080', {transparent: true, opacity: .45})
-};
-function cube(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material);}
-function box(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);}
-function v(position){return new THREE.Vector3(position.x, position.y, position.z);}
-function centered(level, position, lift){
-  return new THREE.Vector3(
-    position.x - level.size.x / 2 + .5,
-    (position.y || 0) - level.size.y / 2 + .5 + (lift || 0),
-    (position.z || 0) - level.size.z / 2 + .5
-  );
-}
-function copyPosition(position){return {x: position.x, y: position.y || 0, z: position.z || 0};}
-function plain(vector){return {x: vector.x, y: vector.y, z: vector.z};}
-function add(a, b){return {x: a.x + b.x, y: (a.y || 0) + (b.y || 0), z: a.z + b.z};}
-function neg(a){return {x: -a.x, y: -(a.y || 0), z: -a.z};}
-function mul(a, scalar){return {x: a.x * scalar, y: (a.y || 0) * scalar, z: a.z * scalar};}
-function near(a, b){return Math.abs(a.x - b.x) < .001 && Math.abs((a.y || 0) - (b.y || 0)) < .001 && Math.abs(a.z - b.z) < .001;}
-function snapshot(source){return {position: copyPosition(source.position), dir: copyPosition(source.dir), up: copyPosition(source.up)};}
-function copyTires(tires){return {left: tires.left, right: tires.right};}
-function withTires(state, tires){state.tires = copyTires(tires); return state;}
-function lerpTires(a, b, amount){return {left: a.left + (b.left - a.left) * amount, right: a.right + (b.right - a.right) * amount};}
-function quaternionForState(state){
-  const dir = v(state.dir).normalize();
-  const up = v(state.up).normalize();
-  const right = new THREE.Vector3().crossVectors(up, dir).normalize();
-  const matrix = new THREE.Matrix4().makeBasis(right, up, dir);
-  return new THREE.Quaternion().setFromRotationMatrix(matrix);
-}
-function stateFromQuaternion(position, quaternion){
-  const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion).normalize();
-  const up = new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion).normalize();
-  return {position: copyPosition(position), dir: plain(dir), up: plain(up), quaternion: quaternion.clone()};
-}
-function stateVectors(state){
-  const q = state.quaternion || quaternionForState(state);
-  return {
-    dir: new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize(),
-    up: new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize()
-  };
-}
-function lerpPosition(a, b, amount){
-  return {
-    x: a.x + (b.x - a.x) * amount,
-    y: (a.y || 0) + ((b.y || 0) - (a.y || 0)) * amount,
-    z: a.z + (b.z - a.z) * amount
-  };
-}
-function slerpState(from, to, amount, position){
-  const q = quaternionForState(from).slerp(quaternionForState(to), amount);
-  return stateFromQuaternion(position || lerpPosition(from.position, to.position, amount), q);
-}
-function addCube(position, size, material){
-  const mesh = cube(size, material);
-  mesh.position.copy(position);
-  board.add(mesh);
-  return mesh;
-}
-function addBox(position, size, material){
-  const mesh = box(size, material);
-  mesh.position.copy(position);
-  board.add(mesh);
-  return mesh;
-}
-function addRoom(level){
-  const room = new THREE.Mesh(new THREE.BoxGeometry(level.size.x, level.size.y, level.size.z), materials.room);
-  const edges = new THREE.LineSegments(new THREE.EdgesGeometry(room.geometry), materials.roomLine);
-  board.add(room, edges);
-}
-function borderMaterial(a, b, c){
-  return (a + b + c) % 2 ? materials.borderA : materials.borderB;
-}
-function addBoundaryWalls(level){
-  const xmin = -level.size.x / 2 - .02;
-  const xmax = level.size.x / 2 + .02;
-  const ymin = -level.size.y / 2 - .02;
-  const ymax = level.size.y / 2 + .02;
-  const zmin = -level.size.z / 2 - .02;
-  const zmax = level.size.z / 2 + .02;
-  for (let y = 0; y < level.size.y; y += 1) {
-    for (let z = 0; z < level.size.z; z += 1) {
-      addBox(new THREE.Vector3(xmin, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 0));
-      addBox(new THREE.Vector3(xmax, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 1));
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <link rel="icon" href="data:,">
+  <title>Kiki / play</title>
+  <style>
+    :root {
+      --paper: #212121;
+      --ink: #e0e0c0;
+      --accent: #ff8000
     }
-  }
-  for (let x = 0; x < level.size.x; x += 1) {
-    for (let z = 0; z < level.size.z; z += 1) {
-      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymin, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 2));
-      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymax, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 3));
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent
     }
-  }
-  for (let x = 0; x < level.size.x; x += 1) {
-    for (let y = 0; y < level.size.y; y += 1) {
-      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmin), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 4));
-      addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmax), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 5));
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      background: var(--paper);
+      color: var(--ink);
+      font: 14px monospace
     }
-  }
-}
-function addSwitch(level, object){
-  const group = new THREE.Group();
-  const ringA = new THREE.Mesh(new THREE.TorusGeometry(.35, .035, 8, 24), materials.switchRing);
-  const ringB = ringA.clone();
-  const core = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 10), object.active ? materials.switchCore : materials.switchOffCore);
-  ringB.rotation.y = Math.PI / 2;
-  group.add(ringA, ringB, core);
-  group.position.copy(centered(level, object.coordinates, 0));
-  board.add(group);
-}
-function addWire(level, object){
-  const size = object.face === 'PX' || object.face === 'NX' ? new THREE.Vector3(.08, .72, .18)
-    : object.face === 'PZ' || object.face === 'NZ' ? new THREE.Vector3(.18, .72, .08)
-    : new THREE.Vector3(.72, .08, .18);
-  const mesh = addBox(centered(level, object.coordinates, 0), size, object.active || object.powered ? materials.wireActive : materials.wire);
-  if (object.face === 'PX') mesh.position.x += .45;
-  else if (object.face === 'NX') mesh.position.x -= .45;
-  else if (object.face === 'PZ') mesh.position.z += .45;
-  else if (object.face === 'NZ') mesh.position.z -= .45;
-  else if (object.face === 'NY') mesh.position.y -= .45;
-  else mesh.position.y += .45;
-}
-function addWireStone(level, object){
-  addCube(centered(level, object.coordinates, 0), .9, materials.stone);
-  addWire(level, Object.assign({}, object, {type: 'wire', active: object.powered}));
-}
-function addGear(level, object){
-  const group = new THREE.Group();
-  const teeth = new THREE.Mesh(new THREE.TorusGeometry(.32, .06, 8, 12), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
-  const hub = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .18, 16), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
-  hub.rotation.x = Math.PI / 2;
-  group.add(teeth, hub);
-  group.position.copy(centered(level, object.coordinates, 0));
-  board.add(group);
-}
-function addMotorCylinder(level, object){
-  const group = new THREE.Group();
-  const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motorCylinder);
-  const rod = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .88, 12), object.powered ? materials.wireActive : materials.gear);
-  shell.rotation.x = Math.PI / 2;
-  rod.rotation.x = Math.PI / 2;
-  rod.position.z = object.powered ? .12 : 0;
-  group.add(shell, rod);
-  group.position.copy(centered(level, object.coordinates, 0));
-  board.add(group);
-}
-function addBomb(level, object){
-  const group = new THREE.Group();
-  const core = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), materials.bomb);
-  const belt = new THREE.Mesh(new THREE.TorusGeometry(.35, .025, 8, 24), materials.wire);
-  belt.rotation.x = Math.PI / 2;
-  group.add(core, belt);
-  group.position.copy(centered(level, object.coordinates, 0));
-  board.add(group);
-}
-function addMutant(level, object){
-  const group = KikiMeshes.createBot(THREE, {body: materials.mutantBody, tire: materials.mutantTire});
-  group.scale.setScalar(.82);
-  group.position.copy(centered(level, object.coordinates, 0));
-  board.add(group);
-}
-function addGate(level, exit){
-  const ringMaterial = exit.active ? materials.gate : materials.gateInactive;
-  const sphereMaterial = exit.active ? materials.gateSphere : materials.gateInactiveSphere;
-  const group = new THREE.Group();
-  const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), ringMaterial);
-  const ringB = ringA.clone();
-  const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), sphereMaterial);
-  ringB.rotation.x = Math.PI / 2;
-  group.add(ringA, ringB, core);
-  group.position.copy(centered(level, exit.coordinates || exit, 0));
-  board.add(group);
-}
-const botMesh = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
-botMesh.matrixAutoUpdate = false;
-const bulletMesh = new THREE.Mesh(new THREE.SphereGeometry(.1, 16, 10), materials.bullet);
-bulletMesh.visible = false;
-effects.add(bulletMesh);
-const TIRE_VISUAL_SCALE = .25;
-const TIRE_HALF_TURN = Math.PI * TIRE_VISUAL_SCALE;
-const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2 * TIRE_VISUAL_SCALE;
-let tireAngles = {left: 0, right: 0};
-let visualState = withTires(snapshot(game), tireAngles);
-let activeAnimation = null;
-let activeShot = null;
-let queuedAction = null;
-let cameraReady = false;
-let advancingLevel = false;
-let suppressInputUntil = Number(sessionStorage.getItem('kikiSuppressInputUntil') || 0);
-sessionStorage.removeItem('kikiSuppressInputUntil');
-const heldInput = {move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null, push: false};
-const JUMP_GRACE_MS = 220;
-const DEBUG_ENABLED_KEY = 'kiki.debug.path.enabled';
-const DEBUG_LATEST_KEY = 'kiki.debug.path.latest';
-const DEBUG_HISTORY_KEY = 'kiki.debug.path.history';
-const DEBUG_TRACE_PREFIX = 'kiki.debug.path.';
-const DEBUG_SAMPLE_MS = 80;
-const DEBUG_TOUCH_RADIUS = .98;
-const debugToggle = document.getElementById('debug-path-toggle');
-const debugTraceElement = document.getElementById('kiki-debug-trace');
-let debugTrace = null;
-let debugEnabled = localStorage.getItem(DEBUG_ENABLED_KEY) === '1';
-let debugLastSampleAt = -Infinity;
-let debugLastPersistAt = 0;
-debugToggle.checked = debugEnabled;
-document.body.dataset.kikiDebugLatestKey = DEBUG_LATEST_KEY;
-function rounded(value){return Math.round(value * 1000) / 1000;}
-function roundedPosition(position){return {x: rounded(position.x), y: rounded(position.y || 0), z: rounded(position.z)};}
-function roundedCell(position){return {x: Math.round(position.x), y: Math.round(position.y || 0), z: Math.round(position.z)};}
-function cellName(position){return position.x + ',' + (position.y || 0) + ',' + position.z;}
-function distanceSquared(a, b){
-  const dx = a.x - b.x;
-  const dy = (a.y || 0) - (b.y || 0);
-  const dz = a.z - b.z;
-  return dx * dx + dy * dy + dz * dz;
-}
-function objectsAtCell(cell){
-  return (game.objects || []).filter(object => {
-    const coordinates = object.coordinates;
-    return coordinates.x === cell.x && (coordinates.y || 0) === (cell.y || 0) && coordinates.z === cell.z;
-  });
-}
-function exitAtCell(cell){
-  return (game.exits || []).filter(exit => {
-    const coordinates = exit.coordinates || exit;
-    return coordinates.x === cell.x && (coordinates.y || 0) === (cell.y || 0) && coordinates.z === cell.z;
-  });
-}
-function tileInfo(cell, distance){
-  const tags = [];
-  if (cell.x < 0 || cell.y < 0 || cell.z < 0 || cell.x >= game.level.size.x || cell.y >= game.level.size.y || cell.z >= game.level.size.z) {
-    tags.push('boundary');
-  } else {
-    if (cell.y === 0) tags.push('floor');
-    objectsAtCell(cell).forEach(object => tags.push(object.type));
-    exitAtCell(cell).forEach(exit => tags.push((exit.active === false ? 'inactive-' : 'active-') + (exit.name || 'exit')));
-  }
-  return {cell: {x: cell.x, y: cell.y || 0, z: cell.z}, distance: rounded(Math.sqrt(distance)), tags};
-}
-function touchedTiles(position){
-  const radius = DEBUG_TOUCH_RADIUS;
-  const radiusSquared = radius * radius;
-  const tiles = [];
-  for (let z = Math.floor(position.z - radius); z <= Math.ceil(position.z + radius); z += 1) {
-    for (let y = Math.floor((position.y || 0) - radius); y <= Math.ceil((position.y || 0) + radius); y += 1) {
-      for (let x = Math.floor(position.x - radius); x <= Math.ceil(position.x + radius); x += 1) {
-        const cell = {x, y, z};
-        const d = distanceSquared(position, cell);
-        if (d <= radiusSquared) tiles.push(tileInfo(cell, d));
+
+    body {
+      position: fixed;
+      inset: 0
+    }
+
+    canvas {
+      display: block;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none
+    }
+
+    button,
+    a,
+    label,
+    input {
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none
+    }
+
+    header {
+      position: fixed;
+      z-index: 2;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      pointer-events: none
+    }
+
+    header a,
+    header button {
+      pointer-events: auto;
+      color: inherit;
+      background: #2b2b2b;
+      border: 1px solid #707070;
+      padding: 9px 12px;
+      font: inherit;
+      text-decoration: none
+    }
+
+    .debug-toggle {
+      position: fixed;
+      z-index: 4;
+      top: 58px;
+      right: 22px;
+      display: flex;
+      gap: 7px;
+      align-items: center;
+      color: #c8c8a8;
+      background: rgba(43, 43, 43, .78);
+      border: 1px solid rgba(112, 112, 112, .8);
+      padding: 7px 9px;
+      font: 12px monospace;
+      text-transform: uppercase;
+      pointer-events: auto
+    }
+
+    .debug-toggle input {
+      width: 14px;
+      height: 14px;
+      margin: 0;
+      accent-color: var(--accent)
+    }
+
+    #title {
+      letter-spacing: 2px;
+      text-transform: uppercase
+    }
+
+    #hud {
+      position: fixed;
+      z-index: 2;
+      top: 65px;
+      left: 22px;
+      max-width: min(560px, calc(100vw - 44px));
+      white-space: pre-line;
+      line-height: 1.35;
+      color: #c8c8a8
+    }
+
+    .controls {
+      position: fixed;
+      z-index: 3;
+      bottom: calc(16px + env(safe-area-inset-bottom));
+      left: 50%;
+      width: min(100vw - 24px, 560px);
+      display: grid;
+      grid-template-columns: minmax(72px, 96px) minmax(148px, 220px) minmax(72px, 96px);
+      gap: 14px;
+      align-items: end;
+      justify-content: center;
+      transform: translateX(-50%);
+      touch-action: none
+    }
+
+    .action-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 8px
+    }
+
+    .jump-actions {
+      gap: 0
+    }
+
+    .control-button,
+    .touchpad {
+      color: #fff;
+      background: transparent;
+      font: inherit;
+      text-decoration: none
+    }
+
+    .control-button {
+      min-height: 46px;
+      min-width: 72px;
+      padding: 8px 10px;
+      border: 1px solid rgba(224, 224, 192, .72);
+      border-radius: 6px;
+      line-height: 1.1
+    }
+
+    .jump-actions .control-button {
+      border-radius: 0
+    }
+
+    .jump-actions .control-button:first-child {
+      border-radius: 6px 6px 0 0
+    }
+
+    .jump-actions .control-button:last-child {
+      border-radius: 0 0 6px 6px
+    }
+
+    .jump-actions .control-button:not(:last-child) {
+      border-bottom: 0
+    }
+
+    .touchpad {
+      position: relative;
+      aspect-ratio: 1/1;
+      width: 100%;
+      min-width: 148px;
+      max-width: 220px;
+      border: 0;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      touch-action: none
+    }
+
+    .touchpad::before,
+    .touchpad::after {
+      content: "";
+      position: absolute;
+      background: rgba(224, 224, 192, .28)
+    }
+
+    .touchpad::before {
+      left: 18%;
+      right: 18%;
+      top: 50%;
+      height: 1px
+    }
+
+    .touchpad::after {
+      top: 18%;
+      bottom: 18%;
+      left: 50%;
+      width: 1px
+    }
+
+    .touchpad-mark {
+      position: absolute;
+      color: #e0e0c0;
+      opacity: .88
+    }
+
+    .touchpad-mark.up {
+      top: 12px
+    }
+
+    .touchpad-mark.down {
+      bottom: 12px
+    }
+
+    .touchpad-mark.left {
+      left: 14px
+    }
+
+    .touchpad-mark.right {
+      right: 14px
+    }
+
+    .touchpad-knob {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 128, 0, .9);
+      border-radius: 50%;
+      transform: translate(var(--pad-x, 0), var(--pad-y, 0));
+      transition: transform 80ms linear
+    }
+
+    .touchpad.active .touchpad-knob {
+      transition: none
+    }
+
+    .won {
+      border-color: #dede45 !important;
+      color: #ffff8a !important
+    }
+
+    @media(max-width:600px) {
+      header {
+        padding: 12px
+      }
+
+      .debug-toggle {
+        top: 51px;
+        right: 12px
+      }
+
+      .controls {
+        bottom: calc(10px + env(safe-area-inset-bottom));
+        width: 100%;
+        padding: 0 10px;
+        grid-template-columns: minmax(62px, 76px) minmax(136px, 1fr) minmax(62px, 76px);
+        gap: 8px
+      }
+
+      .control-button {
+        min-width: 62px;
+        min-height: 42px;
+        padding: 7px 6px
+      }
+
+      .touchpad {
+        min-width: 136px;
+        max-width: 190px;
+        justify-self: center
       }
     }
-  }
-  tiles.sort((a, b) => a.distance - b.distance || cellName(a.cell).localeCompare(cellName(b.cell)));
-  return tiles;
-}
-function currentAnimationKind(now){
-  if (!activeAnimation) return null;
-  let elapsed = now - activeAnimation.startedAt;
-  for (const segment of activeAnimation.segments) {
-    if (elapsed <= segment.duration) return segment.kind;
-    elapsed -= segment.duration;
-  }
-  return activeAnimation.segments.length ? activeAnimation.segments[activeAnimation.segments.length - 1].kind : null;
-}
-function debugTraceKey(trace){return DEBUG_TRACE_PREFIX + trace.id;}
-function saveDebugTrace(force){
-  if (!debugTrace) return;
-  const now = performance.now();
-  if (!force && now - debugLastPersistAt < 500) return;
-  debugLastPersistAt = now;
-  debugTrace.updatedAt = new Date().toISOString();
-  const value = JSON.stringify(debugTrace);
-  if (debugTraceElement) debugTraceElement.textContent = value;
-  document.body.dataset.kikiDebugTraceId = debugTrace.id;
-  document.body.dataset.kikiDebugTraceKey = debugTraceKey(debugTrace);
-  document.body.dataset.kikiDebugActionCount = String(debugTrace.actions.length);
-  document.body.dataset.kikiDebugSampleCount = String(debugTrace.samples.length);
-  try {
-    localStorage.setItem(DEBUG_LATEST_KEY, value);
-    localStorage.setItem(debugTraceKey(debugTrace), value);
-  } catch (_) {}
-}
-function rememberDebugTrace(trace){
-  let history = [];
-  try { history = JSON.parse(localStorage.getItem(DEBUG_HISTORY_KEY) || '[]'); } catch (_) {}
-  history = [trace.id].concat(history.filter(id => id !== trace.id)).slice(0, 20);
-  try { localStorage.setItem(DEBUG_HISTORY_KEY, JSON.stringify(history)); } catch (_) {}
-}
-function beginDebugTrace(reason){
-  debugTrace = {
-    version: 1,
-    id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
-    startedAt: performance.now(),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    storageKey: null,
-    reason,
-    sampleMs: DEBUG_SAMPLE_MS,
-    touchRadius: DEBUG_TOUCH_RADIUS,
-    level: {index: game.level.index, id: game.level.id, title: game.level.title, size: Object.assign({}, game.level.size)},
-    actions: [],
-    samples: []
-  };
-  debugTrace.storageKey = debugTraceKey(debugTrace);
-  rememberDebugTrace(debugTrace);
-  document.body.dataset.kikiDebugTraceId = debugTrace.id;
-  document.body.dataset.kikiDebugTraceKey = debugTrace.storageKey;
-  debugLastSampleAt = -Infinity;
-  recordDebugSample(reason, performance.now(), true);
-  saveDebugTrace(true);
-}
-function stopDebugTrace(reason){
-  if (!debugTrace) return;
-  recordDebugSample(reason, performance.now(), true);
-  debugTrace.endedAt = new Date().toISOString();
-  saveDebugTrace(true);
-  debugTrace = null;
-}
-function recordDebugAction(name, before, after, segments){
-  if (!debugEnabled || !debugTrace) return;
-  debugTrace.actions.push({
-    t: rounded(performance.now() - debugTrace.startedAt),
-    name,
-    before: {position: roundedPosition(before.position), dir: roundedPosition(before.dir), up: roundedPosition(before.up)},
-    after: {position: roundedPosition(after.position), dir: roundedPosition(after.dir), up: roundedPosition(after.up), won: game.won},
-    segments: segments.map(segment => ({kind: segment.kind, duration: segment.duration, from: roundedPosition(segment.from.position), to: roundedPosition(segment.to.position)}))
-  });
-  if (debugTrace.actions.length > 1000) debugTrace.actions.shift();
-  saveDebugTrace(true);
-}
-function recordDebugSample(reason, now, force){
-  if (!debugEnabled) return;
-  if (!debugTrace) beginDebugTrace('auto-start');
-  if (!force && now - debugLastSampleAt < DEBUG_SAMPLE_MS) return;
-  debugLastSampleAt = now;
-  const state = visualState || snapshot(game);
-  const sample = {
-    t: rounded(now - debugTrace.startedAt),
-    reason,
-    action: activeAnimation && activeAnimation.action,
-    segment: currentAnimationKind(now),
-    position: roundedPosition(state.position),
-    cell: roundedCell(state.position),
-    dir: roundedPosition(state.dir),
-    up: roundedPosition(state.up),
-    won: game.won,
-    advancingLevel,
-    queuedAction,
-    tiles: touchedTiles(state.position)
-  };
-  debugTrace.samples.push(sample);
-  if (debugTrace.samples.length > 5000) debugTrace.samples.shift();
-  saveDebugTrace(false);
-}
-debugToggle.addEventListener('change', () => {
-  debugEnabled = debugToggle.checked;
-  localStorage.setItem(DEBUG_ENABLED_KEY, debugEnabled ? '1' : '0');
-  if (debugEnabled) beginDebugTrace('toggle-on');
-  else stopDebugTrace('toggle-off');
-});
-if (debugEnabled) beginDebugTrace('page-load');
-function buildStaticScene(){
-  while(board.children.length) board.remove(board.children[0]);
-  const level = game.level;
-  addRoom(level);
-  addBoundaryWalls(level);
-  for(let z = 0; z < level.size.z; z += 1) {
-    for(let x = 0; x < level.size.x; x += 1) {
-      addCube(centered(level, {x, y: 0, z}, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
-    }
-  }
-  (game.objects || []).forEach(object => {
-    if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall);
-    else if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
-    else if (object.type === 'wireStone') addWireStone(level, object);
-    else if (object.type === 'wire') addWire(level, object);
-    else if (object.type === 'switch') addSwitch(level, object);
-    else if (object.type === 'gear' || object.type === 'generator' || object.type === 'motorGear') addGear(level, object);
-    else if (object.type === 'motorCylinder') addMotorCylinder(level, object);
-    else if (object.type === 'bomb') addBomb(level, object);
-    else if (object.type === 'mutant') addMutant(level, object);
-  });
-  (game.exits || [{active: true, coordinates: level.exit}]).forEach(exit => {
-    addGate(level, exit);
-  });
-  board.add(botMesh);
-}
-function updateBot(level, state){
-  const q = state.quaternion || quaternionForState(state);
-  const matrix = new THREE.Matrix4().compose(centered(level, state.position, 0), q, new THREE.Vector3(1, 1, 1));
-  const tires = state.tires || tireAngles;
-  if (botMesh.userData.leftTire && botMesh.userData.rightTire) {
-    botMesh.userData.leftTire.rotation.set(0, Math.PI / 2, tires.left);
-    botMesh.userData.rightTire.rotation.set(0, Math.PI / 2, tires.right);
-  }
-  botMesh.matrix.copy(matrix);
-}
-function clampInsideRoom(level, position, delta){
-  return new THREE.Vector3(
-    Math.min(level.size.x / 2 - delta, Math.max(-level.size.x / 2 + delta, position.x)),
-    Math.min(level.size.y / 2 - delta, Math.max(-level.size.y / 2 + delta, position.y)),
-    Math.min(level.size.z / 2 - delta, Math.max(-level.size.z / 2 + delta, position.z))
-  );
-}
-function roomRayDistance(level, origin, direction){
-  let distance = Infinity;
-  [['x', -level.size.x / 2], ['x', level.size.x / 2], ['y', -level.size.y / 2], ['y', level.size.y / 2], ['z', -level.size.z / 2], ['z', level.size.z / 2]].forEach(([axis, plane]) => {
-    const value = direction[axis];
-    if (Math.abs(value) < .0001) return;
-    const candidate = (plane - origin[axis]) / value;
-    if (candidate > 0) distance = Math.min(distance, candidate);
-  });
-  return distance;
-}
-function desiredBehindCamera(level, position, dir, up){
-  const botToCamera = up.clone().addScaledVector(dir, -2);
-  const maxDistance = botToCamera.length();
-  botToCamera.normalize();
-  const wallDistance = roomRayDistance(level, position, botToCamera);
-  const distance = Math.max(.72, Math.min(maxDistance, wallDistance - .2));
-  return clampInsideRoom(level, position.clone().addScaledVector(botToCamera, distance), .2);
-}
-function desiredFollowCamera(level, position, dir, up){
-  const desiredDistance = 2;
-  let botToCamera = camera.position.clone().sub(position);
-  if (!cameraReady || botToCamera.length() < .001) {
-    return desiredBehindCamera(level, position, dir, up);
-  }
-  const distance = botToCamera.length();
-  if (distance >= desiredDistance) {
-    const delta = Math.min(.2, Math.pow(distance - desiredDistance, 2) / 400);
-    botToCamera = botToCamera.multiplyScalar(1 - delta);
-  } else {
-    const delta = Math.min(.2, (desiredDistance - distance) / 20);
-    botToCamera = botToCamera.lerp(botToCamera.clone().normalize().multiplyScalar(desiredDistance), delta);
-  }
-  const side = new THREE.Vector3().crossVectors(dir, up).normalize();
-  const horizontal = botToCamera.clone().projectOnPlane(up).normalize();
-  const behind = dir.clone().multiplyScalar(-1);
-  const angle = Math.acos(Math.min(1, Math.max(-1, behind.dot(horizontal)))) * (horizontal.dot(side) > 0 ? -1 : 1);
-  botToCamera.applyAxisAngle(up, angle / 400);
-  const wallDistance = roomRayDistance(level, position, botToCamera.clone().normalize());
-  if (wallDistance < botToCamera.length() + .2) botToCamera.setLength(Math.max(.72, wallDistance - .2));
-  return clampInsideRoom(level, position.clone().add(botToCamera), .2);
-}
-function updateCamera(level, state){
-  const position = centered(level, state.position, 0);
-  const vectors = stateVectors(state);
-  const dir = vectors.dir;
-  const up = vectors.up;
-  camera.aspect = innerWidth / innerHeight;
-  camera.up.copy(up);
-  if (cameraMode === 'inside') {
-    camera.position.copy(position).addScaledVector(up, .18);
-    camera.lookAt(position.clone().add(dir));
-  } else {
-    const desired = cameraMode === 'follow'
-      ? desiredFollowCamera(level, position, dir, up)
-      : desiredBehindCamera(level, position, dir, up);
-    camera.position.copy(cameraReady ? camera.position.lerp(desired, cameraMode === 'follow' ? .12 : .2) : desired);
-    camera.lookAt(position.clone().addScaledVector(dir, .35));
-  }
-  cameraReady = true;
-  cameraLight.position.copy(camera.position);
-  cameraLight.target.position.copy(position);
-  cameraLight.target.updateMatrixWorld();
-  camera.updateProjectionMatrix();
-}
-function updateHud(){
-  const level = game.level;
-  document.getElementById('title').textContent = String(level.index + 1).padStart(2, '0') + ' / ' + level.title;
-  document.getElementById('hud').textContent = game.won ? 'EXIT REACHED' : 'MOVES ' + game.moves + '  ·  ' + cameraMode.toUpperCase() + '\n' + game.help;
-  document.querySelectorAll('.control-button').forEach(button => {
-    button.classList.toggle('won', game.won);
-    button.disabled = game.won || advancingLevel;
-  });
-}
-function animationSegment(kind, duration, from, to, extra){
-  return Object.assign({kind, duration, from, to}, extra || {});
-}
-function actionDuration(name){return game.actionDuration ? game.actionDuration(name) : 200;}
-function tireDelta(left, right){return {left, right};}
-function rollingDelta(sign, scale){return tireDelta(sign * TIRE_HALF_TURN * scale, sign * TIRE_HALF_TURN * scale);}
-function turnTireDelta(action){
-  const leftTurn = action === 'turn left' || action === 'left';
-  return tireDelta(leftTurn ? -TIRE_HALF_TURN : TIRE_HALF_TURN, leftTurn ? TIRE_HALF_TURN : -TIRE_HALF_TURN);
-}
-function appendCatchUp(segments, from, to){
-  if (near(from.position, to.position) && quaternionForState(from).angleTo(quaternionForState(to)) < .001) return;
-  const distance = v(to.position).sub(v(from.position)).length();
-  segments.push(animationSegment('generic', Math.max(120, distance * 120), from, to));
-}
-function sameOrientation(a, b){
-  return quaternionForState(a).angleTo(quaternionForState(b)) < .001;
-}
-function appendJumpSettle(segments, from, to, step, up, maxForwardFalls){
-  if (!sameOrientation(from, to)) return false;
-  const down = neg(up);
-  let cursor = from;
-  let appended = false;
-  let guard = 0;
-  let forwardFalls = 0;
-  function distanceSquared(a, b){
-    const dx = a.x - b.x;
-    const dy = (a.y || 0) - (b.y || 0);
-    const dz = a.z - b.z;
-    return dx * dx + dy * dy + dz * dz;
-  }
-  while (sameOrientation(cursor, to) && !near(cursor.position, to.position) && guard < 64) {
-    const currentDistance = distanceSquared(cursor.position, to.position);
-    const fallTarget = {position: add(cursor.position, down), dir: cursor.dir, up: cursor.up};
-    const canFallForward = step && (maxForwardFalls === undefined || forwardFalls < maxForwardFalls);
-    const fallForwardTarget = canFallForward && {position: add(add(cursor.position, step), down), dir: cursor.dir, up: cursor.up};
-    const forwardTarget = step && {position: add(cursor.position, step), dir: cursor.dir, up: cursor.up};
-    let next = null;
-    if (fallForwardTarget && near(to.position, fallForwardTarget.position)) {
-      next = animationSegment('fallForward', actionDuration('fall forward'), cursor, to, {step, down});
-    } else if (near(to.position, fallTarget.position)) {
-      next = animationSegment('fall', actionDuration('fall'), cursor, to, {down});
-    } else if (forwardTarget && near(to.position, forwardTarget.position)) {
-      next = animationSegment('forward', actionDuration('move forward'), cursor, to, {tireDelta: rollingDelta(1, 1)});
-    } else if (fallForwardTarget && distanceSquared(fallForwardTarget.position, to.position) < currentDistance) {
-      next = animationSegment('fallForward', actionDuration('fall forward'), cursor, fallForwardTarget, {step, down});
-    } else if (distanceSquared(fallTarget.position, to.position) < currentDistance) {
-      next = animationSegment('fall', actionDuration('fall'), cursor, fallTarget, {down});
-    } else {
-      break;
-    }
-    segments.push(next);
-    cursor = next.to;
-    if (next.kind === 'fallForward') forwardFalls += 1;
-    appended = true;
-    guard += 1;
-  }
-  return appended && near(cursor.position, to.position);
-}
-function buildAnimation(action, from, to, beforeGame){
-  const segments = [];
-  const dir = copyPosition(from.dir);
-  const up = copyPosition(from.up);
-  const down = neg(up);
-  let cursor = from;
-  let step = null;
-  let target = null;
+  </style>
+</head>
 
-  if (action === 'turn left' || action === 'left' || action === 'turn right' || action === 'right') {
-    segments.push(animationSegment('turn', actionDuration(action === 'left' ? 'turn left' : action === 'right' ? 'turn right' : action), from, to, {tireDelta: turnTireDelta(action)}));
-    return segments;
-  }
-
-  if (action === 'move forward' || action === 'up' || action === 'move backward' || action === 'down') {
-    const sign = (action === 'move backward' || action === 'down') ? -1 : 1;
-    step = mul(dir, sign);
-    const forward = add(from.position, step);
-    if (beforeGame.isUnoccupied(forward)) {
-      if (beforeGame.isUnoccupied(add(forward, down))) {
-        target = {position: add(forward, down), dir: mul(up, -sign), up: step};
-        segments.push(animationSegment('climbDown', 500, from, target, {step, down, tireDelta: rollingDelta(sign, 1)}));
-      } else {
-        target = {position: forward, dir: from.dir, up: from.up};
-        segments.push(animationSegment('forward', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, {tireDelta: rollingDelta(sign, 1)}));
+<body>
+  <header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header>
+  <div id="hud"></div>
+  <div class="controls">
+    <div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button
+        class="control-button" id="shoot">SHOOT</button></div>
+    <div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span
+        class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span
+        class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob"
+        id="touchpad-knob"></span></div>
+    <div class="action-stack jump-actions"><button class="control-button"
+        data-action="jump far forward">+FAR</button><button class="control-button"
+        data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div>
+  </div>
+  <label class="debug-toggle"><input id="debug-path-toggle" type="checkbox">debug</label>
+  <script id="kiki-debug-trace" type="application/json"></script>
+  <script src="kiki/js/kiki_static_data.js"></script>
+  <script src="kiki/js/kiki.js"></script>
+  <script src="kiki/js/kiki_meshes.js"></script>
+  <script type="module">
+    import * as THREE from './kiki/js/threejs/three.module.js';
+    const query = new URLSearchParams(location.search);
+    const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
+    let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
+    const CONTINUE_LEVEL_KEY = 'kikiContinueLevel';
+    function rememberLevel(index) {
+      const value = String(index);
+      try { localStorage.setItem(CONTINUE_LEVEL_KEY, value); } catch (error) { }
+      document.cookie = CONTINUE_LEVEL_KEY + '=' + encodeURIComponent(value) + '; max-age=31536000; path=/; SameSite=Lax';
+    }
+    rememberLevel(game.level.index);
+    const levelScheme = Kiki.getColorScheme(game.level.scheme);
+    function schemeEntry(className, part) {
+      return levelScheme && levelScheme[className] && levelScheme[className][part || 'base'];
+    }
+    function schemeColor(className, part, fallback) {
+      const entry = schemeEntry(className, part);
+      if (!entry) return new THREE.Color(fallback);
+      return new THREE.Color(entry[0], entry[1], entry[2]);
+    }
+    function schemeAlpha(className, part, fallback) {
+      const entry = schemeEntry(className, part);
+      return entry && entry.length > 3 ? entry[3] : fallback;
+    }
+    function materialFromScheme(className, part, fallback, options) {
+      const alpha = schemeAlpha(className, part, 1);
+      const materialOptions = Object.assign({ color: schemeColor(className, part, fallback) }, options || {});
+      if (alpha < 1 && materialOptions.opacity === undefined) {
+        materialOptions.transparent = true;
+        materialOptions.opacity = alpha;
       }
-    } else {
-      target = {position: from.position, dir: mul(up, sign), up: neg(step)};
-      segments.push(animationSegment('climbUp', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, {tireDelta: rollingDelta(sign, .5)}));
+      return new THREE.MeshStandardMaterial(materialOptions);
     }
-    cursor = target;
-  } else if (action === 'jump forward' || action === 'jump far forward') {
-    step = dir;
-    const above = add(from.position, up);
-    const forward = add(from.position, step);
-    const jumpTarget = beforeGame.isUnoccupied(forward) && beforeGame.isUnoccupied(add(forward, up)) ? add(forward, up) : above;
-    target = {position: jumpTarget, dir: from.dir, up: from.up};
-    segments.push(animationSegment('jumpForward', action === 'jump far forward' ? actionDuration('jump forward') : actionDuration(action), from, target, {step, up, tireDelta: tireDelta(TIRE_JUMP_FORWARD, TIRE_JUMP_FORWARD)}));
-    cursor = target;
-  } else if (action === 'jump') {
-    target = {position: add(from.position, up), dir: from.dir, up: from.up};
-    segments.push(animationSegment('jump', actionDuration('jump'), from, target, {up}));
-    cursor = target;
-  }
-
-  const maxForwardFalls = action === 'jump far forward' ? 2 : action === 'jump forward' ? 0 : undefined;
-  if (!appendJumpSettle(segments, cursor || from, to, step, up, maxForwardFalls)) appendCatchUp(segments, cursor || from, to);
-  return segments.length ? segments : [animationSegment('generic', 160, from, to)];
-}
-function buildSettleAnimation(from, to){
-  const segments = [];
-  const down = neg(from.up);
-  let cursor = from;
-  let guard = 0;
-  while (sameOrientation(cursor, to) && !near(cursor.position, to.position) && guard < 64) {
-    const target = {position: add(cursor.position, down), dir: cursor.dir, up: cursor.up};
-    const toward = v(to.position).sub(v(cursor.position)).dot(v(down));
-    const remainingAfterTarget = v(to.position).sub(v(target.position)).dot(v(down));
-    if (toward < .001 || remainingAfterTarget < -.001) break;
-    segments.push(animationSegment('fall', actionDuration('fall'), cursor, target, {down}));
-    cursor = target;
-    guard += 1;
-  }
-  appendCatchUp(segments, cursor, to);
-  return segments.length ? segments : [animationSegment('generic', 160, from, to)];
-}
-function startAnimation(segments, to, action){
-  let cursorTires = copyTires(tireAngles);
-  segments.forEach(segment => {
-    const delta = segment.tireDelta || tireDelta(0, 0);
-    withTires(segment.from, cursorTires);
-    cursorTires = {left: cursorTires.left + delta.left, right: cursorTires.right + delta.right};
-    withTires(segment.to, cursorTires);
-  });
-  tireAngles = cursorTires;
-  activeAnimation = {
-    action: action || null,
-    startedAt: performance.now(),
-    segments,
-    to: withTires(to, tireAngles),
-    totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
-  };
-}
-function tiresAtSegment(segment, amount){
-  return lerpTires(segment.from.tires || tireAngles, segment.to.tires || tireAngles, amount);
-}
-function stateWithSegmentTires(state, segment, amount){
-  return withTires(state, tiresAtSegment(segment, amount));
-}
-function stateAtSegment(segment, amount){
-  const t = Math.min(1, Math.max(0, amount));
-  if (segment.kind === 'jump') {
-    const height = Math.sin(Math.PI / 2 * t);
-    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.up, height))), segment, t);
-  }
-  if (segment.kind === 'jumpForward') {
-    const forward = 1 - Math.cos(Math.PI / 2 * t);
-    const height = Math.sin(Math.PI / 2 * t);
-    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.up, height))), segment, forward);
-  }
-  if (segment.kind === 'climbDown') {
-    const q = quaternionForState(segment.from).slerp(quaternionForState(segment.to), t);
-    let position;
-    if (t <= .2) {
-      position = add(segment.from.position, mul(segment.step, t / .2 / 2));
-    } else if (t >= .8) {
-      position = add(add(segment.from.position, segment.step), mul(segment.down, .5 + (t - .8) / .2 / 2));
-    } else {
-      const currentUp = plain(new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize());
-      position = add(segment.from.position, mul(add(add(segment.step, segment.down), currentUp), .5));
+    function lineMaterialFromScheme(className, part, fallback, options) {
+      const alpha = schemeAlpha(className, part, 1);
+      const materialOptions = Object.assign({ color: schemeColor(className, part, fallback) }, options || {});
+      if (alpha < 1 && materialOptions.opacity === undefined) {
+        materialOptions.transparent = true;
+        materialOptions.opacity = alpha;
+      }
+      return new THREE.LineBasicMaterial(materialOptions);
     }
-    return stateWithSegmentTires(stateFromQuaternion(position, q), segment, t);
-  }
-  if (segment.kind === 'fallForward') {
-    const forward = Math.sin(Math.PI / 2 * t);
-    const down = 1 - Math.cos(Math.PI / 2 * t);
-    return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.down, down))), segment, t);
-  }
-  if (segment.kind === 'fall') {
-    return stateWithSegmentTires(slerpState(segment.from, segment.to, t), segment, t);
-  }
-  const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
-  return stateWithSegmentTires(slerpState(segment.from, segment.to, eased), segment, t);
-}
-function stateAtAnimation(animation, now){
-  let elapsed = now - animation.startedAt;
-  for (const segment of animation.segments) {
-    if (elapsed <= segment.duration) return stateAtSegment(segment, elapsed / segment.duration);
-    elapsed -= segment.duration;
-  }
-  return animation.to;
-}
-function startShotEffect(shot){
-  if (!shot) return;
-  activeShot = {
-    startedAt: performance.now(),
-    start: copyPosition(shot.start),
-    end: copyPosition(shot.end),
-    impact: shot.impact && copyPosition(shot.impact),
-    flyDuration: Math.max(40, shot.flyDuration || 40),
-    explodeDuration: shot.explodeDuration || 200,
-    level: game.level
-  };
-  bulletMesh.visible = true;
-  bulletMesh.scale.setScalar(1);
-}
-function updateShotEffect(now){
-  if (!activeShot) {
+    function dimmedMaterial(className, part, fallback, options) {
+      const color = schemeColor(className, part, fallback).multiplyScalar(.36);
+      return new THREE.MeshStandardMaterial(Object.assign({ color, emissive: color, emissiveIntensity: .2 }, options || {}));
+    }
+    document.documentElement.style.setProperty('--paper', schemeColor('KikiWorld', 'base', '#212121').getStyle());
+    document.documentElement.style.setProperty('--ink', schemeColor('KikiText', 'bright', '#e0e0c0').getStyle());
+    document.documentElement.style.setProperty('--accent', schemeColor('KikiGate', 'base', '#ff8000').getStyle());
+    const scene = new THREE.Scene();
+    scene.background = schemeColor('KikiWorld', 'base', '#212121');
+    const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
+    let cameraMode = 'behind';
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    document.body.appendChild(renderer.domElement);
+    renderer.domElement.tabIndex = 0;
+    renderer.domElement.focus({ preventScroll: true });
+    addEventListener('pageshow', () => renderer.domElement.focus({ preventScroll: true }));
+    renderer.domElement.addEventListener('touchmove', event => event.preventDefault(), { passive: false });
+    ['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'dragstart', 'contextmenu', 'dblclick'].forEach(type => {
+      addEventListener(type, event => event.preventDefault(), { passive: false });
+    });
+    addEventListener('touchmove', event => event.preventDefault(), { passive: false });
+    scene.add(new THREE.HemisphereLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), schemeColor('KikiLight', 'base', '#000000'), .25));
+    const keyLight = new THREE.DirectionalLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), .75);
+    keyLight.position.set(-3, 6, 4);
+    scene.add(keyLight);
+    const cameraLight = new THREE.SpotLight(schemeColor('KikiLight', 'specular', '#ffffff'), 2.15, 0, Math.PI / 2, .16, .45);
+    cameraLight.target = new THREE.Object3D();
+    scene.add(cameraLight, cameraLight.target);
+    const board = new THREE.Group();
+    scene.add(board);
+    const effects = new THREE.Group();
+    scene.add(effects);
+    const materials = {
+      floorA: materialFromScheme('KikiWorld', 'plate', '#555555', { roughness: .55, metalness: .05 }),
+      floorB: materialFromScheme('KikiWorld', 'base', '#666666', { roughness: .55, metalness: .05 }),
+      wall: materialFromScheme('KikiWorld', 'base', '#808080', { roughness: .48, metalness: .04 }),
+      stone: materialFromScheme('KikiStone', 'base', '#9a9a8a', { roughness: .52, metalness: .03 }),
+      switchRing: materialFromScheme('KikiSwitch', 'base', '#a0b8ff', { emissive: schemeColor('KikiSwitch', 'base', '#182c64'), emissiveIntensity: .25, roughness: .34 }),
+      switchCore: materialFromScheme('KikiSwitch', 'sphere', '#80f0ff', { emissive: schemeColor('KikiSwitch', 'sphere', '#00a0ff'), emissiveIntensity: .7, roughness: .24 }),
+      switchOffCore: dimmedMaterial('KikiSwitch', 'base', '#39465c', { roughness: .48 }),
+      wire: materialFromScheme('KikiWire', 'base', '#2aaad0', { emissive: schemeColor('KikiWire', 'base', '#082530'), emissiveIntensity: .18, roughness: .38 }),
+      wireActive: materialFromScheme('KikiWire', 'light', '#80f0ff', { emissive: schemeColor('KikiWire', 'light', '#00c8ff'), emissiveIntensity: .75, roughness: .24 }),
+      gear: materialFromScheme('KikiGear', 'base', '#c9c4aa', { metalness: .18, roughness: .36 }),
+      generator: materialFromScheme('KikiGenerator', 'base', '#77d68d', { emissive: schemeColor('KikiGenerator', 'base', '#0c3a16'), emissiveIntensity: .32, metalness: .12, roughness: .32 }),
+      motor: materialFromScheme('KikiMotorGear', 'base', '#d0a14a', { emissive: schemeColor('KikiMotorGear', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34 }),
+      motorCylinder: materialFromScheme('KikiMotorCylinder', 'base', '#d0a14a', { emissive: schemeColor('KikiMotorCylinder', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34 }),
+      bomb: materialFromScheme('KikiBomb', 'base', '#2f3038', { emissive: schemeColor('KikiBomb', 'base', '#4a1010'), emissiveIntensity: .3, roughness: .28 }),
+      bullet: materialFromScheme('KikiPlayer', 'base', '#ffa35a', { emissive: schemeColor('KikiPlayer', 'base', '#ff5c00'), emissiveIntensity: .9, transparent: true, opacity: .82, roughness: .2 }),
+      borderA: materialFromScheme('KikiWorld', 'base', '#777777', { roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide }),
+      borderB: materialFromScheme('KikiWorld', 'plate', '#8a8a8a', { roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide }),
+      botBody: materialFromScheme('KikiPlayer', 'base', '#ff8000', { roughness: .42, metalness: .08 }),
+      botTire: materialFromScheme('KikiPlayer', 'tire', '#800000', { roughness: .62 }),
+      gate: materialFromScheme('KikiGate', 'base', '#ffff00', { emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true }),
+      gateInactive: materialFromScheme('KikiGate', 'base', '#ffff00', { emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18 }),
+      gateSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', { emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true }),
+      gateInactiveSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', { emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18 }),
+      mutantBody: materialFromScheme('KikiMutant', 'base', '#800000', { roughness: .46, metalness: .06 }),
+      mutantTire: materialFromScheme('KikiMutant', 'tire', '#202020', { roughness: .62 }),
+      room: materialFromScheme('KikiWorld', 'base', '#212121', { roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide }),
+      roomLine: lineMaterialFromScheme('KikiWorld', 'plate', '#808080', { transparent: true, opacity: .45 })
+    };
+    function cube(size, material) { return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material); }
+    function box(size, material) { return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material); }
+    function v(position) { return new THREE.Vector3(position.x, position.y, position.z); }
+    function centered(level, position, lift) {
+      return new THREE.Vector3(
+        position.x - level.size.x / 2 + .5,
+        (position.y || 0) - level.size.y / 2 + .5 + (lift || 0),
+        (position.z || 0) - level.size.z / 2 + .5
+      );
+    }
+    function copyPosition(position) { return { x: position.x, y: position.y || 0, z: position.z || 0 }; }
+    function plain(vector) { return { x: vector.x, y: vector.y, z: vector.z }; }
+    function add(a, b) { return { x: a.x + b.x, y: (a.y || 0) + (b.y || 0), z: a.z + b.z }; }
+    function neg(a) { return { x: -a.x, y: -(a.y || 0), z: -a.z }; }
+    function mul(a, scalar) { return { x: a.x * scalar, y: (a.y || 0) * scalar, z: a.z * scalar }; }
+    function near(a, b) { return Math.abs(a.x - b.x) < .001 && Math.abs((a.y || 0) - (b.y || 0)) < .001 && Math.abs(a.z - b.z) < .001; }
+    function snapshot(source) { return { position: copyPosition(source.position), dir: copyPosition(source.dir), up: copyPosition(source.up) }; }
+    function copyTires(tires) { return { left: tires.left, right: tires.right }; }
+    function withTires(state, tires) { state.tires = copyTires(tires); return state; }
+    function lerpTires(a, b, amount) { return { left: a.left + (b.left - a.left) * amount, right: a.right + (b.right - a.right) * amount }; }
+    function quaternionForState(state) {
+      const dir = v(state.dir).normalize();
+      const up = v(state.up).normalize();
+      const right = new THREE.Vector3().crossVectors(up, dir).normalize();
+      const matrix = new THREE.Matrix4().makeBasis(right, up, dir);
+      return new THREE.Quaternion().setFromRotationMatrix(matrix);
+    }
+    function stateFromQuaternion(position, quaternion) {
+      const dir = new THREE.Vector3(0, 0, 1).applyQuaternion(quaternion).normalize();
+      const up = new THREE.Vector3(0, 1, 0).applyQuaternion(quaternion).normalize();
+      return { position: copyPosition(position), dir: plain(dir), up: plain(up), quaternion: quaternion.clone() };
+    }
+    function stateVectors(state) {
+      const q = state.quaternion || quaternionForState(state);
+      return {
+        dir: new THREE.Vector3(0, 0, 1).applyQuaternion(q).normalize(),
+        up: new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize()
+      };
+    }
+    function lerpPosition(a, b, amount) {
+      return {
+        x: a.x + (b.x - a.x) * amount,
+        y: (a.y || 0) + ((b.y || 0) - (a.y || 0)) * amount,
+        z: a.z + (b.z - a.z) * amount
+      };
+    }
+    function slerpState(from, to, amount, position) {
+      const q = quaternionForState(from).slerp(quaternionForState(to), amount);
+      return stateFromQuaternion(position || lerpPosition(from.position, to.position, amount), q);
+    }
+    function addCube(position, size, material) {
+      const mesh = cube(size, material);
+      mesh.position.copy(position);
+      board.add(mesh);
+      return mesh;
+    }
+    function addBox(position, size, material) {
+      const mesh = box(size, material);
+      mesh.position.copy(position);
+      board.add(mesh);
+      return mesh;
+    }
+    function addRoom(level) {
+      const room = new THREE.Mesh(new THREE.BoxGeometry(level.size.x, level.size.y, level.size.z), materials.room);
+      const edges = new THREE.LineSegments(new THREE.EdgesGeometry(room.geometry), materials.roomLine);
+      board.add(room, edges);
+    }
+    function borderMaterial(a, b, c) {
+      return (a + b + c) % 2 ? materials.borderA : materials.borderB;
+    }
+    function addBoundaryWalls(level) {
+      const xmin = -level.size.x / 2 - .02;
+      const xmax = level.size.x / 2 + .02;
+      const ymin = -level.size.y / 2 - .02;
+      const ymax = level.size.y / 2 + .02;
+      const zmin = -level.size.z / 2 - .02;
+      const zmax = level.size.z / 2 + .02;
+      for (let y = 0; y < level.size.y; y += 1) {
+        for (let z = 0; z < level.size.z; z += 1) {
+          addBox(new THREE.Vector3(xmin, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 0));
+          addBox(new THREE.Vector3(xmax, y - level.size.y / 2 + .5, z - level.size.z / 2 + .5), new THREE.Vector3(.06, .94, .94), borderMaterial(y, z, 1));
+        }
+      }
+      for (let x = 0; x < level.size.x; x += 1) {
+        for (let z = 0; z < level.size.z; z += 1) {
+          addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymin, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 2));
+          addBox(new THREE.Vector3(x - level.size.x / 2 + .5, ymax, z - level.size.z / 2 + .5), new THREE.Vector3(.94, .06, .94), borderMaterial(x, z, 3));
+        }
+      }
+      for (let x = 0; x < level.size.x; x += 1) {
+        for (let y = 0; y < level.size.y; y += 1) {
+          addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmin), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 4));
+          addBox(new THREE.Vector3(x - level.size.x / 2 + .5, y - level.size.y / 2 + .5, zmax), new THREE.Vector3(.94, .94, .06), borderMaterial(x, y, 5));
+        }
+      }
+    }
+    function addSwitch(level, object) {
+      const group = new THREE.Group();
+      const ringA = new THREE.Mesh(new THREE.TorusGeometry(.35, .035, 8, 24), materials.switchRing);
+      const ringB = ringA.clone();
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 10), object.active ? materials.switchCore : materials.switchOffCore);
+      ringB.rotation.y = Math.PI / 2;
+      group.add(ringA, ringB, core);
+      group.position.copy(centered(level, object.coordinates, 0));
+      board.add(group);
+    }
+    function addWire(level, object) {
+      const size = object.face === 'PX' || object.face === 'NX' ? new THREE.Vector3(.08, .72, .18)
+        : object.face === 'PZ' || object.face === 'NZ' ? new THREE.Vector3(.18, .72, .08)
+          : new THREE.Vector3(.72, .08, .18);
+      const mesh = addBox(centered(level, object.coordinates, 0), size, object.active || object.powered ? materials.wireActive : materials.wire);
+      if (object.face === 'PX') mesh.position.x += .45;
+      else if (object.face === 'NX') mesh.position.x -= .45;
+      else if (object.face === 'PZ') mesh.position.z += .45;
+      else if (object.face === 'NZ') mesh.position.z -= .45;
+      else if (object.face === 'NY') mesh.position.y -= .45;
+      else mesh.position.y += .45;
+    }
+    function addWireStone(level, object) {
+      addCube(centered(level, object.coordinates, 0), .9, materials.stone);
+      addWire(level, Object.assign({}, object, { type: 'wire', active: object.powered }));
+    }
+    function addGear(level, object) {
+      const group = new THREE.Group();
+      const teeth = new THREE.Mesh(new THREE.TorusGeometry(.32, .06, 8, 12), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
+      const hub = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .18, 16), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
+      hub.rotation.x = Math.PI / 2;
+      group.add(teeth, hub);
+      group.position.copy(centered(level, object.coordinates, 0));
+      board.add(group);
+    }
+    function addMotorCylinder(level, object) {
+      const group = new THREE.Group();
+      const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motorCylinder);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .88, 12), object.powered ? materials.wireActive : materials.gear);
+      shell.rotation.x = Math.PI / 2;
+      rod.rotation.x = Math.PI / 2;
+      rod.position.z = object.powered ? .12 : 0;
+      group.add(shell, rod);
+      group.position.copy(centered(level, object.coordinates, 0));
+      board.add(group);
+    }
+    function addBomb(level, object) {
+      const group = new THREE.Group();
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), materials.bomb);
+      const belt = new THREE.Mesh(new THREE.TorusGeometry(.35, .025, 8, 24), materials.wire);
+      belt.rotation.x = Math.PI / 2;
+      group.add(core, belt);
+      group.position.copy(centered(level, object.coordinates, 0));
+      board.add(group);
+    }
+    function addMutant(level, object) {
+      const group = KikiMeshes.createBot(THREE, { body: materials.mutantBody, tire: materials.mutantTire });
+      group.scale.setScalar(.82);
+      group.position.copy(centered(level, object.coordinates, 0));
+      board.add(group);
+    }
+    function addGate(level, exit) {
+      const ringMaterial = exit.active ? materials.gate : materials.gateInactive;
+      const sphereMaterial = exit.active ? materials.gateSphere : materials.gateInactiveSphere;
+      const group = new THREE.Group();
+      const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), ringMaterial);
+      const ringB = ringA.clone();
+      const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), sphereMaterial);
+      ringB.rotation.x = Math.PI / 2;
+      group.add(ringA, ringB, core);
+      group.position.copy(centered(level, exit.coordinates || exit, 0));
+      board.add(group);
+    }
+    const botMesh = KikiMeshes.createBot(THREE, { body: materials.botBody, tire: materials.botTire });
+    botMesh.matrixAutoUpdate = false;
+    const bulletMesh = new THREE.Mesh(new THREE.SphereGeometry(.1, 16, 10), materials.bullet);
     bulletMesh.visible = false;
-    return;
-  }
-  const elapsed = now - activeShot.startedAt;
-  if (elapsed <= activeShot.flyDuration) {
-    const t = Math.min(1, elapsed / activeShot.flyDuration);
-    bulletMesh.position.copy(centered(activeShot.level, lerpPosition(activeShot.start, activeShot.end, t), 0));
-    bulletMesh.scale.setScalar(1);
-    bulletMesh.material.opacity = .82;
-    bulletMesh.visible = true;
-    return;
-  }
-  const explodeElapsed = elapsed - activeShot.flyDuration;
-  if (explodeElapsed <= activeShot.explodeDuration) {
-    const t = Math.min(1, explodeElapsed / activeShot.explodeDuration);
-    const impact = activeShot.impact || activeShot.end;
-    bulletMesh.position.copy(centered(activeShot.level, impact, 0));
-    bulletMesh.scale.setScalar(1 + t * 4);
-    bulletMesh.material.opacity = .82 * (1 - t);
-    bulletMesh.visible = true;
-    return;
-  }
-  activeShot = null;
-  bulletMesh.visible = false;
-  bulletMesh.material.opacity = .82;
-}
-function finishAnimation(){
-  recordDebugSample('animation-finish', performance.now(), true);
-  activeAnimation = null;
-  visualState = withTires(snapshot(game), tireAngles);
-  if (scheduleAdvanceIfWon()) {
-    queuedAction = null;
-    return;
-  }
-  if (queuedAction) {
-    const next = queuedAction;
-    queuedAction = null;
-    act(next);
-  } else {
-    continueHeldInput();
-  }
-}
-function scheduleAdvanceIfWon(){
-  if (!game.won) return false;
-  const nextIndex = game.level.index + 1;
-  if (nextIndex >= Kiki.levels.length) return true;
-  if (!advancingLevel) {
-    advancingLevel = true;
-    recordDebugSample('level-complete', performance.now(), true);
-    clearPendingJump();
-    heldInput.move = null;
-    heldInput.pointerMove = null;
-    rememberLevel(nextIndex);
-    sessionStorage.setItem('kikiSuppressInputUntil', String(Date.now() + 1600));
-    setTimeout(() => { location.href = 'play.html?level=' + nextIndex; }, 700);
-  }
-  return true;
-}
-function canJumpForward(direction){
-  return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
-}
-function actionForMove(direction){
-  if (heldInput.push && direction === 'up') return 'push forward';
-  if (heldInput.push && direction === 'down') return 'push backward';
-  return canJumpForward(direction) ? 'jump forward' : direction;
-}
-function clearPendingJump(){
-  if (heldInput.jumpTimer) clearTimeout(heldInput.jumpTimer);
-  heldInput.jumpTimer = null;
-  heldInput.jumpPending = false;
-}
-function consumeJumpIntent(){
-  clearPendingJump();
-  heldInput.jumpConsumed = true;
-  heldInput.jumpGraceUntil = 0;
-}
-function schedulePlainJump(){
-  const delay = Math.max(0, heldInput.jumpGraceUntil - performance.now());
-  clearPendingJump();
-  heldInput.jumpPending = true;
-  heldInput.jumpTimer = setTimeout(() => {
-    heldInput.jumpTimer = null;
-    if (!heldInput.jumpPending || heldInput.jumpConsumed) return;
-    heldInput.jumpPending = false;
-    heldInput.jumpGraceUntil = 0;
-    act('jump');
-  }, delay);
-}
-function draw(now){
-  if (activeAnimation) {
-    visualState = stateAtAnimation(activeAnimation, now);
-    if (now - activeAnimation.startedAt >= activeAnimation.totalDuration) finishAnimation();
-  }
-  recordDebugSample('frame', now, false);
-  updateBot(game.level, visualState);
-  updateShotEffect(now);
-  updateCamera(game.level, visualState);
-  updateHud();
-  renderer.render(scene, camera);
-  requestAnimationFrame(draw);
-}
-function act(direction){
-  if (game.won || advancingLevel || Date.now() < suppressInputUntil) return;
-  if (activeAnimation) {
-    if (direction.indexOf('jump') === 0) return;
-    queuedAction = direction;
-    return;
-  }
-  const before = game.clone();
-  const from = snapshot(before);
-  if (!game.action(direction)) return;
-  recordDebugSample('action-start', performance.now(), true);
-  const shot = game.lastShot && copyPosition(game.lastShot.start) ? game.lastShot : null;
-  const to = snapshot(game);
-  const segments = buildAnimation(direction, from, to, before);
-  startAnimation(segments, to, direction);
-  recordDebugAction(direction, from, to, segments);
-  buildStaticScene();
-  if (direction === 'shoot') startShotEffect(shot);
-  updateHud();
-}
-function continueHeldInput(){
-  const next = heldInput.move;
-  if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => {
-    const action = actionForMove(next);
-    if (action === 'jump forward') consumeJumpIntent();
-    act(action);
-  });
-}
-function setHeldMove(direction, pointerId){
-  const changed = heldInput.move !== direction || heldInput.pointerMove !== pointerId;
-  heldInput.move = direction;
-  heldInput.pointerMove = pointerId;
-  if (changed && !activeAnimation && !queuedAction) {
-    const action = actionForMove(direction);
-    if (action === 'jump forward') consumeJumpIntent();
-    act(action);
-  }
-}
-function releaseMove(pointerId){
-  if (heldInput.pointerMove === pointerId) {
-    heldInput.move = null;
-    heldInput.pointerMove = null;
-  }
-}
-const touchpad = document.getElementById('touchpad');
-const touchpadKnob = document.getElementById('touchpad-knob');
-const touchpadState = {pointerId: null, originX: 0, originY: 0, tapDirection: null, dragging: false};
-function directionFromSwipe(dx, dy){
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return null;
-  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-}
-function directionFromTouchpadPoint(x, y){
-  const rect = touchpad.getBoundingClientRect();
-  const dx = x - (rect.left + rect.width / 2);
-  const dy = y - (rect.top + rect.height / 2);
-  if (Math.max(Math.abs(dx), Math.abs(dy)) < Math.min(rect.width, rect.height) * .32) return null;
-  return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-}
-function moveTouchpadKnob(dx, dy){
-  const limit = 34;
-  const scale = Math.min(1, limit / Math.max(limit, Math.hypot(dx, dy)));
-  touchpadKnob.style.setProperty('--pad-x', (dx * scale).toFixed(1) + 'px');
-  touchpadKnob.style.setProperty('--pad-y', (dy * scale).toFixed(1) + 'px');
-}
-function resetTouchpad(){
-  touchpadState.pointerId = null;
-  touchpadState.tapDirection = null;
-  touchpadState.dragging = false;
-  touchpad.classList.remove('active');
-  touchpadKnob.style.setProperty('--pad-x', '0px');
-  touchpadKnob.style.setProperty('--pad-y', '0px');
-}
-function isButtonLikeTarget(target){
-  return Boolean(target && target.closest && target.closest('button,a,label,input,textarea,select'));
-}
-function canStartDragGesture(event){
-  if (event.pointerType === 'mouse' && event.button !== 0) return false;
-  return !isButtonLikeTarget(event.target);
-}
-addEventListener('pointerdown', event => {
-  if (!canStartDragGesture(event)) return;
-  event.preventDefault();
-  touchpadState.pointerId = event.pointerId;
-  touchpadState.originX = event.clientX;
-  touchpadState.originY = event.clientY;
-  touchpadState.tapDirection = event.target.closest('#touchpad') ? directionFromTouchpadPoint(event.clientX, event.clientY) : null;
-  touchpadState.dragging = false;
-  if (event.target.setPointerCapture) {
-    try { event.target.setPointerCapture(event.pointerId); } catch (_) {}
-  }
-  touchpad.classList.add('active');
-});
-addEventListener('pointermove', event => {
-  if (touchpadState.pointerId !== event.pointerId) return;
-  event.preventDefault();
-  const dx = event.clientX - touchpadState.originX;
-  const dy = event.clientY - touchpadState.originY;
-  moveTouchpadKnob(dx, dy);
-  const direction = directionFromSwipe(dx, dy);
-  if (direction) {
-    touchpadState.dragging = true;
-    setHeldMove(direction, event.pointerId);
-  }
-});
-addEventListener('pointerup', event => {
-  const tapDirection = touchpadState.pointerId === event.pointerId && !touchpadState.dragging ? touchpadState.tapDirection : null;
-  releaseMove(event.pointerId);
-  resetTouchpad();
-  if (tapDirection) act(tapDirection);
-});
-addEventListener('pointercancel', event => {releaseMove(event.pointerId);resetTouchpad();});
-document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
-document.getElementById('reset').onclick = () => { location.reload(); };
-document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
-document.getElementById('shoot').onclick = () => act('shoot');
-addEventListener('keydown', event => {
-  const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
-  if(event.key === 'v'){event.preventDefault();cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind';updateHud();return;}
-  if(event.key === 'Shift'){
-    event.preventDefault();
-    heldInput.push = true;
-    return;
-  }
-  if(event.key === ' '){
-    event.preventDefault();
-    if (!event.repeat) clearPendingJump();
-    heldInput.jump = true;
-    heldInput.jumpGraceUntil = performance.now() + JUMP_GRACE_MS;
-    if (!event.repeat && heldInput.move === 'up') {
-      consumeJumpIntent();
-      act('jump forward');
+    effects.add(bulletMesh);
+    const TIRE_VISUAL_SCALE = .25;
+    const TIRE_HALF_TURN = Math.PI * TIRE_VISUAL_SCALE;
+    const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2 * TIRE_VISUAL_SCALE;
+    let tireAngles = { left: 0, right: 0 };
+    let visualState = withTires(snapshot(game), tireAngles);
+    let activeAnimation = null;
+    let activeShot = null;
+    let queuedAction = null;
+    let cameraReady = false;
+    let advancingLevel = false;
+    let suppressInputUntil = Number(sessionStorage.getItem('kikiSuppressInputUntil') || 0);
+    sessionStorage.removeItem('kikiSuppressInputUntil');
+    const heldInput = { move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null, push: false };
+    const JUMP_GRACE_MS = 220;
+    const DEBUG_ENABLED_KEY = 'kiki.debug.path.enabled';
+    const DEBUG_LATEST_KEY = 'kiki.debug.path.latest';
+    const DEBUG_HISTORY_KEY = 'kiki.debug.path.history';
+    const DEBUG_TRACE_PREFIX = 'kiki.debug.path.';
+    const DEBUG_SAMPLE_MS = 80;
+    const DEBUG_TOUCH_RADIUS = .98;
+    const debugToggle = document.getElementById('debug-path-toggle');
+    const debugTraceElement = document.getElementById('kiki-debug-trace');
+    let debugTrace = null;
+    let debugEnabled = localStorage.getItem(DEBUG_ENABLED_KEY) === '1';
+    let debugLastSampleAt = -Infinity;
+    let debugLastPersistAt = 0;
+    debugToggle.checked = debugEnabled;
+    document.body.dataset.kikiDebugLatestKey = DEBUG_LATEST_KEY;
+    function rounded(value) { return Math.round(value * 1000) / 1000; }
+    function roundedPosition(position) { return { x: rounded(position.x), y: rounded(position.y || 0), z: rounded(position.z) }; }
+    function roundedCell(position) { return { x: Math.round(position.x), y: Math.round(position.y || 0), z: Math.round(position.z) }; }
+    function cellName(position) { return position.x + ',' + (position.y || 0) + ',' + position.z; }
+    function distanceSquared(a, b) {
+      const dx = a.x - b.x;
+      const dy = (a.y || 0) - (b.y || 0);
+      const dz = a.z - b.z;
+      return dx * dx + dy * dy + dz * dz;
     }
-    return;
-  }
-  if(map[event.key]){
-    event.preventDefault();
-    heldInput.move = map[event.key];
-    if (!event.repeat) {
-      const action = actionForMove(heldInput.move);
-      if (action === 'jump forward') consumeJumpIntent();
-      act(action);
+    function objectsAtCell(cell) {
+      return (game.objects || []).filter(object => {
+        const coordinates = object.coordinates;
+        return coordinates.x === cell.x && (coordinates.y || 0) === (cell.y || 0) && coordinates.z === cell.z;
+      });
     }
-  }
-});
-addEventListener('keyup', event => {
-  const map = {ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right'};
-  if(event.key === 'Shift'){
-    event.preventDefault();
-    heldInput.push = false;
-    return;
-  }
-  if(event.key === ' '){
-    event.preventDefault();
-    heldInput.jump = false;
-    if (heldInput.jumpConsumed) {
-      heldInput.jumpConsumed = false;
+    function exitAtCell(cell) {
+      return (game.exits || []).filter(exit => {
+        const coordinates = exit.coordinates || exit;
+        return coordinates.x === cell.x && (coordinates.y || 0) === (cell.y || 0) && coordinates.z === cell.z;
+      });
+    }
+    function tileInfo(cell, distance) {
+      const tags = [];
+      if (cell.x < 0 || cell.y < 0 || cell.z < 0 || cell.x >= game.level.size.x || cell.y >= game.level.size.y || cell.z >= game.level.size.z) {
+        tags.push('boundary');
+      } else {
+        if (cell.y === 0) tags.push('floor');
+        objectsAtCell(cell).forEach(object => tags.push(object.type));
+        exitAtCell(cell).forEach(exit => tags.push((exit.active === false ? 'inactive-' : 'active-') + (exit.name || 'exit')));
+      }
+      return { cell: { x: cell.x, y: cell.y || 0, z: cell.z }, distance: rounded(Math.sqrt(distance)), tags };
+    }
+    function touchedTiles(position) {
+      const radius = DEBUG_TOUCH_RADIUS;
+      const radiusSquared = radius * radius;
+      const tiles = [];
+      for (let z = Math.floor(position.z - radius); z <= Math.ceil(position.z + radius); z += 1) {
+        for (let y = Math.floor((position.y || 0) - radius); y <= Math.ceil((position.y || 0) + radius); y += 1) {
+          for (let x = Math.floor(position.x - radius); x <= Math.ceil(position.x + radius); x += 1) {
+            const cell = { x, y, z };
+            const d = distanceSquared(position, cell);
+            if (d <= radiusSquared) tiles.push(tileInfo(cell, d));
+          }
+        }
+      }
+      tiles.sort((a, b) => a.distance - b.distance || cellName(a.cell).localeCompare(cellName(b.cell)));
+      return tiles;
+    }
+    function currentAnimationKind(now) {
+      if (!activeAnimation) return null;
+      let elapsed = now - activeAnimation.startedAt;
+      for (const segment of activeAnimation.segments) {
+        if (elapsed <= segment.duration) return segment.kind;
+        elapsed -= segment.duration;
+      }
+      return activeAnimation.segments.length ? activeAnimation.segments[activeAnimation.segments.length - 1].kind : null;
+    }
+    function debugTraceKey(trace) { return DEBUG_TRACE_PREFIX + trace.id; }
+    function saveDebugTrace(force) {
+      if (!debugTrace) return;
+      const now = performance.now();
+      if (!force && now - debugLastPersistAt < 500) return;
+      debugLastPersistAt = now;
+      debugTrace.updatedAt = new Date().toISOString();
+      const value = JSON.stringify(debugTrace);
+      if (debugTraceElement) debugTraceElement.textContent = value;
+      document.body.dataset.kikiDebugTraceId = debugTrace.id;
+      document.body.dataset.kikiDebugTraceKey = debugTraceKey(debugTrace);
+      document.body.dataset.kikiDebugActionCount = String(debugTrace.actions.length);
+      document.body.dataset.kikiDebugSampleCount = String(debugTrace.samples.length);
+      try {
+        localStorage.setItem(DEBUG_LATEST_KEY, value);
+        localStorage.setItem(debugTraceKey(debugTrace), value);
+      } catch (_) { }
+    }
+    function rememberDebugTrace(trace) {
+      let history = [];
+      try { history = JSON.parse(localStorage.getItem(DEBUG_HISTORY_KEY) || '[]'); } catch (_) { }
+      history = [trace.id].concat(history.filter(id => id !== trace.id)).slice(0, 20);
+      try { localStorage.setItem(DEBUG_HISTORY_KEY, JSON.stringify(history)); } catch (_) { }
+    }
+    function beginDebugTrace(reason) {
+      debugTrace = {
+        version: 1,
+        id: Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 8),
+        startedAt: performance.now(),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        storageKey: null,
+        reason,
+        sampleMs: DEBUG_SAMPLE_MS,
+        touchRadius: DEBUG_TOUCH_RADIUS,
+        level: { index: game.level.index, id: game.level.id, title: game.level.title, size: Object.assign({}, game.level.size) },
+        actions: [],
+        samples: []
+      };
+      debugTrace.storageKey = debugTraceKey(debugTrace);
+      rememberDebugTrace(debugTrace);
+      document.body.dataset.kikiDebugTraceId = debugTrace.id;
+      document.body.dataset.kikiDebugTraceKey = debugTrace.storageKey;
+      debugLastSampleAt = -Infinity;
+      recordDebugSample(reason, performance.now(), true);
+      saveDebugTrace(true);
+    }
+    function stopDebugTrace(reason) {
+      if (!debugTrace) return;
+      recordDebugSample(reason, performance.now(), true);
+      debugTrace.endedAt = new Date().toISOString();
+      saveDebugTrace(true);
+      debugTrace = null;
+    }
+    function recordDebugAction(name, before, after, segments) {
+      if (!debugEnabled || !debugTrace) return;
+      debugTrace.actions.push({
+        t: rounded(performance.now() - debugTrace.startedAt),
+        name,
+        before: { position: roundedPosition(before.position), dir: roundedPosition(before.dir), up: roundedPosition(before.up) },
+        after: { position: roundedPosition(after.position), dir: roundedPosition(after.dir), up: roundedPosition(after.up), won: game.won },
+        segments: segments.map(segment => ({ kind: segment.kind, duration: segment.duration, from: roundedPosition(segment.from.position), to: roundedPosition(segment.to.position) }))
+      });
+      if (debugTrace.actions.length > 1000) debugTrace.actions.shift();
+      saveDebugTrace(true);
+    }
+    function recordDebugSample(reason, now, force) {
+      if (!debugEnabled) return;
+      if (!debugTrace) beginDebugTrace('auto-start');
+      if (!force && now - debugLastSampleAt < DEBUG_SAMPLE_MS) return;
+      debugLastSampleAt = now;
+      const state = visualState || snapshot(game);
+      const sample = {
+        t: rounded(now - debugTrace.startedAt),
+        reason,
+        action: activeAnimation && activeAnimation.action,
+        segment: currentAnimationKind(now),
+        position: roundedPosition(state.position),
+        cell: roundedCell(state.position),
+        dir: roundedPosition(state.dir),
+        up: roundedPosition(state.up),
+        won: game.won,
+        advancingLevel,
+        queuedAction,
+        tiles: touchedTiles(state.position)
+      };
+      debugTrace.samples.push(sample);
+      if (debugTrace.samples.length > 5000) debugTrace.samples.shift();
+      saveDebugTrace(false);
+    }
+    debugToggle.addEventListener('change', () => {
+      debugEnabled = debugToggle.checked;
+      localStorage.setItem(DEBUG_ENABLED_KEY, debugEnabled ? '1' : '0');
+      if (debugEnabled) beginDebugTrace('toggle-on');
+      else stopDebugTrace('toggle-off');
+    });
+    if (debugEnabled) beginDebugTrace('page-load');
+    function buildStaticScene() {
+      while (board.children.length) board.remove(board.children[0]);
+      const level = game.level;
+      addRoom(level);
+      addBoundaryWalls(level);
+      for (let z = 0; z < level.size.z; z += 1) {
+        for (let x = 0; x < level.size.x; x += 1) {
+          addCube(centered(level, { x, y: 0, z }, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
+        }
+      }
+      (game.objects || []).forEach(object => {
+        if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall);
+        else if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
+        else if (object.type === 'wireStone') addWireStone(level, object);
+        else if (object.type === 'wire') addWire(level, object);
+        else if (object.type === 'switch') addSwitch(level, object);
+        else if (object.type === 'gear' || object.type === 'generator' || object.type === 'motorGear') addGear(level, object);
+        else if (object.type === 'motorCylinder') addMotorCylinder(level, object);
+        else if (object.type === 'bomb') addBomb(level, object);
+        else if (object.type === 'mutant') addMutant(level, object);
+      });
+      (game.exits || [{ active: true, coordinates: level.exit }]).forEach(exit => {
+        addGate(level, exit);
+      });
+      board.add(botMesh);
+    }
+    function updateBot(level, state) {
+      const q = state.quaternion || quaternionForState(state);
+      const matrix = new THREE.Matrix4().compose(centered(level, state.position, 0), q, new THREE.Vector3(1, 1, 1));
+      const tires = state.tires || tireAngles;
+      if (botMesh.userData.leftTire && botMesh.userData.rightTire) {
+        botMesh.userData.leftTire.rotation.set(0, Math.PI / 2, tires.left);
+        botMesh.userData.rightTire.rotation.set(0, Math.PI / 2, tires.right);
+      }
+      botMesh.matrix.copy(matrix);
+    }
+    function clampInsideRoom(level, position, delta) {
+      return new THREE.Vector3(
+        Math.min(level.size.x / 2 - delta, Math.max(-level.size.x / 2 + delta, position.x)),
+        Math.min(level.size.y / 2 - delta, Math.max(-level.size.y / 2 + delta, position.y)),
+        Math.min(level.size.z / 2 - delta, Math.max(-level.size.z / 2 + delta, position.z))
+      );
+    }
+    function roomRayDistance(level, origin, direction) {
+      let distance = Infinity;
+      [['x', -level.size.x / 2], ['x', level.size.x / 2], ['y', -level.size.y / 2], ['y', level.size.y / 2], ['z', -level.size.z / 2], ['z', level.size.z / 2]].forEach(([axis, plane]) => {
+        const value = direction[axis];
+        if (Math.abs(value) < .0001) return;
+        const candidate = (plane - origin[axis]) / value;
+        if (candidate > 0) distance = Math.min(distance, candidate);
+      });
+      return distance;
+    }
+    function desiredBehindCamera(level, position, dir, up) {
+      const botToCamera = up.clone().addScaledVector(dir, -2);
+      const maxDistance = botToCamera.length();
+      botToCamera.normalize();
+      const wallDistance = roomRayDistance(level, position, botToCamera);
+      const distance = Math.max(.72, Math.min(maxDistance, wallDistance - .2));
+      return clampInsideRoom(level, position.clone().addScaledVector(botToCamera, distance), .2);
+    }
+    function desiredFollowCamera(level, position, dir, up) {
+      const desiredDistance = 2;
+      let botToCamera = camera.position.clone().sub(position);
+      if (!cameraReady || botToCamera.length() < .001) {
+        return desiredBehindCamera(level, position, dir, up);
+      }
+      const distance = botToCamera.length();
+      if (distance >= desiredDistance) {
+        const delta = Math.min(.2, Math.pow(distance - desiredDistance, 2) / 400);
+        botToCamera = botToCamera.multiplyScalar(1 - delta);
+      } else {
+        const delta = Math.min(.2, (desiredDistance - distance) / 20);
+        botToCamera = botToCamera.lerp(botToCamera.clone().normalize().multiplyScalar(desiredDistance), delta);
+      }
+      const side = new THREE.Vector3().crossVectors(dir, up).normalize();
+      const horizontal = botToCamera.clone().projectOnPlane(up).normalize();
+      const behind = dir.clone().multiplyScalar(-1);
+      const angle = Math.acos(Math.min(1, Math.max(-1, behind.dot(horizontal)))) * (horizontal.dot(side) > 0 ? -1 : 1);
+      botToCamera.applyAxisAngle(up, angle / 400);
+      const wallDistance = roomRayDistance(level, position, botToCamera.clone().normalize());
+      if (wallDistance < botToCamera.length() + .2) botToCamera.setLength(Math.max(.72, wallDistance - .2));
+      return clampInsideRoom(level, position.clone().add(botToCamera), .2);
+    }
+    function updateCamera(level, state) {
+      const position = centered(level, state.position, 0);
+      const vectors = stateVectors(state);
+      const dir = vectors.dir;
+      const up = vectors.up;
+      camera.aspect = innerWidth / innerHeight;
+      camera.up.copy(up);
+      if (cameraMode === 'inside') {
+        camera.position.copy(position).addScaledVector(up, .18);
+        camera.lookAt(position.clone().add(dir));
+      } else {
+        const desired = cameraMode === 'follow'
+          ? desiredFollowCamera(level, position, dir, up)
+          : desiredBehindCamera(level, position, dir, up);
+        camera.position.copy(cameraReady ? camera.position.lerp(desired, cameraMode === 'follow' ? .12 : .2) : desired);
+        camera.lookAt(position.clone().addScaledVector(dir, .35));
+      }
+      cameraReady = true;
+      cameraLight.position.copy(camera.position);
+      cameraLight.target.position.copy(position);
+      cameraLight.target.updateMatrixWorld();
+      camera.updateProjectionMatrix();
+    }
+    function updateHud() {
+      const level = game.level;
+      document.getElementById('title').textContent = String(level.index + 1).padStart(2, '0') + ' / ' + level.title;
+      document.getElementById('hud').textContent = game.won ? 'EXIT REACHED' : 'MOVES ' + game.moves + '  ·  ' + cameraMode.toUpperCase() + '\n' + game.help;
+      document.querySelectorAll('.control-button').forEach(button => {
+        button.classList.toggle('won', game.won);
+        button.disabled = game.won || advancingLevel;
+      });
+    }
+    function animationSegment(kind, duration, from, to, extra) {
+      return Object.assign({ kind, duration, from, to }, extra || {});
+    }
+    function actionDuration(name) { return game.actionDuration ? game.actionDuration(name) : 200; }
+    function tireDelta(left, right) { return { left, right }; }
+    function rollingDelta(sign, scale) { return tireDelta(sign * TIRE_HALF_TURN * scale, sign * TIRE_HALF_TURN * scale); }
+    function turnTireDelta(action) {
+      const leftTurn = action === 'turn left' || action === 'left';
+      return tireDelta(leftTurn ? -TIRE_HALF_TURN : TIRE_HALF_TURN, leftTurn ? TIRE_HALF_TURN : -TIRE_HALF_TURN);
+    }
+    function appendCatchUp(segments, from, to) {
+      if (near(from.position, to.position) && quaternionForState(from).angleTo(quaternionForState(to)) < .001) return;
+      const distance = v(to.position).sub(v(from.position)).length();
+      segments.push(animationSegment('generic', Math.max(120, distance * 120), from, to));
+    }
+    function sameOrientation(a, b) {
+      return quaternionForState(a).angleTo(quaternionForState(b)) < .001;
+    }
+    function appendJumpSettle(segments, from, to, step, up, maxForwardFalls) {
+      if (!sameOrientation(from, to)) return false;
+      const down = neg(up);
+      let cursor = from;
+      let appended = false;
+      let guard = 0;
+      let forwardFalls = 0;
+      function distanceSquared(a, b) {
+        const dx = a.x - b.x;
+        const dy = (a.y || 0) - (b.y || 0);
+        const dz = a.z - b.z;
+        return dx * dx + dy * dy + dz * dz;
+      }
+      while (sameOrientation(cursor, to) && !near(cursor.position, to.position) && guard < 64) {
+        const currentDistance = distanceSquared(cursor.position, to.position);
+        const fallTarget = { position: add(cursor.position, down), dir: cursor.dir, up: cursor.up };
+        const canFallForward = step && (maxForwardFalls === undefined || forwardFalls < maxForwardFalls);
+        const fallForwardTarget = canFallForward && { position: add(add(cursor.position, step), down), dir: cursor.dir, up: cursor.up };
+        const forwardTarget = step && { position: add(cursor.position, step), dir: cursor.dir, up: cursor.up };
+        let next = null;
+        if (fallForwardTarget && near(to.position, fallForwardTarget.position)) {
+          next = animationSegment('fallForward', actionDuration('fall forward'), cursor, to, { step, down });
+        } else if (near(to.position, fallTarget.position)) {
+          next = animationSegment('fall', actionDuration('fall'), cursor, to, { down });
+        } else if (forwardTarget && near(to.position, forwardTarget.position)) {
+          next = animationSegment('forward', actionDuration('move forward'), cursor, to, { tireDelta: rollingDelta(1, 1) });
+        } else if (fallForwardTarget && distanceSquared(fallForwardTarget.position, to.position) < currentDistance) {
+          next = animationSegment('fallForward', actionDuration('fall forward'), cursor, fallForwardTarget, { step, down });
+        } else if (distanceSquared(fallTarget.position, to.position) < currentDistance) {
+          next = animationSegment('fall', actionDuration('fall'), cursor, fallTarget, { down });
+        } else {
+          break;
+        }
+        segments.push(next);
+        cursor = next.to;
+        if (next.kind === 'fallForward') forwardFalls += 1;
+        appended = true;
+        guard += 1;
+      }
+      return appended && near(cursor.position, to.position);
+    }
+    function buildAnimation(action, from, to, beforeGame) {
+      const segments = [];
+      const dir = copyPosition(from.dir);
+      const up = copyPosition(from.up);
+      const down = neg(up);
+      let cursor = from;
+      let step = null;
+      let target = null;
+
+      if (action === 'turn left' || action === 'left' || action === 'turn right' || action === 'right') {
+        segments.push(animationSegment('turn', actionDuration(action === 'left' ? 'turn left' : action === 'right' ? 'turn right' : action), from, to, { tireDelta: turnTireDelta(action) }));
+        return segments;
+      }
+
+      if (action === 'move forward' || action === 'up' || action === 'move backward' || action === 'down') {
+        const sign = (action === 'move backward' || action === 'down') ? -1 : 1;
+        step = mul(dir, sign);
+        const forward = add(from.position, step);
+        if (beforeGame.isUnoccupied(forward)) {
+          if (beforeGame.isUnoccupied(add(forward, down))) {
+            target = { position: add(forward, down), dir: mul(up, -sign), up: step };
+            segments.push(animationSegment('climbDown', 500, from, target, { step, down, tireDelta: rollingDelta(sign, 1) }));
+          } else {
+            target = { position: forward, dir: from.dir, up: from.up };
+            segments.push(animationSegment('forward', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, { tireDelta: rollingDelta(sign, 1) }));
+          }
+        } else {
+          target = { position: from.position, dir: mul(up, sign), up: neg(step) };
+          segments.push(animationSegment('climbUp', actionDuration(sign > 0 ? 'move forward' : 'move backward'), from, target, { tireDelta: rollingDelta(sign, .5) }));
+        }
+        cursor = target;
+      } else if (action === 'jump forward' || action === 'jump far forward') {
+        step = dir;
+        const above = add(from.position, up);
+        const forward = add(from.position, step);
+        const jumpTarget = beforeGame.isUnoccupied(forward) && beforeGame.isUnoccupied(add(forward, up)) ? add(forward, up) : above;
+        target = { position: jumpTarget, dir: from.dir, up: from.up };
+        segments.push(animationSegment('jumpForward', action === 'jump far forward' ? actionDuration('jump forward') : actionDuration(action), from, target, { step, up, tireDelta: tireDelta(TIRE_JUMP_FORWARD, TIRE_JUMP_FORWARD) }));
+        cursor = target;
+      } else if (action === 'jump') {
+        target = { position: add(from.position, up), dir: from.dir, up: from.up };
+        segments.push(animationSegment('jump', actionDuration('jump'), from, target, { up }));
+        cursor = target;
+      }
+
+      const maxForwardFalls = action === 'jump far forward' ? 2 : action === 'jump forward' ? 0 : undefined;
+      if (!appendJumpSettle(segments, cursor || from, to, step, up, maxForwardFalls)) appendCatchUp(segments, cursor || from, to);
+      return segments.length ? segments : [animationSegment('generic', 160, from, to)];
+    }
+    function buildSettleAnimation(from, to) {
+      const segments = [];
+      const down = neg(from.up);
+      let cursor = from;
+      let guard = 0;
+      while (sameOrientation(cursor, to) && !near(cursor.position, to.position) && guard < 64) {
+        const target = { position: add(cursor.position, down), dir: cursor.dir, up: cursor.up };
+        const toward = v(to.position).sub(v(cursor.position)).dot(v(down));
+        const remainingAfterTarget = v(to.position).sub(v(target.position)).dot(v(down));
+        if (toward < .001 || remainingAfterTarget < -.001) break;
+        segments.push(animationSegment('fall', actionDuration('fall'), cursor, target, { down }));
+        cursor = target;
+        guard += 1;
+      }
+      appendCatchUp(segments, cursor, to);
+      return segments.length ? segments : [animationSegment('generic', 160, from, to)];
+    }
+    function startAnimation(segments, to, action) {
+      let cursorTires = copyTires(tireAngles);
+      segments.forEach(segment => {
+        const delta = segment.tireDelta || tireDelta(0, 0);
+        withTires(segment.from, cursorTires);
+        cursorTires = { left: cursorTires.left + delta.left, right: cursorTires.right + delta.right };
+        withTires(segment.to, cursorTires);
+      });
+      tireAngles = cursorTires;
+      activeAnimation = {
+        action: action || null,
+        startedAt: performance.now(),
+        segments,
+        to: withTires(to, tireAngles),
+        totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
+      };
+    }
+    function tiresAtSegment(segment, amount) {
+      return lerpTires(segment.from.tires || tireAngles, segment.to.tires || tireAngles, amount);
+    }
+    function stateWithSegmentTires(state, segment, amount) {
+      return withTires(state, tiresAtSegment(segment, amount));
+    }
+    function stateAtSegment(segment, amount) {
+      const t = Math.min(1, Math.max(0, amount));
+      if (segment.kind === 'jump') {
+        const height = Math.sin(Math.PI / 2 * t);
+        return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.up, height))), segment, t);
+      }
+      if (segment.kind === 'jumpForward') {
+        const forward = 1 - Math.cos(Math.PI / 2 * t);
+        const height = Math.sin(Math.PI / 2 * t);
+        return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.up, height))), segment, forward);
+      }
+      if (segment.kind === 'climbDown') {
+        const q = quaternionForState(segment.from).slerp(quaternionForState(segment.to), t);
+        let position;
+        if (t <= .2) {
+          position = add(segment.from.position, mul(segment.step, t / .2 / 2));
+        } else if (t >= .8) {
+          position = add(add(segment.from.position, segment.step), mul(segment.down, .5 + (t - .8) / .2 / 2));
+        } else {
+          const currentUp = plain(new THREE.Vector3(0, 1, 0).applyQuaternion(q).normalize());
+          position = add(segment.from.position, mul(add(add(segment.step, segment.down), currentUp), .5));
+        }
+        return stateWithSegmentTires(stateFromQuaternion(position, q), segment, t);
+      }
+      if (segment.kind === 'fallForward') {
+        const forward = Math.sin(Math.PI / 2 * t);
+        const down = 1 - Math.cos(Math.PI / 2 * t);
+        return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(add(segment.from.position, mul(segment.step, forward)), mul(segment.down, down))), segment, t);
+      }
+      if (segment.kind === 'fall') {
+        return stateWithSegmentTires(slerpState(segment.from, segment.to, t), segment, t);
+      }
+      const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
+      return stateWithSegmentTires(slerpState(segment.from, segment.to, eased), segment, t);
+    }
+    function stateAtAnimation(animation, now) {
+      let elapsed = now - animation.startedAt;
+      for (const segment of animation.segments) {
+        if (elapsed <= segment.duration) return stateAtSegment(segment, elapsed / segment.duration);
+        elapsed -= segment.duration;
+      }
+      return animation.to;
+    }
+    function startShotEffect(shot) {
+      if (!shot) return;
+      activeShot = {
+        startedAt: performance.now(),
+        start: copyPosition(shot.start),
+        end: copyPosition(shot.end),
+        impact: shot.impact && copyPosition(shot.impact),
+        flyDuration: Math.max(40, shot.flyDuration || 40),
+        explodeDuration: shot.explodeDuration || 200,
+        level: game.level
+      };
+      bulletMesh.visible = true;
+      bulletMesh.scale.setScalar(1);
+    }
+    function updateShotEffect(now) {
+      if (!activeShot) {
+        bulletMesh.visible = false;
+        return;
+      }
+      const elapsed = now - activeShot.startedAt;
+      if (elapsed <= activeShot.flyDuration) {
+        const t = Math.min(1, elapsed / activeShot.flyDuration);
+        bulletMesh.position.copy(centered(activeShot.level, lerpPosition(activeShot.start, activeShot.end, t), 0));
+        bulletMesh.scale.setScalar(1);
+        bulletMesh.material.opacity = .82;
+        bulletMesh.visible = true;
+        return;
+      }
+      const explodeElapsed = elapsed - activeShot.flyDuration;
+      if (explodeElapsed <= activeShot.explodeDuration) {
+        const t = Math.min(1, explodeElapsed / activeShot.explodeDuration);
+        const impact = activeShot.impact || activeShot.end;
+        bulletMesh.position.copy(centered(activeShot.level, impact, 0));
+        bulletMesh.scale.setScalar(1 + t * 4);
+        bulletMesh.material.opacity = .82 * (1 - t);
+        bulletMesh.visible = true;
+        return;
+      }
+      activeShot = null;
+      bulletMesh.visible = false;
+      bulletMesh.material.opacity = .82;
+    }
+    function finishAnimation() {
+      recordDebugSample('animation-finish', performance.now(), true);
+      activeAnimation = null;
+      visualState = withTires(snapshot(game), tireAngles);
+      if (scheduleAdvanceIfWon()) {
+        queuedAction = null;
+        return;
+      }
+      if (queuedAction) {
+        const next = queuedAction;
+        queuedAction = null;
+        act(next);
+      } else {
+        continueHeldInput();
+      }
+    }
+    function scheduleAdvanceIfWon() {
+      if (!game.won) return false;
+      const nextIndex = game.level.index + 1;
+      if (nextIndex >= Kiki.levels.length) return true;
+      if (!advancingLevel) {
+        advancingLevel = true;
+        recordDebugSample('level-complete', performance.now(), true);
+        clearPendingJump();
+        heldInput.move = null;
+        heldInput.pointerMove = null;
+        rememberLevel(nextIndex);
+        sessionStorage.setItem('kikiSuppressInputUntil', String(Date.now() + 1600));
+        setTimeout(() => { location.href = 'play.html?level=' + nextIndex; }, 700);
+      }
+      return true;
+    }
+    function canJumpForward(direction) {
+      return direction === 'up' && (heldInput.jump || performance.now() <= heldInput.jumpGraceUntil);
+    }
+    function actionForMove(direction) {
+      if (heldInput.push && direction === 'up') return 'push forward';
+      if (heldInput.push && direction === 'down') return 'push backward';
+      return canJumpForward(direction) ? 'jump forward' : direction;
+    }
+    function clearPendingJump() {
+      if (heldInput.jumpTimer) clearTimeout(heldInput.jumpTimer);
+      heldInput.jumpTimer = null;
+      heldInput.jumpPending = false;
+    }
+    function consumeJumpIntent() {
+      clearPendingJump();
+      heldInput.jumpConsumed = true;
       heldInput.jumpGraceUntil = 0;
-    } else if (performance.now() <= heldInput.jumpGraceUntil) {
-      schedulePlainJump();
-    } else {
-      heldInput.jumpGraceUntil = 0;
-      act('jump');
     }
-    return;
-  }
-  if(map[event.key] && heldInput.move === map[event.key]){
-    event.preventDefault();
-    heldInput.move = null;
-  }
-});
-addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
-const spawnFrom = snapshot(game);
-game.applyGravity();
-const spawnTo = snapshot(game);
-visualState = withTires(spawnFrom, tireAngles);
-buildStaticScene();
-updateHud();
-if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
-  startAnimation(buildSettleAnimation(spawnFrom, spawnTo), spawnTo, 'settle');
-}
-requestAnimationFrame(draw);
-</script></body></html>
+    function schedulePlainJump() {
+      const delay = Math.max(0, heldInput.jumpGraceUntil - performance.now());
+      clearPendingJump();
+      heldInput.jumpPending = true;
+      heldInput.jumpTimer = setTimeout(() => {
+        heldInput.jumpTimer = null;
+        if (!heldInput.jumpPending || heldInput.jumpConsumed) return;
+        heldInput.jumpPending = false;
+        heldInput.jumpGraceUntil = 0;
+        act('jump');
+      }, delay);
+    }
+    function draw(now) {
+      if (activeAnimation) {
+        visualState = stateAtAnimation(activeAnimation, now);
+        if (now - activeAnimation.startedAt >= activeAnimation.totalDuration) finishAnimation();
+      }
+      recordDebugSample('frame', now, false);
+      updateBot(game.level, visualState);
+      updateShotEffect(now);
+      updateCamera(game.level, visualState);
+      updateHud();
+      renderer.render(scene, camera);
+      requestAnimationFrame(draw);
+    }
+    function act(direction) {
+      if (game.won || advancingLevel || Date.now() < suppressInputUntil) return;
+      if (activeAnimation) {
+        if (direction.indexOf('jump') === 0) return;
+        queuedAction = direction;
+        return;
+      }
+      const before = game.clone();
+      const from = snapshot(before);
+      if (!game.action(direction)) return;
+      recordDebugSample('action-start', performance.now(), true);
+      const shot = game.lastShot && copyPosition(game.lastShot.start) ? game.lastShot : null;
+      const to = snapshot(game);
+      const segments = buildAnimation(direction, from, to, before);
+      startAnimation(segments, to, direction);
+      recordDebugAction(direction, from, to, segments);
+      buildStaticScene();
+      if (direction === 'shoot') startShotEffect(shot);
+      updateHud();
+    }
+    function continueHeldInput() {
+      const next = heldInput.move;
+      if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => {
+        const action = actionForMove(next);
+        if (action === 'jump forward') consumeJumpIntent();
+        act(action);
+      });
+    }
+    function setHeldMove(direction, pointerId) {
+      const changed = heldInput.move !== direction || heldInput.pointerMove !== pointerId;
+      heldInput.move = direction;
+      heldInput.pointerMove = pointerId;
+      if (changed && !activeAnimation && !queuedAction) {
+        const action = actionForMove(direction);
+        if (action === 'jump forward') consumeJumpIntent();
+        act(action);
+      }
+    }
+    function releaseMove(pointerId) {
+      if (heldInput.pointerMove === pointerId) {
+        heldInput.move = null;
+        heldInput.pointerMove = null;
+      }
+    }
+    const touchpad = document.getElementById('touchpad');
+    const touchpadKnob = document.getElementById('touchpad-knob');
+    const touchpadState = { pointerId: null, originX: 0, originY: 0, tapDirection: null, dragging: false };
+    function directionFromSwipe(dx, dy) {
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return null;
+      return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    }
+    function directionFromTouchpadPoint(x, y) {
+      const rect = touchpad.getBoundingClientRect();
+      const dx = x - (rect.left + rect.width / 2);
+      const dy = y - (rect.top + rect.height / 2);
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < Math.min(rect.width, rect.height) * .32) return null;
+      return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+    }
+    function moveTouchpadKnob(dx, dy) {
+      const limit = 34;
+      const scale = Math.min(1, limit / Math.max(limit, Math.hypot(dx, dy)));
+      touchpadKnob.style.setProperty('--pad-x', (dx * scale).toFixed(1) + 'px');
+      touchpadKnob.style.setProperty('--pad-y', (dy * scale).toFixed(1) + 'px');
+    }
+    function resetTouchpad() {
+      touchpadState.pointerId = null;
+      touchpadState.tapDirection = null;
+      touchpadState.dragging = false;
+      touchpad.classList.remove('active');
+      touchpadKnob.style.setProperty('--pad-x', '0px');
+      touchpadKnob.style.setProperty('--pad-y', '0px');
+    }
+    function isButtonLikeTarget(target) {
+      return Boolean(target && target.closest && target.closest('button,a,label,input,textarea,select'));
+    }
+    function canStartDragGesture(event) {
+      if (event.pointerType === 'mouse' && event.button !== 0) return false;
+      return !isButtonLikeTarget(event.target);
+    }
+    addEventListener('pointerdown', event => {
+      if (!canStartDragGesture(event)) return;
+      event.preventDefault();
+      touchpadState.pointerId = event.pointerId;
+      touchpadState.originX = event.clientX;
+      touchpadState.originY = event.clientY;
+      touchpadState.tapDirection = event.target.closest('#touchpad') ? directionFromTouchpadPoint(event.clientX, event.clientY) : null;
+      touchpadState.dragging = false;
+      if (event.target.setPointerCapture) {
+        try { event.target.setPointerCapture(event.pointerId); } catch (_) { }
+      }
+      touchpad.classList.add('active');
+    });
+    addEventListener('pointermove', event => {
+      if (touchpadState.pointerId !== event.pointerId) return;
+      event.preventDefault();
+      const dx = event.clientX - touchpadState.originX;
+      const dy = event.clientY - touchpadState.originY;
+      moveTouchpadKnob(dx, dy);
+      const direction = directionFromSwipe(dx, dy);
+      if (direction) {
+        touchpadState.dragging = true;
+        setHeldMove(direction, event.pointerId);
+      }
+    });
+    addEventListener('pointerup', event => {
+      const tapDirection = touchpadState.pointerId === event.pointerId && !touchpadState.dragging ? touchpadState.tapDirection : null;
+      releaseMove(event.pointerId);
+      resetTouchpad();
+      if (tapDirection) act(tapDirection);
+    });
+    addEventListener('pointercancel', event => { releaseMove(event.pointerId); resetTouchpad(); });
+    document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
+    document.getElementById('reset').onclick = () => { location.reload(); };
+    document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
+    document.getElementById('shoot').onclick = () => act('shoot');
+    addEventListener('keydown', event => {
+      const map = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
+      if (event.key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); return; }
+      if (event.key === 'Shift') {
+        event.preventDefault();
+        heldInput.push = true;
+        return;
+      }
+      if (event.key === ' ') {
+        event.preventDefault();
+        if (!event.repeat) clearPendingJump();
+        heldInput.jump = true;
+        heldInput.jumpGraceUntil = performance.now() + JUMP_GRACE_MS;
+        if (!event.repeat && heldInput.move === 'up') {
+          consumeJumpIntent();
+          act('jump forward');
+        }
+        return;
+      }
+      if (map[event.key]) {
+        event.preventDefault();
+        heldInput.move = map[event.key];
+        if (!event.repeat) {
+          const action = actionForMove(heldInput.move);
+          if (action === 'jump forward') consumeJumpIntent();
+          act(action);
+        }
+      }
+    });
+    addEventListener('keyup', event => {
+      const map = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
+      if (event.key === 'Shift') {
+        event.preventDefault();
+        heldInput.push = false;
+        return;
+      }
+      if (event.key === ' ') {
+        event.preventDefault();
+        heldInput.jump = false;
+        if (heldInput.jumpConsumed) {
+          heldInput.jumpConsumed = false;
+          heldInput.jumpGraceUntil = 0;
+        } else if (performance.now() <= heldInput.jumpGraceUntil) {
+          schedulePlainJump();
+        } else {
+          heldInput.jumpGraceUntil = 0;
+          act('jump');
+        }
+        return;
+      }
+      if (map[event.key] && heldInput.move === map[event.key]) {
+        event.preventDefault();
+        heldInput.move = null;
+      }
+    });
+    addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
+    const spawnFrom = snapshot(game);
+    game.applyGravity();
+    const spawnTo = snapshot(game);
+    visualState = withTires(spawnFrom, tireAngles);
+    buildStaticScene();
+    updateHud();
+    if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
+      startAnimation(buildSettleAnimation(spawnFrom, spawnTo), spawnTo, 'settle');
+    }
+    requestAnimationFrame(draw);
+  </script>
+</body>
+
+</html>
