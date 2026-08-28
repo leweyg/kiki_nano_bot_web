@@ -165,8 +165,9 @@ function addGate(level, exit){
 }
 const botMesh = KikiMeshes.createBot(THREE, {body: materials.botBody, tire: materials.botTire});
 botMesh.matrixAutoUpdate = false;
-const TIRE_HALF_TURN = Math.PI;
-const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2;
+const TIRE_VISUAL_SCALE = .25;
+const TIRE_HALF_TURN = Math.PI * TIRE_VISUAL_SCALE;
+const TIRE_JUMP_FORWARD = Math.PI * Math.PI / 2 * TIRE_VISUAL_SCALE;
 let tireAngles = {left: 0, right: 0};
 let visualState = withTires(snapshot(game), tireAngles);
 let activeAnimation = null;
