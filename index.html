@@ -12,11 +12,17 @@
   <div class="eyebrow">A small machine with a big way out</div>
   <h1>Kiki<br>the Nano Bot</h1>
   <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version keeps the game state shared between the 3D client and an offline validator.</p>
-  <div class="actions"><a class="primary" href="play.html">Play the first level</a><a href="sim.html">Run the level lab</a><a id="source-link" href="https://github.com/leweyg/kiki_nano_bot_web">Source code</a></div>
+  <div class="actions"><a class="primary" href="play.html">Play the first level</a><a id="continue-link" href="play.html">Continue @ 01 start</a><a id="source-link" href="https://github.com/leweyg/kiki_nano_bot_web">Source code</a></div>
   <section><div class="eyebrow">50 arenas</div><h2>Choose a level</h2><div class="levels" id="levels"></div><p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p></section>
   <section><div class="eyebrow">Porting checklist</div><h2>Game Items</h2><div class="items" id="game-items"></div></section>
 </main><script src="kiki/js/kiki_static_data.js"></script><script src="kiki/js/kiki.js"></script><script>
+  var CONTINUE_LEVEL_KEY = "kikiContinueLevel";
+  function readCookie(name){var match=document.cookie.match(new RegExp("(?:^|; )"+name.replace(/[.$?*|{}()[\]\\/+^]/g,"\\$&")+"=([^;]*)"));return match ? decodeURIComponent(match[1]) : null;}
+  function savedLevelIndex(){var saved=null;try{saved=localStorage.getItem(CONTINUE_LEVEL_KEY);}catch(error){}if(saved === null) saved=readCookie(CONTINUE_LEVEL_KEY);var index=Kiki.getLevelIndex(saved);return Kiki.levels[index] ? index : 0;}
   document.getElementById("levels").innerHTML = Kiki.levels.map(function(level){return '<a href="play.html?level='+level.index+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+level.title+'</a>';}).join('');
+  var continueLevel = Kiki.getLevel(savedLevelIndex());
+  document.getElementById("continue-link").href = "play.html?level=" + continueLevel.index;
+  document.getElementById("continue-link").textContent = "Continue @ " + String(continueLevel.index+1).padStart(2,'0') + " " + continueLevel.title;
   document.getElementById("source-link").href = Kiki.sourceUrl || "https://github.com/leweyg/kiki_nano_bot_web";
   function escapeHtml(value){return String(value || "").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c];});}
   function levelLink(id){var level=Kiki.getLevel(id);return '<a href="play.html?level='+level.index+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+escapeHtml(level.title)+'</a>';}

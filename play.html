@@ -9,6 +9,13 @@ import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
 const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
 let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
+const CONTINUE_LEVEL_KEY = 'kikiContinueLevel';
+function rememberLevel(index){
+  const value = String(index);
+  try { localStorage.setItem(CONTINUE_LEVEL_KEY, value); } catch (error) {}
+  document.cookie = CONTINUE_LEVEL_KEY + '=' + encodeURIComponent(value) + '; max-age=31536000; path=/; SameSite=Lax';
+}
+rememberLevel(game.level.index);
 const levelScheme = Kiki.getColorScheme(game.level.scheme);
 function schemeEntry(className, part){
   return levelScheme && levelScheme[className] && levelScheme[className][part || 'base'];
@@ -835,6 +842,7 @@ function scheduleAdvanceIfWon(){
     clearPendingJump();
     heldInput.move = null;
     heldInput.pointerMove = null;
+    rememberLevel(nextIndex);
     sessionStorage.setItem('kikiSuppressInputUntil', String(Date.now() + 1600));
     setTimeout(() => { location.href = 'play.html?level=' + nextIndex; }, 700);
   }
