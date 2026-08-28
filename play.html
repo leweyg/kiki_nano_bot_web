@@ -597,6 +597,7 @@
     sessionStorage.removeItem('kikiSuppressInputUntil');
     const heldInput = { move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null };
     const JUMP_GRACE_MS = 220;
+    const TAP_SEQUENCE_MS = 420;
     const DEBUG_ENABLED_KEY = 'kiki.debug.path.enabled';
     const DEBUG_LATEST_KEY = 'kiki.debug.path.latest';
     const DEBUG_HISTORY_KEY = 'kiki.debug.path.history';
@@ -1184,6 +1185,26 @@
         act('jump');
       }, delay);
     }
+    const tapSequence = { count: 0, timer: null };
+    function clearTapSequence() {
+      if (tapSequence.timer) clearTimeout(tapSequence.timer);
+      tapSequence.count = 0;
+      tapSequence.timer = null;
+    }
+    function runTapSequence() {
+      const count = tapSequence.count;
+      clearTapSequence();
+      act(count >= 3 ? 'jump far forward' : count === 2 ? 'jump forward' : 'jump');
+    }
+    function queueTapJump() {
+      tapSequence.count = Math.min(3, tapSequence.count + 1);
+      if (tapSequence.timer) clearTimeout(tapSequence.timer);
+      if (tapSequence.count >= 3) {
+        runTapSequence();
+        return;
+      }
+      tapSequence.timer = setTimeout(runTapSequence, TAP_SEQUENCE_MS);
+    }
     function draw(now) {
       if (activeAnimation) {
         visualState = stateAtAnimation(activeAnimation, now);
@@ -1250,16 +1271,9 @@
     }
     const touchpad = document.getElementById('touchpad');
     const touchpadKnob = document.getElementById('touchpad-knob');
-    const touchpadState = { pointerId: null, originX: 0, originY: 0, tapDirection: null, dragging: false };
+    const touchpadState = { pointerId: null, originX: 0, originY: 0, dragging: false };
     function directionFromSwipe(dx, dy) {
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return null;
-      return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
-    }
-    function directionFromTouchpadPoint(x, y) {
-      const rect = touchpad.getBoundingClientRect();
-      const dx = x - (rect.left + rect.width / 2);
-      const dy = y - (rect.top + rect.height / 2);
-      if (Math.max(Math.abs(dx), Math.abs(dy)) < Math.min(rect.width, rect.height) * .32) return null;
       return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
     }
     function moveTouchpadKnob(dx, dy) {
@@ -1270,7 +1284,6 @@
     }
     function resetTouchpad() {
       touchpadState.pointerId = null;
-      touchpadState.tapDirection = null;
       touchpadState.dragging = false;
       touchpad.classList.remove('active');
       touchpadKnob.style.setProperty('--pad-x', '0px');
@@ -1289,7 +1302,6 @@
       touchpadState.pointerId = event.pointerId;
       touchpadState.originX = event.clientX;
       touchpadState.originY = event.clientY;
-      touchpadState.tapDirection = event.target.closest('#touchpad') ? directionFromTouchpadPoint(event.clientX, event.clientY) : null;
       touchpadState.dragging = false;
       if (event.target.setPointerCapture) {
         try { event.target.setPointerCapture(event.pointerId); } catch (_) { }
@@ -1304,17 +1316,19 @@
       moveTouchpadKnob(dx, dy);
       const direction = directionFromSwipe(dx, dy);
       if (direction) {
+        if (!touchpadState.dragging) clearTapSequence();
         touchpadState.dragging = true;
         setHeldMove(direction, event.pointerId);
       }
     });
     addEventListener('pointerup', event => {
-      const tapDirection = touchpadState.pointerId === event.pointerId && !touchpadState.dragging ? touchpadState.tapDirection : null;
+      const wasActivePointer = touchpadState.pointerId === event.pointerId;
+      const wasTap = wasActivePointer && !touchpadState.dragging;
       releaseMove(event.pointerId);
       resetTouchpad();
-      if (tapDirection) act(tapDirection);
+      if (wasTap) queueTapJump();
     });
-    addEventListener('pointercancel', event => { releaseMove(event.pointerId); resetTouchpad(); });
+    addEventListener('pointercancel', event => { clearTapSequence(); releaseMove(event.pointerId); resetTouchpad(); });
     document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
     document.getElementById('reset').onclick = () => { location.reload(); };
     document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
