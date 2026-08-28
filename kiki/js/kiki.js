@@ -1,10 +1,14 @@
 (function (root, factory) {
-  if (typeof module !== "undefined" && module.exports) module.exports = factory();
-  else root.Kiki = factory();
-}(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  if (typeof module !== "undefined" && module.exports) module.exports = factory(root);
+  else root.Kiki = factory(root);
+}(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
   "use strict";
 
-  var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
+  var staticData = root.KikiStaticData;
+  if (!staticData && typeof require !== "undefined") staticData = require("./kiki_static_data.js");
+  staticData = staticData || {};
+  var themes = staticData.themes || ["mint", "copper", "sky", "violet", "lime", "coral"];
+  var colorSchemes = staticData.colorSchemes || {};
   var actionTimings = {
     "move forward": 200,
     "move backward": 200,
@@ -19,58 +23,7 @@
   };
   var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump", "push forward", "push backward", "shoot"];
   var EXIT_TOUCH_RADIUS_SQUARED = 0.98 * 0.98;
-  var levelDefinitions = [
-    { index: 0, id: "start", title: "start", create: makeIndex00StartLevel },
-    { index: 1, id: "steps", title: "steps", create: makeIndex01StepsLevel },
-    { index: 2, id: "move", title: "move", create: makeIndex02MoveLevel },
-    { index: 3, id: "electro", title: "electro", create: makeIndex03ElectroLevel },
-    { index: 4, id: "elevate", title: "elevate", create: makeIndex04ElevateLevel },
-    { index: 5, id: "throw", title: "throw", create: makeIndex05ThrowLevel },
-    { index: 6, id: "gold", title: "gold" },
-    { index: 7, id: "jump", title: "jump" },
-    { index: 8, id: "escape", title: "escape" },
-    { index: 9, id: "gears", title: "gears" },
-    { index: 10, id: "gamma", title: "gamma" },
-    { index: 11, id: "cube", title: "cube" },
-    { index: 12, id: "switch", title: "switch" },
-    { index: 13, id: "borg", title: "borg" },
-    { index: 14, id: "mini", title: "mini" },
-    { index: 15, id: "blocks", title: "blocks" },
-    { index: 16, id: "bombs", title: "bombs" },
-    { index: 17, id: "sandbox", title: "sandbox" },
-    { index: 18, id: "energy", title: "energy" },
-    { index: 19, id: "maze", title: "maze" },
-    { index: 20, id: "love", title: "love" },
-    { index: 21, id: "towers", title: "towers" },
-    { index: 22, id: "edge", title: "edge" },
-    { index: 23, id: "random", title: "random" },
-    { index: 24, id: "plate", title: "plate" },
-    { index: 25, id: "nice", title: "nice" },
-    { index: 26, id: "entropy", title: "entropy" },
-    { index: 27, id: "slick", title: "slick" },
-    { index: 28, id: "bridge", title: "bridge" },
-    { index: 29, id: "flower", title: "flower" },
-    { index: 30, id: "stones", title: "stones" },
-    { index: 31, id: "walls", title: "walls" },
-    { index: 32, id: "grid", title: "grid" },
-    { index: 33, id: "rings", title: "rings" },
-    { index: 34, id: "core", title: "core" },
-    { index: 35, id: "bronze", title: "bronze" },
-    { index: 36, id: "pool", title: "pool" },
-    { index: 37, id: "hidden", title: "hidden" },
-    { index: 38, id: "church", title: "church" },
-    { index: 39, id: "strange", title: "strange" },
-    { index: 40, id: "mesh", title: "mesh" },
-    { index: 41, id: "columns", title: "columns" },
-    { index: 42, id: "machine", title: "machine" },
-    { index: 43, id: "neutron", title: "neutron" },
-    { index: 44, id: "captured", title: "captured" },
-    { index: 45, id: "circuit", title: "circuit" },
-    { index: 46, id: "regal", title: "regal" },
-    { index: 47, id: "conductor", title: "conductor" },
-    { index: 48, id: "evil", title: "evil" },
-    { index: 49, id: "mutants", title: "mutants" }
-  ];
+  var levelDefinitions = staticData.levelDefinitions || [];
   var levelNames = levelDefinitions.map(function (definition) { return definition.id; });
 
   function hash(name) {
@@ -113,7 +66,42 @@
     }
   }
 
-  function makeIndex00StartLevel(index) {
+  function applyDefinition(level, definition) {
+    if (!definition) return level;
+    level.id = definition.id || level.id;
+    level.title = definition.title || level.title;
+    level.index = definition.index;
+    level.theme = definition.theme || level.theme || themes[level.index % themes.length];
+    level.source = definition.source || level.source;
+    level.scheme = definition.scheme || level.scheme || "default_scheme";
+    return level;
+  }
+
+  function cloneColorSchemeValue(value) {
+    if (Array.isArray(value)) return value.slice();
+    var clone = {};
+    Object.keys(value || {}).forEach(function (key) {
+      clone[key] = cloneColorSchemeValue(value[key]);
+    });
+    return clone;
+  }
+  function mergeColorScheme(base, override) {
+    var merged = cloneColorSchemeValue(base);
+    Object.keys(override || {}).forEach(function (className) {
+      if (!merged[className]) merged[className] = {};
+      Object.keys(override[className]).forEach(function (partName) {
+        merged[className][partName] = cloneColorSchemeValue(override[className][partName]);
+      });
+    });
+    return merged;
+  }
+  function getColorScheme(name) {
+    var defaultScheme = colorSchemes.default_scheme || {};
+    var requestedScheme = colorSchemes[name] || defaultScheme;
+    return mergeColorScheme(defaultScheme, requestedScheme);
+  }
+
+  function makeIndex00StartLevel(index, definition) {
     var size = { x: 7, y: 7, z: 11 };
     var objectSpecs = [
       { type: "wall", position: { x: 0, y: 0, z: -2 } },
@@ -123,7 +111,7 @@
     var exits = [{ name: "exit", active: true, position: { x: 0, y: 0, z: 3 } }];
     objectSpecs.forEach(function (object) { object.coordinates = decenter(size, object.position); });
     exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return {
+    return applyDefinition({
       id: "start",
       title: "start",
       index: index,
@@ -147,10 +135,10 @@
       exit: exits[0].coordinates,
       objects: objectSpecs,
       walls: objectSpecs.map(function (object) { return object.coordinates; })
-    };
+    }, definition);
   }
 
-  function makeIndex01StepsLevel(index) {
+  function makeIndex01StepsLevel(index, definition) {
     var size = { x: 7, y: 7, z: 13 };
     var objectSpecs = [
       { type: "wall", position: { x: 0, y: 0, z: 3 } },
@@ -161,7 +149,7 @@
     var exits = [{ name: "exit", active: true, position: { x: 0, y: 1, z: 3 } }];
     objectSpecs.forEach(function (object) { object.coordinates = decenter(size, object.position); });
     exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return {
+    return applyDefinition({
       id: "steps",
       title: "steps",
       index: index,
@@ -181,10 +169,10 @@
       exit: exits[0].coordinates,
       objects: objectSpecs,
       walls: objectSpecs.map(function (object) { return object.coordinates; })
-    };
+    }, definition);
   }
 
-  function makeIndex02MoveLevel(index) {
+  function makeIndex02MoveLevel(index, definition) {
     var size = { x: 7, y: 7, z: 7 };
     var stones = [
       { x: 2, y: 4, z: 0 }, { x: 4, y: 4, z: 0 }, { x: 4, y: 2, z: 0 }, { x: 2, y: 2, z: 0 },
@@ -195,7 +183,7 @@
     objects.push({ type: "switch", name: "exit switch", active: false, toggles: ["exit"], coordinates: { x: 3, y: 3, z: 0 } });
     var exits = [{ name: "exit", active: false, position: { x: 0, y: 0, z: 0 } }];
     exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return {
+    return applyDefinition({
       id: "move",
       title: "move",
       index: index,
@@ -214,10 +202,10 @@
       exit: exits[0].coordinates,
       objects: objects,
       walls: []
-    };
+    }, definition);
   }
 
-  function makeIndex03ElectroLevel(index) {
+  function makeIndex03ElectroLevel(index, definition) {
     var size = { x: 9, y: 7, z: 9 };
     var c = center(size);
     var objects = [];
@@ -256,7 +244,7 @@
         object.coordinates.y === exits[0].coordinates.y && object.coordinates.z === exits[0].coordinates.z);
     });
 
-    return {
+    return applyDefinition({
       id: "electro",
       title: "electro",
       index: index,
@@ -274,10 +262,10 @@
       exit: exits[0].coordinates,
       objects: objects,
       walls: []
-    };
+    }, definition);
   }
 
-  function makeIndex04ElevateLevel(index) {
+  function makeIndex04ElevateLevel(index, definition) {
     var size = { x: 9, y: 5, z: 7 };
     var c = center(size);
     var objects = [];
@@ -303,7 +291,7 @@
     objects.push(objectSpec("bomb", pos(c.x - 1, 0, c.z + 1)));
     objects.push(objectSpec("bomb", pos(c.x - 2, 0, c.z - 1)));
 
-    return {
+    return applyDefinition({
       id: "elevate",
       title: "elevate",
       index: index,
@@ -321,10 +309,10 @@
       exit: exits[0].coordinates,
       objects: objects,
       walls: []
-    };
+    }, definition);
   }
 
-  function makeIndex05ThrowLevel(index) {
+  function makeIndex05ThrowLevel(index, definition) {
     var size = { x: 5, y: 7, z: 7 };
     var objects = [
       objectSpec("wall", decenter(size, pos(-2, 0, 2))),
@@ -333,7 +321,7 @@
     ];
     var exits = [{ name: "exit", active: true, position: pos(0, 0, 0) }];
     exits.forEach(function (exit) { exit.coordinates = decenter(size, exit.position); });
-    return {
+    return applyDefinition({
       id: "throw",
       title: "throw",
       index: index,
@@ -349,10 +337,10 @@
       exit: exits[0].coordinates,
       objects: objects,
       walls: objects.filter(function (object) { return object.type === "wall"; }).map(function (object) { return object.coordinates; })
-    };
+    }, definition);
   }
 
-  function makeGeneratedLevel(name, index) {
+  function makeGeneratedLevel(name, index, definition) {
     var width = 9 + (index % 3) * 2;
     var depth = 9 + ((index * 2) % 3) * 2;
     var start = { x: 1, y: 0, z: 1 };
@@ -377,19 +365,32 @@
         if (!route[key] && (seed % 100) < Math.min(22 + index, 44)) walls.push({ x: x, y: 0, z: z });
       }
     }
-    return {
+    return applyDefinition({
       id: name, title: name, index: index, theme: themes[index % themes.length],
+      source: definition && definition.source,
+      scheme: definition && definition.scheme || "default_scheme",
       size: { x: width, y: 1, z: depth }, start: start, exit: exit, walls: walls,
       player: { coordinates: start, orientation: "rot0" },
       exits: [{ name: "exit", active: true, coordinates: exit }],
       objects: walls.map(function (wall) { return { type: "wall", coordinates: wall }; }),
       help: index < 6 ? "Reach the exit. Use the arrow keys or the controls below." : "Find a route through the arena and reach the glowing exit.",
       generated: true
-    };
+    }, definition);
   }
 
   function makeLevelFromDefinition(definition) {
-    return definition.create ? definition.create(definition.index) : makeGeneratedLevel(definition.id, definition.index);
+    var levelFactories = {
+      makeIndex00StartLevel: makeIndex00StartLevel,
+      makeIndex01StepsLevel: makeIndex01StepsLevel,
+      makeIndex02MoveLevel: makeIndex02MoveLevel,
+      makeIndex03ElectroLevel: makeIndex03ElectroLevel,
+      makeIndex04ElevateLevel: makeIndex04ElevateLevel,
+      makeIndex05ThrowLevel: makeIndex05ThrowLevel
+    };
+    var createLevel = definition.factory && levelFactories[definition.factory];
+    var level = createLevel ? createLevel(definition.index, definition) : makeGeneratedLevel(definition.id, definition.index, definition);
+    level.colorScheme = getColorScheme(level.scheme);
+    return level;
   }
 
   var levels = levelDefinitions.map(makeLevelFromDefinition);
@@ -949,5 +950,16 @@
     return null;
   }
 
-  return { levels: levels, levelDefinitions: levelDefinitions, levelNames: levelNames, actionTimings: actionTimings, getLevel: getLevel, getLevelIndex: getLevelIndex, Game: Game, solve: solve };
+  return {
+    levels: levels,
+    levelDefinitions: levelDefinitions,
+    levelNames: levelNames,
+    colorSchemes: colorSchemes,
+    actionTimings: actionTimings,
+    getColorScheme: getColorScheme,
+    getLevel: getLevel,
+    getLevelIndex: getLevelIndex,
+    Game: Game,
+    solve: solve
+  };
 }));

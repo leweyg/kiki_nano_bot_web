@@ -14,6 +14,6 @@
   <p>Navigate a chain of compact puzzle arenas, push through the walls, and find the glowing exit. The web version keeps the game state shared between the 3D client and an offline validator.</p>
   <div class="actions"><a class="primary" href="play.html">Play the first level</a><a href="sim.html">Run the level lab</a></div>
   <section><div class="eyebrow">50 arenas</div><h2>Choose a level</h2><div class="levels" id="levels"></div><p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p></section>
-</main><script src="kiki/js/kiki.js"></script><script>
+</main><script src="kiki/js/kiki_static_data.js"></script><script src="kiki/js/kiki.js"></script><script>
   document.getElementById("levels").innerHTML = Kiki.levels.map(function(level){return '<a href="play.html?level='+level.index+'">'+String(level.index+1).padStart(2,'0')+' &nbsp;'+level.title+'</a>';}).join('');
 </script></body></html>

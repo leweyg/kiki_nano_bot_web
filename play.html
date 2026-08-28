@@ -4,13 +4,51 @@
 </style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">+FAR</button><button class="control-button" data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div></div>
 <label class="debug-toggle"><input id="debug-path-toggle" type="checkbox">debug</label>
 <script id="kiki-debug-trace" type="application/json"></script>
-<script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
+<script src="kiki/js/kiki_static_data.js"></script><script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
 const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
 let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
+const levelScheme = Kiki.getColorScheme(game.level.scheme);
+function schemeEntry(className, part){
+  return levelScheme && levelScheme[className] && levelScheme[className][part || 'base'];
+}
+function schemeColor(className, part, fallback){
+  const entry = schemeEntry(className, part);
+  if (!entry) return new THREE.Color(fallback);
+  return new THREE.Color(entry[0], entry[1], entry[2]);
+}
+function schemeAlpha(className, part, fallback){
+  const entry = schemeEntry(className, part);
+  return entry && entry.length > 3 ? entry[3] : fallback;
+}
+function materialFromScheme(className, part, fallback, options){
+  const alpha = schemeAlpha(className, part, 1);
+  const materialOptions = Object.assign({color: schemeColor(className, part, fallback)}, options || {});
+  if (alpha < 1 && materialOptions.opacity === undefined) {
+    materialOptions.transparent = true;
+    materialOptions.opacity = alpha;
+  }
+  return new THREE.MeshStandardMaterial(materialOptions);
+}
+function lineMaterialFromScheme(className, part, fallback, options){
+  const alpha = schemeAlpha(className, part, 1);
+  const materialOptions = Object.assign({color: schemeColor(className, part, fallback)}, options || {});
+  if (alpha < 1 && materialOptions.opacity === undefined) {
+    materialOptions.transparent = true;
+    materialOptions.opacity = alpha;
+  }
+  return new THREE.LineBasicMaterial(materialOptions);
+}
+function dimmedMaterial(className, part, fallback, options){
+  const color = schemeColor(className, part, fallback).multiplyScalar(.36);
+  return new THREE.MeshStandardMaterial(Object.assign({color, emissive: color, emissiveIntensity: .2}, options || {}));
+}
+document.documentElement.style.setProperty('--paper', schemeColor('KikiWorld', 'base', '#212121').getStyle());
+document.documentElement.style.setProperty('--ink', schemeColor('KikiText', 'bright', '#e0e0c0').getStyle());
+document.documentElement.style.setProperty('--accent', schemeColor('KikiGate', 'base', '#ff8000').getStyle());
 const scene = new THREE.Scene();
-scene.background = new THREE.Color('#212121');
+scene.background = schemeColor('KikiWorld', 'base', '#212121');
 const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
 let cameraMode = 'behind';
 const renderer = new THREE.WebGLRenderer({antialias: true});
@@ -22,39 +60,43 @@ renderer.domElement.addEventListener('touchmove', event => event.preventDefault(
   addEventListener(type, event => event.preventDefault(), {passive: false});
 });
 addEventListener('touchmove', event => event.preventDefault(), {passive: false});
-scene.add(new THREE.HemisphereLight(0xffffff, 0x000000, .25));
-const keyLight = new THREE.DirectionalLight(0xffffff, .75);
+scene.add(new THREE.HemisphereLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), schemeColor('KikiLight', 'base', '#000000'), .25));
+const keyLight = new THREE.DirectionalLight(schemeColor('KikiLight', 'diffuse', '#ffffff'), .75);
 keyLight.position.set(-3, 6, 4);
 scene.add(keyLight);
-const cameraLight = new THREE.SpotLight(0xffffff, 2.15, 0, Math.PI / 2, .16, .45);
+const cameraLight = new THREE.SpotLight(schemeColor('KikiLight', 'specular', '#ffffff'), 2.15, 0, Math.PI / 2, .16, .45);
 cameraLight.target = new THREE.Object3D();
 scene.add(cameraLight, cameraLight.target);
 const board = new THREE.Group();
 scene.add(board);
 const effects = new THREE.Group();
 scene.add(effects);
-const DEFAULT_GATE_COLOR = 0xffff00;
 const materials = {
-  floorA: new THREE.MeshStandardMaterial({color: 0x555555, roughness: .55, metalness: .05}),
-  floorB: new THREE.MeshStandardMaterial({color: 0x666666, roughness: .55, metalness: .05}),
-  wall: new THREE.MeshStandardMaterial({color: 0x808080, roughness: .48, metalness: .04}),
-  stone: new THREE.MeshStandardMaterial({color: 0x9a9a8a, roughness: .52, metalness: .03}),
-  switchRing: new THREE.MeshStandardMaterial({color: 0xa0b8ff, emissive: 0x182c64, emissiveIntensity: .25, roughness: .34}),
-  switchCore: new THREE.MeshStandardMaterial({color: 0x80f0ff, emissive: 0x00a0ff, emissiveIntensity: .7, roughness: .24}),
-  switchOffCore: new THREE.MeshStandardMaterial({color: 0x39465c, emissive: 0x101824, emissiveIntensity: .25, roughness: .48}),
-  wire: new THREE.MeshStandardMaterial({color: 0x2aaad0, emissive: 0x082530, emissiveIntensity: .18, roughness: .38}),
-  wireActive: new THREE.MeshStandardMaterial({color: 0x80f0ff, emissive: 0x00c8ff, emissiveIntensity: .75, roughness: .24}),
-  gear: new THREE.MeshStandardMaterial({color: 0xc9c4aa, metalness: .18, roughness: .36}),
-  generator: new THREE.MeshStandardMaterial({color: 0x77d68d, emissive: 0x0c3a16, emissiveIntensity: .32, metalness: .12, roughness: .32}),
-  motor: new THREE.MeshStandardMaterial({color: 0xd0a14a, emissive: 0x4a2a06, emissiveIntensity: .22, metalness: .16, roughness: .34}),
-  bomb: new THREE.MeshStandardMaterial({color: 0x2f3038, emissive: 0x4a1010, emissiveIntensity: .3, roughness: .28}),
-  bullet: new THREE.MeshStandardMaterial({color: 0xffa35a, emissive: 0xff5c00, emissiveIntensity: .9, transparent: true, opacity: .82, roughness: .2}),
-  borderA: new THREE.MeshStandardMaterial({color: 0x777777, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  borderB: new THREE.MeshStandardMaterial({color: 0x8a8a8a, roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
-  botBody: new THREE.MeshStandardMaterial({color: 0xff8000, roughness: .42, metalness: .08}),
-  botTire: new THREE.MeshStandardMaterial({color: 0x800000, roughness: .62}),
-  room: new THREE.MeshStandardMaterial({color: 0x212121, roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide}),
-  roomLine: new THREE.LineBasicMaterial({color: 0x808080, transparent: true, opacity: .45})
+  floorA: materialFromScheme('KikiWorld', 'plate', '#555555', {roughness: .55, metalness: .05}),
+  floorB: materialFromScheme('KikiWorld', 'base', '#666666', {roughness: .55, metalness: .05}),
+  wall: materialFromScheme('KikiWorld', 'base', '#808080', {roughness: .48, metalness: .04}),
+  stone: materialFromScheme('KikiStone', 'base', '#9a9a8a', {roughness: .52, metalness: .03}),
+  switchRing: materialFromScheme('KikiSwitch', 'base', '#a0b8ff', {emissive: schemeColor('KikiSwitch', 'base', '#182c64'), emissiveIntensity: .25, roughness: .34}),
+  switchCore: materialFromScheme('KikiSwitch', 'sphere', '#80f0ff', {emissive: schemeColor('KikiSwitch', 'sphere', '#00a0ff'), emissiveIntensity: .7, roughness: .24}),
+  switchOffCore: dimmedMaterial('KikiSwitch', 'base', '#39465c', {roughness: .48}),
+  wire: materialFromScheme('KikiWire', 'base', '#2aaad0', {emissive: schemeColor('KikiWire', 'base', '#082530'), emissiveIntensity: .18, roughness: .38}),
+  wireActive: materialFromScheme('KikiWire', 'light', '#80f0ff', {emissive: schemeColor('KikiWire', 'light', '#00c8ff'), emissiveIntensity: .75, roughness: .24}),
+  gear: materialFromScheme('KikiGear', 'base', '#c9c4aa', {metalness: .18, roughness: .36}),
+  generator: materialFromScheme('KikiGenerator', 'base', '#77d68d', {emissive: schemeColor('KikiGenerator', 'base', '#0c3a16'), emissiveIntensity: .32, metalness: .12, roughness: .32}),
+  motor: materialFromScheme('KikiMotorGear', 'base', '#d0a14a', {emissive: schemeColor('KikiMotorGear', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34}),
+  motorCylinder: materialFromScheme('KikiMotorCylinder', 'base', '#d0a14a', {emissive: schemeColor('KikiMotorCylinder', 'base', '#4a2a06'), emissiveIntensity: .22, metalness: .16, roughness: .34}),
+  bomb: materialFromScheme('KikiBomb', 'base', '#2f3038', {emissive: schemeColor('KikiBomb', 'base', '#4a1010'), emissiveIntensity: .3, roughness: .28}),
+  bullet: materialFromScheme('KikiPlayer', 'base', '#ffa35a', {emissive: schemeColor('KikiPlayer', 'base', '#ff5c00'), emissiveIntensity: .9, transparent: true, opacity: .82, roughness: .2}),
+  borderA: materialFromScheme('KikiWorld', 'base', '#777777', {roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
+  borderB: materialFromScheme('KikiWorld', 'plate', '#8a8a8a', {roughness: .55, transparent: true, opacity: .46, side: THREE.DoubleSide}),
+  botBody: materialFromScheme('KikiPlayer', 'base', '#ff8000', {roughness: .42, metalness: .08}),
+  botTire: materialFromScheme('KikiPlayer', 'tire', '#800000', {roughness: .62}),
+  gate: materialFromScheme('KikiGate', 'base', '#ffff00', {emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true}),
+  gateInactive: materialFromScheme('KikiGate', 'base', '#ffff00', {emissive: schemeColor('KikiGate', 'base', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
+  gateSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .4, roughness: .35, transparent: true}),
+  gateInactiveSphere: materialFromScheme('KikiGate', 'sphere', '#ffff00', {emissive: schemeColor('KikiGate', 'sphere', '#ffff00'), emissiveIntensity: .08, roughness: .35, transparent: true, opacity: .18}),
+  room: materialFromScheme('KikiWorld', 'base', '#212121', {roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide}),
+  roomLine: lineMaterialFromScheme('KikiWorld', 'plate', '#808080', {transparent: true, opacity: .45})
 };
 function cube(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material);}
 function box(size, material){return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material);}
@@ -189,7 +231,7 @@ function addGear(level, object){
 }
 function addMotorCylinder(level, object){
   const group = new THREE.Group();
-  const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motor);
+  const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motorCylinder);
   const rod = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .88, 12), object.powered ? materials.wireActive : materials.gear);
   shell.rotation.x = Math.PI / 2;
   rod.rotation.x = Math.PI / 2;
@@ -208,12 +250,12 @@ function addBomb(level, object){
   board.add(group);
 }
 function addGate(level, exit){
-  const color = DEFAULT_GATE_COLOR;
-  const material = new THREE.MeshStandardMaterial({color, emissive: color, emissiveIntensity: exit.active ? .4 : .08, roughness: .35, transparent: true, opacity: exit.active ? 1 : .18});
+  const ringMaterial = exit.active ? materials.gate : materials.gateInactive;
+  const sphereMaterial = exit.active ? materials.gateSphere : materials.gateInactiveSphere;
   const group = new THREE.Group();
-  const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), material);
+  const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), ringMaterial);
   const ringB = ringA.clone();
-  const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), material);
+  const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), sphereMaterial);
   ringB.rotation.x = Math.PI / 2;
   group.add(ringA, ringB, core);
   group.position.copy(centered(level, exit.coordinates || exit, 0));
