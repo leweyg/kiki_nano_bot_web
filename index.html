@@ -101,6 +101,55 @@
       font-size: 14px
     }
 
+    .controls-scroll {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, .18)
+    }
+
+    .controls-table {
+      width: 100%;
+      min-width: 680px;
+      border-collapse: collapse;
+      font: 13px monospace
+    }
+
+    .controls-table th,
+    .controls-table td {
+      padding: 12px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top
+    }
+
+    .controls-table th:last-child,
+    .controls-table td:last-child {
+      border-right: 0
+    }
+
+    .controls-table tr:last-child th,
+    .controls-table tr:last-child td {
+      border-bottom: 0
+    }
+
+    .controls-table thead th {
+      color: #65736a;
+      text-transform: uppercase;
+      letter-spacing: 1px
+    }
+
+    kbd {
+      display: inline-block;
+      min-width: 26px;
+      margin: 0 3px 3px 0;
+      padding: 3px 6px;
+      border: 1px solid var(--ink);
+      background: rgba(255, 255, 255, .28);
+      font: 12px monospace;
+      text-align: center
+    }
+
     .items {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
@@ -170,10 +219,61 @@
       <div class="eyebrow">50 arenas</div>
       <h2>Choose a level</h2>
       <div class="levels" id="levels"></div>
-      <p class="note">Keyboard: arrow keys or WASD. Touch controls are available in the game.</p>
     </section>
     <section>
-      <div class="eyebrow">Porting checklist</div>
+      <h2>Controls</h2>
+      <div class="controls-scroll">
+        <table class="controls-table">
+          <thead>
+            <tr>
+              <th>Action</th>
+              <th>Touch / Mouse</th>
+              <th>Keyboard Left</th>
+              <th>Keyboard Right</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th>Move</th>
+              <td>Drag or swipe</td>
+              <td><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></td>
+              <td><kbd>Up</kbd><kbd>Left</kbd><kbd>Down</kbd><kbd>Right</kbd></td>
+            </tr>
+            <tr>
+              <th>Jump</th>
+              <td>Tap</td>
+              <td><kbd>Space</kbd></td>
+              <td><kbd>Space</kbd></td>
+            </tr>
+            <tr>
+              <th>Jump+Fwd</th>
+              <td>Double tap</td>
+              <td><kbd>F</kbd></td>
+              <td><kbd>Shift</kbd></td>
+            </tr>
+            <tr>
+              <th>Jump+Far</th>
+              <td>Triple tap</td>
+              <td><kbd>R</kbd></td>
+              <td><kbd>Enter</kbd></td>
+            </tr>
+            <tr>
+              <th>Push</th>
+              <td>Push button</td>
+              <td><kbd>E</kbd></td>
+              <td><kbd>'</kbd></td>
+            </tr>
+            <tr>
+              <th>Energy</th>
+              <td>Energy button</td>
+              <td><kbd>Q</kbd></td>
+              <td><kbd>/</kbd></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+    <section>
       <h2>Game Items</h2>
       <div class="items" id="game-items"></div>
     </section>
