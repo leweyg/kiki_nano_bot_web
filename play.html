@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><link rel="icon" href="data:,"><title>Kiki / play</title>
-<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--paper);color:var(--ink);font:14px monospace}body{position:fixed;inset:0}canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none}button,a{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,header button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;width:min(100vw - 24px,560px);display:grid;grid-template-columns:minmax(72px,96px) minmax(148px,220px) minmax(72px,96px);gap:14px;align-items:end;justify-content:center;transform:translateX(-50%);touch-action:none}.action-stack{display:flex;flex-direction:column;gap:8px}.control-button,.touchpad{color:#fff;background:transparent;border:1px solid rgba(224,224,192,.72);font:inherit;text-decoration:none}.control-button{min-height:46px;min-width:72px;padding:8px 10px;border-radius:6px;line-height:1.1}.touchpad{position:relative;aspect-ratio:1/1;width:100%;min-width:148px;max-width:220px;border-radius:8px;display:grid;place-items:center;touch-action:none}.touchpad::before,.touchpad::after{content:"";position:absolute;background:rgba(224,224,192,.28)}.touchpad::before{left:18%;right:18%;top:50%;height:1px}.touchpad::after{top:18%;bottom:18%;left:50%;width:1px}.touchpad-mark{position:absolute;color:#e0e0c0;opacity:.88}.touchpad-mark.up{top:12px}.touchpad-mark.down{bottom:12px}.touchpad-mark.left{left:14px}.touchpad-mark.right{right:14px}.touchpad-knob{width:42px;height:42px;border:1px solid rgba(255,128,0,.9);border-radius:50%;transform:translate(var(--pad-x,0),var(--pad-y,0));transition:transform 80ms linear}.touchpad.active .touchpad-knob{transition:none}.won{border-color:#dede45!important;color:#ffff8a!important}@media(max-width:600px){header{padding:12px}.controls{bottom:calc(10px + env(safe-area-inset-bottom));width:100%;padding:0 10px;grid-template-columns:minmax(62px,76px) minmax(136px,1fr) minmax(62px,76px);gap:8px}.control-button{min-width:62px;min-height:42px;padding:7px 6px}.touchpad{min-width:136px;max-width:190px;justify-self:center}}
-</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">JUMP<br>+FAR</button><button class="control-button" data-action="jump forward">JUMP<br>+FWD</button><button class="control-button" data-action="jump">JUMP</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack tool-actions"><button class="control-button" id="shoot">SHOOT</button><button class="control-button" id="push">PUSH</button></div></div>
+<style>:root{--paper:#212121;--ink:#e0e0c0;--accent:#ff8000}*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{width:100%;height:100%;margin:0;overflow:hidden;overscroll-behavior:none;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:var(--paper);color:var(--ink);font:14px monospace}body{position:fixed;inset:0}canvas{display:block;touch-action:none;user-select:none;-webkit-user-select:none}button,a{touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}header{position:fixed;z-index:2;top:0;left:0;right:0;padding:18px 22px;display:flex;justify-content:space-between;pointer-events:none}header a,header button{pointer-events:auto;color:inherit;background:#2b2b2b;border:1px solid #707070;padding:9px 12px;font:inherit;text-decoration:none}#title{letter-spacing:2px;text-transform:uppercase}#hud{position:fixed;z-index:2;top:65px;left:22px;max-width:min(560px,calc(100vw - 44px));white-space:pre-line;line-height:1.35;color:#c8c8a8}.controls{position:fixed;z-index:3;bottom:calc(16px + env(safe-area-inset-bottom));left:50%;width:min(100vw - 24px,560px);display:grid;grid-template-columns:minmax(72px,96px) minmax(148px,220px) minmax(72px,96px);gap:14px;align-items:end;justify-content:center;transform:translateX(-50%);touch-action:none}.action-stack{display:flex;flex-direction:column;gap:8px}.jump-actions{gap:0}.control-button,.touchpad{color:#fff;background:transparent;font:inherit;text-decoration:none}.control-button{min-height:46px;min-width:72px;padding:8px 10px;border:1px solid rgba(224,224,192,.72);border-radius:6px;line-height:1.1}.jump-actions .control-button{border-radius:0}.jump-actions .control-button:first-child{border-radius:6px 6px 0 0}.jump-actions .control-button:last-child{border-radius:0 0 6px 6px}.jump-actions .control-button:not(:last-child){border-bottom:0}.touchpad{position:relative;aspect-ratio:1/1;width:100%;min-width:148px;max-width:220px;border:0;border-radius:8px;display:grid;place-items:center;touch-action:none}.touchpad::before,.touchpad::after{content:"";position:absolute;background:rgba(224,224,192,.28)}.touchpad::before{left:18%;right:18%;top:50%;height:1px}.touchpad::after{top:18%;bottom:18%;left:50%;width:1px}.touchpad-mark{position:absolute;color:#e0e0c0;opacity:.88}.touchpad-mark.up{top:12px}.touchpad-mark.down{bottom:12px}.touchpad-mark.left{left:14px}.touchpad-mark.right{right:14px}.touchpad-knob{width:42px;height:42px;border:1px solid rgba(255,128,0,.9);border-radius:50%;transform:translate(var(--pad-x,0),var(--pad-y,0));transition:transform 80ms linear}.touchpad.active .touchpad-knob{transition:none}.won{border-color:#dede45!important;color:#ffff8a!important}@media(max-width:600px){header{padding:12px}.controls{bottom:calc(10px + env(safe-area-inset-bottom));width:100%;padding:0 10px;grid-template-columns:minmax(62px,76px) minmax(136px,1fr) minmax(62px,76px);gap:8px}.control-button{min-width:62px;min-height:42px;padding:7px 6px}.touchpad{min-width:136px;max-width:190px;justify-self:center}}
+</style></head><body><header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header><div id="hud"></div><div class="controls"><div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button class="control-button" id="shoot">SHOOT</button></div><div class="touchpad" id="touchpad" role="application" aria-label="movement touchpad"><span class="touchpad-mark up">↑</span><span class="touchpad-mark left">←</span><span class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob" id="touchpad-knob"></span></div><div class="action-stack jump-actions"><button class="control-button" data-action="jump far forward">JUMP<br>+FAR</button><button class="control-button" data-action="jump forward">JUMP<br>+FWD</button><button class="control-button" data-action="jump">JUMP</button></div></div>
 <script src="kiki/js/kiki.js"></script><script src="kiki/js/kiki_meshes.js"></script><script type="module">
 import * as THREE from './kiki/js/threejs/three.module.js';
 const query = new URLSearchParams(location.search);
@@ -580,17 +580,27 @@ function resetTouchpad(){
   touchpadKnob.style.setProperty('--pad-x', '0px');
   touchpadKnob.style.setProperty('--pad-y', '0px');
 }
-touchpad.addEventListener('pointerdown', event => {
+function isButtonLikeTarget(target){
+  return Boolean(target && target.closest && target.closest('button,a,input,textarea,select'));
+}
+function canStartDragGesture(event){
+  if (event.pointerType === 'mouse' && event.button !== 0) return false;
+  return !isButtonLikeTarget(event.target);
+}
+addEventListener('pointerdown', event => {
+  if (!canStartDragGesture(event)) return;
   event.preventDefault();
   touchpadState.pointerId = event.pointerId;
   touchpadState.originX = event.clientX;
   touchpadState.originY = event.clientY;
-  touchpadState.tapDirection = directionFromTouchpadPoint(event.clientX, event.clientY);
+  touchpadState.tapDirection = event.target.closest('#touchpad') ? directionFromTouchpadPoint(event.clientX, event.clientY) : null;
   touchpadState.dragging = false;
-  touchpad.setPointerCapture(event.pointerId);
+  if (event.target.setPointerCapture) {
+    try { event.target.setPointerCapture(event.pointerId); } catch (_) {}
+  }
   touchpad.classList.add('active');
 });
-touchpad.addEventListener('pointermove', event => {
+addEventListener('pointermove', event => {
   if (touchpadState.pointerId !== event.pointerId) return;
   event.preventDefault();
   const dx = event.clientX - touchpadState.originX;
@@ -602,13 +612,13 @@ touchpad.addEventListener('pointermove', event => {
     setHeldMove(direction, event.pointerId);
   }
 });
-touchpad.addEventListener('pointerup', event => {
+addEventListener('pointerup', event => {
   const tapDirection = touchpadState.pointerId === event.pointerId && !touchpadState.dragging ? touchpadState.tapDirection : null;
   releaseMove(event.pointerId);
   resetTouchpad();
   if (tapDirection) act(tapDirection);
 });
-touchpad.addEventListener('pointercancel', event => {releaseMove(event.pointerId);resetTouchpad();});
+addEventListener('pointercancel', event => {releaseMove(event.pointerId);resetTouchpad();});
 document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
 document.getElementById('reset').onclick = () => { location.reload(); };
 document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
