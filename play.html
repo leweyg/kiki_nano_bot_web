@@ -1007,6 +1007,11 @@
       appendCatchUp(segments, cursor, to);
       return segments.length ? segments : [animationSegment('generic', 160, from, to)];
     }
+    function buildPushRockAnimation(action, from) {
+      const sign = action === 'push backward' ? -1 : 1;
+      const step = mul(from.dir, sign);
+      return [animationSegment('pushRock', 180, from, from, { step })];
+    }
     function startAnimation(segments, to, action) {
       let cursorTires = copyTires(tireAngles);
       segments.forEach(segment => {
@@ -1061,6 +1066,10 @@
       }
       if (segment.kind === 'fall') {
         return stateWithSegmentTires(slerpState(segment.from, segment.to, t), segment, t);
+      }
+      if (segment.kind === 'pushRock') {
+        const offset = Math.sin(Math.PI * t) * .18;
+        return stateWithSegmentTires(slerpState(segment.from, segment.to, t, add(segment.from.position, mul(segment.step, offset))), segment, t);
       }
       const eased = segment.kind === 'generic' ? t * t * (3 - 2 * t) : t;
       return stateWithSegmentTires(slerpState(segment.from, segment.to, eased), segment, t);
@@ -1197,7 +1206,14 @@
       }
       const before = game.clone();
       const from = snapshot(before);
-      if (!game.action(direction)) return;
+      if (!game.action(direction)) {
+        if (direction === 'push forward' || direction === 'push backward') {
+          const segments = buildPushRockAnimation(direction, from);
+          startAnimation(segments, from, direction);
+          recordDebugAction(direction, from, from, segments);
+        }
+        return;
+      }
       recordDebugSample('action-start', performance.now(), true);
       const shot = game.lastShot && copyPosition(game.lastShot.start) ? game.lastShot : null;
       const to = snapshot(game);
