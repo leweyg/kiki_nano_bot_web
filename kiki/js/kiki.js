@@ -18,7 +18,7 @@
     "shoot": 200
   };
   var solverActions = ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump", "push forward", "push backward", "shoot"];
-  var EXIT_TOUCH_RADIUS_SQUARED = 0.52 * 0.52;
+  var EXIT_TOUCH_RADIUS_SQUARED = 0.98 * 0.98;
   var levelDefinitions = [
     { index: 0, id: "start", title: "start", create: makeIndex00StartLevel },
     { index: 1, id: "steps", title: "steps", create: makeIndex01StepsLevel },
@@ -643,14 +643,14 @@
     }
     return false;
   };
-  Game.prototype.checkLineExit = function (start, end) {
+  Game.prototype.checkLineExit = function (start, end, allowTouch) {
     return this.checkPathExit(function (t) {
       return {
         x: start.x + (end.x - start.x) * t,
         y: (start.y || 0) + ((end.y || 0) - (start.y || 0)) * t,
         z: start.z + (end.z - start.z) * t
       };
-    }, 24, false);
+    }, 24, !!allowTouch);
   };
   Game.prototype.checkJumpArcExit = function (start, step, up) {
     return this.checkPathExit(function (t) {
@@ -670,7 +670,7 @@
       };
     }, 48, true);
   };
-  Game.prototype.applyGravity = function (holdStep, sign, maxForwardFalls) {
+  Game.prototype.applyGravity = function (holdStep, sign, maxForwardFalls, allowTouchFalls) {
     var down = neg(this.up);
     var moved = false;
     var forwardFalls = 0;
@@ -686,7 +686,7 @@
           break;
         }
         if (!this.isUnoccupied(add(forward, down))) {
-          var lineReachedExit = this.checkLineExit(this.position, forward);
+          var lineReachedExit = this.checkLineExit(this.position, forward, true);
           this.position = forward;
           if (lineReachedExit) return true;
           this.checkExit();
@@ -707,7 +707,7 @@
         }
       }
       var target = add(this.position, down);
-      var fallReachedExit = this.checkLineExit(this.position, target);
+      var fallReachedExit = this.checkLineExit(this.position, target, allowTouchFalls);
       this.position = target;
       if (fallReachedExit) return true;
       this.checkExit();
@@ -736,7 +736,7 @@
       this.moves += 1;
       return true;
     }
-    this.applyGravity(step, sign, maxForwardFalls || 0);
+    this.applyGravity(step, sign, maxForwardFalls || 0, true);
     this.moves += 1;
     this.checkExit();
     return true;
@@ -863,7 +863,7 @@
       if (this.isUnoccupied(add(forward, neg(this.up)))) {
         this.rollClimbDown(step, sign);
       } else {
-        var moveReachedExit = this.checkLineExit(this.position, forward);
+        var moveReachedExit = this.checkLineExit(this.position, forward, true);
         this.position = forward;
         if (moveReachedExit) return true;
       }
@@ -892,7 +892,7 @@
     }
     this.moves += 1;
     this.checkExit();
-    if (!this.won) this.applyGravity();
+    if (!this.won) this.applyGravity(null, null, undefined, true);
     return true;
   };
   Game.prototype.move = function (dx, dy, dz) {

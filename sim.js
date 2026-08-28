@@ -26,12 +26,28 @@ function assertStartJumpExitSweep() {
     failed.push("start (3D jump/fall sweep setup reached exit too early)");
     return;
   }
-  if (!game.action("jump forward") || !game.won) {
-    failed.push("start (3D jump/fall sweep missed exit)");
+  var forwardFinish = game.clone();
+  var farFinish = game.clone();
+  if (!forwardFinish.action("jump forward") || !forwardFinish.won) {
+    failed.push("start (3D jump/fall sweep missed forward-jump exit)");
     return;
   }
-  if (sameCell(game.position, level.exits[0].coordinates)) {
+  if (!farFinish.action("jump far forward") || !farFinish.won) {
+    failed.push("start (3D jump/fall sweep missed far-jump exit)");
+    return;
+  }
+  if (sameCell(forwardFinish.position, level.exits[0].coordinates)) {
     failed.push("start (3D jump/fall sweep did not exercise in-flight completion)");
+    return;
+  }
+
+  var earlyFarMiss = new Kiki.Game(level);
+  ["turn left", "jump far forward", "jump forward", "jump forward", "jump forward", "jump far forward"].forEach(function (action) {
+    earlyFarMiss.action(action);
+  });
+  earlyFarMiss.action("jump far forward");
+  if (earlyFarMiss.won) {
+    failed.push("start (early far-jump miss completed exit)");
     return;
   }
   console.log("OK  start      3D jump/fall exit sweep");
