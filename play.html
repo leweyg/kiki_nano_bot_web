@@ -1321,23 +1321,29 @@
     document.getElementById('shoot').onclick = () => act('shoot');
     addEventListener('keydown', event => {
       const map = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
-      if (event.key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); return; }
+      const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
+      if (key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); return; }
       if (event.key === 'Shift') {
         event.preventDefault();
         if (!event.repeat) act('jump forward');
         return;
       }
-      if (event.key === 'Enter') {
+      if (event.key === 'Enter' || key === 'r') {
         event.preventDefault();
         if (!event.repeat) act('jump far forward');
         return;
       }
-      if (event.key === '/' || event.code === 'Slash') {
+      if (key === 'f') {
+        event.preventDefault();
+        if (!event.repeat) act('jump forward');
+        return;
+      }
+      if (key === 'q' || event.key === '/' || event.code === 'Slash') {
         event.preventDefault();
         if (!event.repeat) act('shoot');
         return;
       }
-      if (event.key === "'" || event.code === 'Quote') {
+      if (key === 'e' || event.key === "'" || event.code === 'Quote') {
         event.preventDefault();
         if (!event.repeat) act(heldInput.move === 'down' ? 'push backward' : 'push forward');
         return;
@@ -1353,9 +1359,9 @@
         }
         return;
       }
-      if (map[event.key]) {
+      if (map[key]) {
         event.preventDefault();
-        heldInput.move = map[event.key];
+        heldInput.move = map[key];
         if (!event.repeat) {
           const action = actionForMove(heldInput.move);
           if (action === 'jump forward') consumeJumpIntent();
