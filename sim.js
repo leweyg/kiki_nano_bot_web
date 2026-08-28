@@ -9,8 +9,18 @@ function sameCell(a, b) {
 
 function assertStartJumpExitSweep() {
   var level = Kiki.getLevel(0);
+  var miss = new Kiki.Game(level);
+  miss.position = { x: 3, y: 2, z: 6 };
+  miss.dir = { x: 0, y: 0, z: 1 };
+  miss.up = { x: 0, y: -1, z: 0 };
+  miss.action("move forward");
+  if (miss.won) {
+    failed.push("start (adjacent walk/roll miss completed exit)");
+    return;
+  }
+
   var game = new Kiki.Game(level);
-  var setup = ["turn left", "jump far forward", "jump forward", "jump forward", "jump forward", "jump far forward"];
+  var setup = ["turn left", "jump far forward", "jump forward", "jump forward", "jump forward", "jump far forward", "move forward"];
   setup.forEach(function (action) { game.action(action); });
   if (game.won) {
     failed.push("start (3D jump/fall sweep setup reached exit too early)");
