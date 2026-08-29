@@ -218,6 +218,70 @@
   function neg(a) { return vec(-a.x, -a.y, -a.z); }
   function mul(a, scalar) { return vec(a.x * scalar, a.y * scalar, a.z * scalar); }
   var sixDirections = [vec(1, 0, 0), vec(0, 1, 0), vec(0, 0, 1), vec(-1, 0, 0), vec(0, -1, 0), vec(0, 0, -1)];
+  var faceIds = { PX: 0, PY: 1, PZ: 2, NX: 3, NY: 4, NZ: 5 };
+  var faces = ["PX", "PY", "PZ", "NX", "NY", "NZ"];
+  var allWireConnections = 15;
+  function faceName(face) { return face === undefined ? "PZ" : (typeof face === "number" ? faces[face] : face); }
+  function faceIndex(face) { return faceIds[faceName(face)] === undefined ? 2 : faceIds[faceName(face)]; }
+  function faceNormal(face) {
+    switch (faceName(face)) {
+      case "PX": return vec(-1, 0, 0);
+      case "PY": return vec(0, -1, 0);
+      case "PZ": return vec(0, 0, -1);
+      case "NX": return vec(1, 0, 0);
+      case "NY": return vec(0, 1, 0);
+      case "NZ": return vec(0, 0, 1);
+    }
+    return vec(0, 0, -1);
+  }
+  function rotateFaceVector(face, vector) {
+    var name = faceName(face);
+    if (name === "PX") return vec(vector.z, vector.y, -vector.x);
+    if (name === "NX") return vec(-vector.z, vector.y, vector.x);
+    if (name === "PY") return vec(vector.x, vector.z, -vector.y);
+    if (name === "NY") return vec(vector.x, -vector.z, vector.y);
+    if (name === "NZ") return vec(vector.x, -vector.y, -vector.z);
+    return copyPosition(vector);
+  }
+  function connectionMask(connections) {
+    if (connections === undefined || connections === "all") return allWireConnections;
+    if (connections === "vertical") return 5;
+    if (connections === "horizontal") return 10;
+    return connections;
+  }
+  function validPosition(level, position) {
+    return position.x >= 0 && position.y >= 0 && position.z >= 0 &&
+      position.x < level.size.x && position.y < level.size.y && position.z < level.size.z;
+  }
+  function samePosition(a, b) {
+    return a.x === b.x && (a.y || 0) === (b.y || 0) && a.z === b.z;
+  }
+  function wireConnectionPoints(object) {
+    var points = [];
+    var mask = connectionMask(object.connections);
+    var border = mul(faceNormal(object.face), 0.5);
+    function point(local) {
+      points.push(add(add(object.coordinates, border), rotateFaceVector(object.face, local)));
+    }
+    if (mask & 2) point(vec(0.5, 0, 0));
+    if (mask & 8) point(vec(-0.5, 0, 0));
+    if (mask & 1) point(vec(0, 0.5, 0));
+    if (mask & 4) point(vec(0, -0.5, 0));
+    return points;
+  }
+  function roundedPointKey(point) {
+    return [point.x, point.y, point.z].map(function (value) { return Math.round(value * 1000); }).join(",");
+  }
+  function gearNeighborDirections(face) {
+    switch (faceIndex(face) % 3) {
+      case 0: return [vec(0, 1, 0), vec(0, -1, 0), vec(0, 0, 1), vec(0, 0, -1)];
+      case 1: return [vec(1, 0, 0), vec(-1, 0, 0), vec(0, 0, 1), vec(0, 0, -1)];
+      default: return [vec(1, 0, 0), vec(-1, 0, 0), vec(0, 1, 0), vec(0, -1, 0)];
+    }
+  }
+  function isGearObject(object) {
+    return object && (object.type === "gear" || object.type === "generator" || object.type === "motorGear");
+  }
   function objectBlocks(object) {
     return object.type === "wall" || object.type === "stone" || object.type === "wireStone" ||
       object.type === "switch" || object.type === "gear" || object.type === "generator" ||
@@ -225,10 +289,11 @@
       object.type === "mutant";
   }
   function isPushableObject(object) {
-    return object && (object.type === "stone" || object.type === "wireStone" || object.type === "bomb");
+    return object && (object.type === "stone" || object.type === "wireStone" || object.type === "bomb" ||
+      object.type === "gear" || object.type === "generator");
   }
   function conducts(object) {
-    return object && (object.type === "wire" || object.type === "wireStone" || object.type === "gear" ||
+    return object && (object.type === "wire" || object.type === "gear" ||
       object.type === "generator" || object.type === "motorCylinder" || object.type === "motorGear" ||
       object.type === "switch");
   }
@@ -337,10 +402,40 @@
       if (exit.name === name) exit.active = active;
     });
   };
+  Game.prototype.canHostWireStoneWire = function (owner, position) {
+    if (!validPosition(this.level, position)) return false;
+    var occupant = this.objectAt(position);
+    return !occupant || occupant === owner;
+  };
+  Game.prototype.wireStoneWires = function (owner) {
+    var wires = [];
+    faces.forEach(function (face) {
+      var position = add(owner.coordinates, neg(faceNormal(face)));
+      if (!this.canHostWireStoneWire(owner, position)) return;
+      wires.push({
+        type: "wire",
+        face: face,
+        connections: allWireConnections,
+        coordinates: position,
+        active: !!owner.powered,
+        powered: !!owner.powered,
+        owner: owner
+      });
+    }, this);
+    return wires;
+  };
+  Game.prototype.dynamicWires = function () {
+    var wires = [];
+    this.objects.forEach(function (object) {
+      if (object.type === "wireStone") wires = wires.concat(this.wireStoneWires(object));
+    }, this);
+    return wires;
+  };
   Game.prototype.updatePower = function () {
     this.objects.forEach(function (object) {
-      if (conducts(object) && object.type !== "generator") object.powered = false;
+      if (conducts(object)) object.powered = false;
       if (object.type === "wire") object.active = false;
+      if (object.type === "wireStone") object.powered = false;
     });
 
     if (this.level.powerCondition === "elevatedCircuit") {
@@ -357,47 +452,85 @@
 
     if (this.level.powerCondition !== "connectedMotor") return;
 
-    if (this.objects.some(function (object) { return object.type === "generator" && object.active !== false; }) &&
-        this.objects.some(function (object) { return object.type === "motorGear" || object.type === "motorCylinder"; })) {
-      this.setExitActive("exit", true);
-    }
+    this.setExitActive("exit", false);
 
-    var conductiveObjects = this.objects.filter(conducts);
-    var byPosition = {};
-    conductiveObjects.forEach(function (object) {
-      var name = key(object.coordinates.x, object.coordinates.y || 0, object.coordinates.z || 0);
-      if (!byPosition[name]) byPosition[name] = [];
-      byPosition[name].push(object);
+    var gearObjects = this.objects.filter(isGearObject);
+    var gearsByPosition = {};
+    gearObjects.forEach(function (object) {
+      gearsByPosition[key(object.coordinates.x, object.coordinates.y || 0, object.coordinates.z)] = object;
     });
 
-    var queue = conductiveObjects.filter(function (object) { return object.type === "generator" && object.active !== false; });
-    var visited = {};
+    var queue = gearObjects.filter(function (object) { return object.type === "generator" && object.active !== false; });
+    var visitedGears = {};
     var reachesMotor = false;
-    function enqueue(position) {
-      var entries = byPosition[key(position.x, position.y || 0, position.z || 0)] || [];
-      entries.forEach(function (object) {
-        var name = object.type + ":" + vectorKey(object.coordinates) + ":" + (object.name || "");
-        if (!visited[name]) {
-          visited[name] = true;
-          queue.push(object);
-        }
+    while (queue.length) {
+      var gear = queue.shift();
+      var gearName = vectorKey(gear.coordinates) + ":" + gear.type;
+      if (visitedGears[gearName]) continue;
+      visitedGears[gearName] = true;
+      gear.powered = true;
+      if (gear.type === "motorGear") reachesMotor = true;
+      gearNeighborDirections(gear.face).forEach(function (direction) {
+        var neighbor = gearsByPosition[key(gear.coordinates.x + direction.x, (gear.coordinates.y || 0) + direction.y, gear.coordinates.z + direction.z)];
+        if (neighbor && faceName(neighbor.face) === faceName(gear.face)) queue.push(neighbor);
       });
     }
-    while (queue.length) {
-      var object = queue.shift();
-      object.powered = true;
-      if (object.type === "wire") object.active = true;
-      if (object.type === "motorGear" || object.type === "motorCylinder") reachesMotor = true;
-      var p = object.coordinates;
-      enqueue(p);
-      enqueue(add(p, vec(1, 0, 0)));
-      enqueue(add(p, vec(-1, 0, 0)));
-      enqueue(add(p, vec(0, 1, 0)));
-      enqueue(add(p, vec(0, -1, 0)));
-      enqueue(add(p, vec(0, 0, 1)));
-      enqueue(add(p, vec(0, 0, -1)));
+
+    var wireObjects = this.objects.filter(function (object) { return object.type === "wire" || object.type === "switch"; })
+      .concat(this.dynamicWires());
+    var pointIndex = {};
+    var ownerIndex = {};
+    wireObjects.forEach(function (object, index) {
+      object.__powerIndex = index;
+      wireConnectionPoints(object).forEach(function (point) {
+        var name = roundedPointKey(point);
+        if (!pointIndex[name]) pointIndex[name] = [];
+        pointIndex[name].push(object);
+      });
+      if (object.owner) {
+        var ownerName = vectorKey(object.owner.coordinates);
+        if (!ownerIndex[ownerName]) ownerIndex[ownerName] = [];
+        ownerIndex[ownerName].push(object);
+      }
+    });
+
+    queue = wireObjects.filter(function (wire) {
+      return gearObjects.some(function (gear) {
+        return gear.type === "generator" && gear.active !== false && samePosition(gear.coordinates, wire.coordinates);
+      });
+    });
+    var visitedWires = {};
+    function enqueueWire(wire) {
+      if (visitedWires[wire.__powerIndex]) return;
+      queue.push(wire);
     }
-    this.setExitActive("exit", reachesMotor || this.objects.some(function (object) { return object.type === "generator" && object.active !== false; }));
+    while (queue.length) {
+      var wire = queue.shift();
+      if (visitedWires[wire.__powerIndex]) continue;
+      visitedWires[wire.__powerIndex] = true;
+      if (wire.owner) wire.owner.powered = true;
+      else {
+        wire.powered = true;
+        if (wire.type === "wire") wire.active = true;
+      }
+      if (this.objects.some(function (object) {
+        return (object.type === "motorGear" || object.type === "motorCylinder") && samePosition(object.coordinates, wire.coordinates);
+      })) reachesMotor = true;
+      wireConnectionPoints(wire).forEach(function (point) {
+        (pointIndex[roundedPointKey(point)] || []).forEach(enqueueWire);
+      });
+      if (wire.owner) {
+        (ownerIndex[vectorKey(wire.owner.coordinates)] || []).forEach(enqueueWire);
+      }
+    }
+
+    this.objects.forEach(function (object) {
+      if (object.type !== "motorCylinder") return;
+      object.powered = this.objects.some(function (gear) {
+        return gear.type === "motorGear" && gear.powered && samePosition(add(gear.coordinates, vec(0, 1, 0)), object.coordinates);
+      });
+    }, this);
+    this.setExitActive("exit", reachesMotor);
   };
   Game.prototype.stateKey = function () {
     return vectorKey(this.position) + "|" + vectorKey(this.dir) + "|" + vectorKey(this.up) + "|" +

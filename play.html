@@ -303,6 +303,7 @@
   <script src="kiki/js/kiki_static_data.js"></script>
   <script src="kiki/js/kiki.js"></script>
   <script src="kiki/js/kiki_meshes.js"></script>
+  <script src="kiki/js/kiki_item_meshes.js"></script>
   <script type="module">
     import * as THREE from './kiki/js/threejs/three.module.js';
     const query = new URLSearchParams(location.search);
@@ -477,6 +478,42 @@
       board.add(mesh);
       return mesh;
     }
+    function faceName(face) { return face || 'PZ'; }
+    function faceIndex(face) { return ({ PX: 0, PY: 1, PZ: 2, NX: 3, NY: 4, NZ: 5 })[faceName(face)] ?? 2; }
+    function faceNormal(face) {
+      if (faceName(face) === 'PX') return new THREE.Vector3(-1, 0, 0);
+      if (faceName(face) === 'PY') return new THREE.Vector3(0, -1, 0);
+      if (faceName(face) === 'PZ') return new THREE.Vector3(0, 0, -1);
+      if (faceName(face) === 'NX') return new THREE.Vector3(1, 0, 0);
+      if (faceName(face) === 'NY') return new THREE.Vector3(0, 1, 0);
+      return new THREE.Vector3(0, 0, 1);
+    }
+    function applyFaceOrientation(group, face) {
+      if (faceName(face) === 'PX') group.rotation.y = Math.PI / 2;
+      else if (faceName(face) === 'NX') group.rotation.y = -Math.PI / 2;
+      else if (faceName(face) === 'PY') group.rotation.x = -Math.PI / 2;
+      else if (faceName(face) === 'NY') group.rotation.x = Math.PI / 2;
+      else if (faceName(face) === 'NZ') group.rotation.x = Math.PI;
+    }
+    function connectionMask(connections) {
+      if (connections === undefined || connections === 'all') return 15;
+      if (connections === 'vertical') return 5;
+      if (connections === 'horizontal') return 10;
+      return connections;
+    }
+    function addWireArm(group, x, y, width, height, material) {
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(width, height, .012), material);
+      arm.position.set(x, y, .006);
+      group.add(arm);
+    }
+    function gearClockwise(object) {
+      const axis = faceIndex(object.face) % 3;
+      const p = object.coordinates;
+      const sum = (axis === 1 || axis === 2 ? p.x : 0) +
+        (axis === 0 || axis === 2 ? (p.y || 0) : 0) +
+        (axis === 0 || axis === 1 ? p.z : 0);
+      return sum % 2 ? 1 : -1;
+    }
     function addRoom(level) {
       const room = new THREE.Mesh(new THREE.BoxGeometry(level.size.x, level.size.y, level.size.z), materials.room);
       const edges = new THREE.LineSegments(new THREE.EdgesGeometry(room.geometry), materials.roomLine);
@@ -522,39 +559,55 @@
       board.add(group);
     }
     function addWire(level, object) {
-      const size = object.face === 'PX' || object.face === 'NX' ? new THREE.Vector3(.08, .72, .18)
-        : object.face === 'PZ' || object.face === 'NZ' ? new THREE.Vector3(.18, .72, .08)
-          : new THREE.Vector3(.72, .08, .18);
-      const mesh = addBox(centered(level, object.coordinates, 0), size, object.active || object.powered ? materials.wireActive : materials.wire);
-      if (object.face === 'PX') mesh.position.x += .45;
-      else if (object.face === 'NX') mesh.position.x -= .45;
-      else if (object.face === 'PZ') mesh.position.z += .45;
-      else if (object.face === 'NZ') mesh.position.z -= .45;
-      else if (object.face === 'NY') mesh.position.y -= .45;
-      else mesh.position.y += .45;
+      const material = object.active || object.powered ? materials.wireActive : materials.wire;
+      const group = new THREE.Group();
+      const mask = connectionMask(object.connections);
+      const core = KikiItemMeshes.createMesh(THREE, 'wire', material);
+      group.add(core);
+      if (mask & 2) addWireArm(group, .25, 0, .5, .1, material);
+      if (mask & 8) addWireArm(group, -.25, 0, .5, .1, material);
+      if (mask & 1) addWireArm(group, 0, .25, .1, .5, material);
+      if (mask & 4) addWireArm(group, 0, -.25, .1, .5, material);
+      group.position.copy(centered(level, object.coordinates, 0)).add(faceNormal(object.face).multiplyScalar(.495));
+      applyFaceOrientation(group, object.face);
+      board.add(group);
     }
     function addWireStone(level, object) {
       addCube(centered(level, object.coordinates, 0), .9, materials.stone);
-      addWire(level, Object.assign({}, object, { type: 'wire', active: object.powered }));
+      game.wireStoneWires(object).forEach(wire => addWire(level, wire));
     }
     function addGear(level, object) {
       const group = new THREE.Group();
-      const teeth = new THREE.Mesh(new THREE.TorusGeometry(.32, .06, 8, 12), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
-      const hub = new THREE.Mesh(new THREE.CylinderGeometry(.16, .16, .18, 16), object.type === 'generator' ? materials.generator : object.type === 'gear' ? materials.gear : materials.motor);
-      hub.rotation.x = Math.PI / 2;
-      group.add(teeth, hub);
+      const rotor = new THREE.Group();
+      if (object.type === 'generator') {
+        rotor.add(KikiItemMeshes.createMesh(THREE, 'generator', materials.generator));
+        const gear = KikiItemMeshes.createMesh(THREE, 'gear', materials.gear);
+        gear.position.z = .4;
+        rotor.add(gear);
+      } else if (object.type === 'motorGear') {
+        group.add(KikiItemMeshes.createMesh(THREE, 'motor', materials.motor));
+        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
+        gear.position.z = .4;
+        rotor.add(gear);
+      } else {
+        rotor.add(KikiItemMeshes.createMesh(THREE, 'valve', materials.motor));
+        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
+        gear.position.z = .4;
+        rotor.add(gear);
+      }
+      group.add(rotor);
       group.position.copy(centered(level, object.coordinates, 0));
+      applyFaceOrientation(group, object.face);
+      animatedItems.push({ type: 'gear', object, rotor, direction: gearClockwise(object) });
       board.add(group);
     }
     function addMotorCylinder(level, object) {
       const group = new THREE.Group();
-      const shell = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .65, 18), materials.motorCylinder);
-      const rod = new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, .88, 12), object.powered ? materials.wireActive : materials.gear);
-      shell.rotation.x = Math.PI / 2;
-      rod.rotation.x = Math.PI / 2;
-      rod.position.z = object.powered ? .12 : 0;
-      group.add(shell, rod);
+      const piston = KikiItemMeshes.createMesh(THREE, 'kolben', object.powered ? materials.wireActive : materials.gear);
+      group.add(KikiItemMeshes.createMesh(THREE, 'cylinder', materials.motorCylinder), piston);
       group.position.copy(centered(level, object.coordinates, 0));
+      applyFaceOrientation(group, object.face);
+      animatedItems.push({ type: 'motorCylinder', object, piston });
       board.add(group);
     }
     function addBomb(level, object) {
@@ -596,6 +649,7 @@
     let visualState = withTires(snapshot(game), tireAngles);
     let activeAnimation = null;
     let activeShot = null;
+    let animatedItems = [];
     let queuedAction = null;
     let cameraReady = false;
     let advancingLevel = false;
@@ -775,6 +829,7 @@
     if (debugEnabled) beginDebugTrace('page-load');
     function buildStaticScene() {
       while (board.children.length) board.remove(board.children[0]);
+      animatedItems = [];
       const level = game.level;
       addRoom(level);
       addBoundaryWalls(level);
@@ -798,6 +853,16 @@
         addGate(level, exit);
       });
       board.add(botMesh);
+    }
+    function updateItemAnimations(now) {
+      animatedItems.forEach(item => {
+        if (item.type === 'gear') {
+          const active = item.object.type === 'generator' ? item.object.active !== false : item.object.powered;
+          item.rotor.rotation.z = active ? item.direction * now / 320 : 0;
+        } else if (item.type === 'motorCylinder') {
+          item.piston.position.z = item.object.powered ? -.42 * (.5 + .5 * Math.sin(now / 130)) : 0;
+        }
+      });
     }
     function updateBot(level, state) {
       const q = state.quaternion || quaternionForState(state);
@@ -1218,6 +1283,7 @@
       }
       recordDebugSample('frame', now, false);
       updateBot(game.level, visualState);
+      updateItemAnimations(now);
       updateShotEffect(now);
       updateCamera(game.level, visualState);
       updateHud();

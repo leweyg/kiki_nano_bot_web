@@ -136,8 +136,7 @@
         { clone: { type: "wireStone" }, space: "coordinates", at: [
           { x: 2, y: 6, z: 4 }, { x: 2, y: 5, z: 4 }, { x: 2, y: 4, z: 4 }, { x: 2, y: 3, z: 4 },
           { x: 6, y: 6, z: 4 }, { x: 6, y: 5, z: 4 }, { x: 6, y: 4, z: 4 }, { x: 6, y: 3, z: 4 },
-          { x: 6, y: 3, z: 4 }, { x: 5, y: 3, z: 4 },
-          { x: 2, y: 3, z: 4 }, { x: 3, y: 3, z: 4 }
+          { x: 5, y: 3, z: 4 }, { x: 3, y: 3, z: 4 }
         ] },
         { clone: { type: "gear", face: "PY" }, space: "coordinates", at: [{ x: 3, y: 0, z: 3 }] },
         { clone: { type: "generator", face: "PY", active: true }, space: "coordinates", at: [{ x: 5, y: 0, z: 5 }] },
