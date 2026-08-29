@@ -363,7 +363,13 @@
     document.body.appendChild(renderer.domElement);
     renderer.domElement.tabIndex = 0;
     renderer.domElement.focus({ preventScroll: true });
-    addEventListener('pageshow', () => renderer.domElement.focus({ preventScroll: true }));
+    addEventListener('pageshow', event => {
+      if (event.persisted && game.won) {
+        location.reload();
+        return;
+      }
+      renderer.domElement.focus({ preventScroll: true });
+    });
     renderer.domElement.addEventListener('touchmove', event => event.preventDefault(), { passive: false });
     ['gesturestart', 'gesturechange', 'gestureend', 'selectstart', 'dragstart', 'contextmenu', 'dblclick'].forEach(type => {
       addEventListener(type, event => event.preventDefault(), { passive: false });
