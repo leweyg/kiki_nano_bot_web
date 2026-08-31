@@ -650,6 +650,8 @@
     let activeAnimation = null;
     let activeShot = null;
     let animatedItems = [];
+    let frameRequested = false;
+    let idleAnimationUntil = 0;
     let queuedAction = null;
     let cameraReady = false;
     let advancingLevel = false;
@@ -658,6 +660,7 @@
     const heldInput = { move: null, pointerMove: null, jump: false, jumpGraceUntil: 0, jumpConsumed: false, jumpPending: false, jumpTimer: null };
     const JUMP_GRACE_MS = 220;
     const TAP_SEQUENCE_MS = 420;
+    const POST_ACTION_VISUAL_MS = 450;
     const DEBUG_ENABLED_KEY = 'kiki.debug.path.enabled';
     const DEBUG_LATEST_KEY = 'kiki.debug.path.latest';
     const DEBUG_HISTORY_KEY = 'kiki.debug.path.history';
@@ -1100,6 +1103,8 @@
         to: withTires(to, tireAngles),
         totalDuration: segments.reduce((total, segment) => total + segment.duration, 0)
       };
+      idleAnimationUntil = Math.max(idleAnimationUntil, activeAnimation.startedAt + activeAnimation.totalDuration + POST_ACTION_VISUAL_MS);
+      requestDraw();
     }
     function tiresAtSegment(segment, amount) {
       return lerpTires(segment.from.tires || tireAngles, segment.to.tires || tireAngles, amount);
@@ -1167,6 +1172,8 @@
       };
       bulletMesh.visible = true;
       bulletMesh.scale.setScalar(1);
+      idleAnimationUntil = Math.max(idleAnimationUntil, activeShot.startedAt + activeShot.flyDuration + activeShot.explodeDuration + POST_ACTION_VISUAL_MS);
+      requestDraw();
     }
     function updateShotEffect(now) {
       if (!activeShot) {
@@ -1199,6 +1206,7 @@
     function finishAnimation() {
       recordDebugSample('animation-finish', performance.now(), true);
       activeAnimation = null;
+      idleAnimationUntil = Math.max(idleAnimationUntil, performance.now() + POST_ACTION_VISUAL_MS);
       visualState = withTires(snapshot(game), tireAngles);
       if (scheduleAdvanceIfWon()) {
         queuedAction = null;
@@ -1276,7 +1284,13 @@
       }
       tapSequence.timer = setTimeout(runTapSequence, TAP_SEQUENCE_MS);
     }
+    function requestDraw() {
+      if (frameRequested) return;
+      frameRequested = true;
+      requestAnimationFrame(draw);
+    }
     function draw(now) {
+      frameRequested = false;
       if (activeAnimation) {
         visualState = stateAtAnimation(activeAnimation, now);
         if (now - activeAnimation.startedAt >= activeAnimation.totalDuration) finishAnimation();
@@ -1288,7 +1302,7 @@
       updateCamera(game.level, visualState);
       updateHud();
       renderer.render(scene, camera);
-      requestAnimationFrame(draw);
+      if (activeAnimation || activeShot || now < idleAnimationUntil) requestDraw();
     }
     function act(direction) {
       if (game.won || advancingLevel || Date.now() < suppressInputUntil) return;
@@ -1319,11 +1333,11 @@
     }
     function continueHeldInput() {
       const next = heldInput.move;
-      if (next && !activeAnimation && !queuedAction) requestAnimationFrame(() => {
+      if (next && !activeAnimation && !queuedAction) {
         const action = actionForMove(next);
         if (action === 'jump forward') consumeJumpIntent();
         act(action);
-      });
+      }
     }
     function setHeldMove(direction, pointerId) {
       const changed = heldInput.move !== direction || heldInput.pointerMove !== pointerId;
@@ -1408,7 +1422,7 @@
     addEventListener('keydown', event => {
       const map = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right' };
       const key = event.key.length === 1 ? event.key.toLowerCase() : event.key;
-      if (key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); return; }
+      if (key === 'v') { event.preventDefault(); cameraMode = cameraMode === 'behind' ? 'follow' : cameraMode === 'follow' ? 'inside' : 'behind'; updateHud(); requestDraw(); return; }
       if (event.key === 'Shift') {
         event.preventDefault();
         if (!event.repeat) act('jump forward');
@@ -1480,7 +1494,7 @@
         heldInput.move = null;
       }
     });
-    addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; });
+    addEventListener('resize', () => { renderer.setSize(innerWidth, innerHeight); cameraReady = false; requestDraw(); });
     const spawnFrom = snapshot(game);
     game.applyGravity();
     const spawnTo = snapshot(game);
@@ -1490,7 +1504,7 @@
     if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
       startAnimation(buildSettleAnimation(spawnFrom, spawnTo), spawnTo, 'settle');
     }
-    requestAnimationFrame(draw);
+    requestDraw();
   </script>
 </body>
 
