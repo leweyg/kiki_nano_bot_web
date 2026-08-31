@@ -279,6 +279,14 @@
       default: return [vec(1, 0, 0), vec(-1, 0, 0), vec(0, 1, 0), vec(0, -1, 0)];
     }
   }
+  function gearSpinSign(object) {
+    var axis = faceIndex(object.face) % 3;
+    var p = object.coordinates;
+    var sum = (axis === 1 || axis === 2 ? p.x : 0) +
+      (axis === 0 || axis === 2 ? (p.y || 0) : 0) +
+      (axis === 0 || axis === 1 ? p.z : 0);
+    return sum % 2 ? 1 : -1;
+  }
   function isGearObject(object) {
     return object && (object.type === "gear" || object.type === "generator" || object.type === "motorGear");
   }
@@ -431,21 +439,53 @@
     }, this);
     return wires;
   };
+  Game.prototype.updateMechanicalGears = function () {
+    var gearObjects = this.objects.filter(isGearObject);
+    var gearsByPosition = {};
+    var drivenGenerators = [];
+    gearObjects.forEach(function (object) {
+      object.mechanical = false;
+      object.spinDirection = 0;
+      gearsByPosition[key(object.coordinates.x, object.coordinates.y || 0, object.coordinates.z)] = object;
+    });
+    var queue = gearObjects.filter(function (object) { return object.type === "motorGear"; }).map(function (object) {
+      return { object: object, spinDirection: gearSpinSign(object) };
+    });
+    var visitedGears = {};
+    while (queue.length) {
+      var entry = queue.shift();
+      var gear = entry.object;
+      var gearName = vectorKey(gear.coordinates) + ":" + gear.type;
+      if (visitedGears[gearName]) continue;
+      visitedGears[gearName] = true;
+      gear.mechanical = true;
+      gear.spinDirection = entry.spinDirection;
+      if (gear.type === "generator" && gear.active !== false) drivenGenerators.push(gear);
+      gearNeighborDirections(gear.face).forEach(function (direction) {
+        var neighbor = gearsByPosition[key(gear.coordinates.x + direction.x, (gear.coordinates.y || 0) + direction.y, gear.coordinates.z + direction.z)];
+        if (neighbor && faceName(neighbor.face) === faceName(gear.face)) queue.push({ object: neighbor, spinDirection: -entry.spinDirection });
+      });
+    }
+    return drivenGenerators;
+  };
   Game.prototype.updatePower = function () {
     this.objects.forEach(function (object) {
       if (conducts(object)) object.powered = false;
       if (object.type === "wire") object.active = false;
       if (object.type === "wireStone") object.powered = false;
     });
+    var drivenGenerators = this.updateMechanicalGears();
 
     if (this.level.powerCondition === "elevatedCircuit") {
-      var ready = this.objects.filter(function (object) { return object.circuitPart; }).every(function (object) {
+      var circuitParts = this.objects.filter(function (object) { return object.circuitPart; });
+      var elevated = circuitParts.length > 0 && circuitParts.every(function (object) {
         return (object.coordinates.y || 0) >= 2;
       });
-      this.setExitActive("exit", ready);
+      var connected = elevated && circuitParts.every(function (object) { return object.mechanical; });
+      this.setExitActive("exit", connected);
       this.objects.forEach(function (object) {
-        if (conducts(object)) object.powered = ready;
-        if (object.type === "wire") object.active = ready;
+        if (object.circuitPart && isGearObject(object)) object.powered = connected;
+        if (object.type === "wire") object.active = connected;
       });
       return;
     }
@@ -453,28 +493,7 @@
     if (this.level.powerCondition !== "connectedMotor") return;
 
     this.setExitActive("exit", false);
-
-    var gearObjects = this.objects.filter(isGearObject);
-    var gearsByPosition = {};
-    gearObjects.forEach(function (object) {
-      gearsByPosition[key(object.coordinates.x, object.coordinates.y || 0, object.coordinates.z)] = object;
-    });
-
-    var queue = gearObjects.filter(function (object) { return object.type === "motorGear"; });
-    var visitedGears = {};
-    var drivenGenerators = [];
-    while (queue.length) {
-      var gear = queue.shift();
-      var gearName = vectorKey(gear.coordinates) + ":" + gear.type;
-      if (visitedGears[gearName]) continue;
-      visitedGears[gearName] = true;
-      gear.powered = true;
-      if (gear.type === "generator" && gear.active !== false) drivenGenerators.push(gear);
-      gearNeighborDirections(gear.face).forEach(function (direction) {
-        var neighbor = gearsByPosition[key(gear.coordinates.x + direction.x, (gear.coordinates.y || 0) + direction.y, gear.coordinates.z + direction.z)];
-        if (neighbor && faceName(neighbor.face) === faceName(gear.face)) queue.push(neighbor);
-      });
-    }
+    drivenGenerators.forEach(function (generator) { generator.powered = true; });
     var reachesMotor = drivenGenerators.length > 0;
 
     var wireObjects = this.objects.filter(function (object) { return object.type === "wire" || object.type === "switch"; })
@@ -495,7 +514,7 @@
       }
     });
 
-    queue = wireObjects.filter(function (wire) {
+    var queue = wireObjects.filter(function (wire) {
       return drivenGenerators.some(function (generator) {
         return samePosition(generator.coordinates, wire.coordinates) ||
           gearNeighborDirections(generator.face).some(function (direction) {
@@ -531,7 +550,7 @@
     this.objects.forEach(function (object) {
       if (object.type !== "motorCylinder") return;
       object.powered = this.objects.some(function (gear) {
-        return gear.type === "motorGear" && gear.powered && samePosition(add(gear.coordinates, vec(0, 1, 0)), object.coordinates);
+        return gear.type === "motorGear" && gear.mechanical && samePosition(add(gear.coordinates, vec(0, 1, 0)), object.coordinates);
       });
     }, this);
     this.setExitActive("exit", reachesMotor);
@@ -747,24 +766,42 @@
   };
   Game.prototype.explodeBomb = function (bomb) {
     if (bomb.splitted) return;
+    var origin = copyPosition(bomb.coordinates);
     bomb.splitted = true;
     var index = this.objects.indexOf(bomb);
     if (index >= 0) this.objects.splice(index, 1);
     this.rebuildOccupants();
     sixDirections.forEach(function (direction) {
-      var adjacent = add(bomb.coordinates, direction);
-      var occupant = this.objectAt(adjacent);
-      if (!occupant) return;
+      this.propagateBombBlast(origin, direction);
+    }, this);
+    this.updatePower();
+  };
+  Game.prototype.propagateBombBlast = function (origin, direction) {
+    var cursor = add(origin, direction);
+    var guard = 0;
+    while (validPosition(this.level, cursor) && guard < 64) {
+      guard += 1;
+      var occupant = this.objectAt(cursor);
+      if (!occupant) {
+        cursor = add(cursor, direction);
+        continue;
+      }
       if (occupant.type === "bomb") {
         this.explodeBomb(occupant);
         return;
       }
-      var destination = add(adjacent, direction);
-      if (this.isUnoccupied(destination)) {
+      if (!isPushableObject(occupant)) return;
+      var destination = cursor;
+      var next = add(destination, direction);
+      while (this.isUnoccupied(next)) {
+        destination = next;
+        next = add(destination, direction);
+      }
+      if (!samePosition(destination, cursor)) {
         this.moveObjectTo(occupant, destination);
       }
-    }, this);
-    this.updatePower();
+      return;
+    }
   };
   Game.prototype.bulletImpact = function (object) {
     if (!object) return;

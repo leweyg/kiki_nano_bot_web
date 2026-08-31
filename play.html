@@ -598,7 +598,7 @@
       group.add(rotor);
       group.position.copy(centered(level, object.coordinates, 0));
       applyFaceOrientation(group, object.face);
-      animatedItems.push({ type: 'gear', object, rotor, direction: gearClockwise(object) });
+      animatedItems.push({ type: 'gear', object, rotor });
       board.add(group);
     }
     function addMotorCylinder(level, object) {
@@ -860,8 +860,8 @@
     function updateItemAnimations(now) {
       animatedItems.forEach(item => {
         if (item.type === 'gear') {
-          const active = item.object.type === 'motorGear' || item.object.powered;
-          item.rotor.rotation.z = active ? item.direction * now / 320 : 0;
+          const active = item.object.mechanical;
+          item.rotor.rotation.z = active ? (item.object.spinDirection || gearClockwise(item.object)) * now / 320 : 0;
         } else if (item.type === 'motorCylinder') {
           item.piston.position.z = item.object.powered ? -.42 * (.5 + .5 * Math.sin(now / 130)) : 0;
         }

@@ -126,7 +126,7 @@
       size: { x: 9, y: 7, z: 9 },
       intro: "electro",
       powerCondition: "connectedMotor",
-      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump"],
+      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump", "push forward", "push backward"],
       help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit\nfeed it with electricity:\n\nconnect the generator\nwith the motor",
       player: { coordinates: { x: 2, y: 0, z: 4 }, orientation: "rotz180", nostatus: false },
       exits: [
