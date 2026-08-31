@@ -460,21 +460,22 @@
       gearsByPosition[key(object.coordinates.x, object.coordinates.y || 0, object.coordinates.z)] = object;
     });
 
-    var queue = gearObjects.filter(function (object) { return object.type === "generator" && object.active !== false; });
+    var queue = gearObjects.filter(function (object) { return object.type === "motorGear"; });
     var visitedGears = {};
-    var reachesMotor = false;
+    var drivenGenerators = [];
     while (queue.length) {
       var gear = queue.shift();
       var gearName = vectorKey(gear.coordinates) + ":" + gear.type;
       if (visitedGears[gearName]) continue;
       visitedGears[gearName] = true;
       gear.powered = true;
-      if (gear.type === "motorGear") reachesMotor = true;
+      if (gear.type === "generator" && gear.active !== false) drivenGenerators.push(gear);
       gearNeighborDirections(gear.face).forEach(function (direction) {
         var neighbor = gearsByPosition[key(gear.coordinates.x + direction.x, (gear.coordinates.y || 0) + direction.y, gear.coordinates.z + direction.z)];
         if (neighbor && faceName(neighbor.face) === faceName(gear.face)) queue.push(neighbor);
       });
     }
+    var reachesMotor = drivenGenerators.length > 0;
 
     var wireObjects = this.objects.filter(function (object) { return object.type === "wire" || object.type === "switch"; })
       .concat(this.dynamicWires());
@@ -495,8 +496,11 @@
     });
 
     queue = wireObjects.filter(function (wire) {
-      return gearObjects.some(function (gear) {
-        return gear.type === "generator" && gear.active !== false && samePosition(gear.coordinates, wire.coordinates);
+      return drivenGenerators.some(function (generator) {
+        return samePosition(generator.coordinates, wire.coordinates) ||
+          gearNeighborDirections(generator.face).some(function (direction) {
+            return samePosition(add(generator.coordinates, direction), wire.coordinates);
+          });
       });
     });
     var visitedWires = {};

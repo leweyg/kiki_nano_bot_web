@@ -581,7 +581,7 @@
       const rotor = new THREE.Group();
       if (object.type === 'generator') {
         rotor.add(KikiItemMeshes.createMesh(THREE, 'generator', materials.generator));
-        const gear = KikiItemMeshes.createMesh(THREE, 'gear', materials.gear);
+        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
         gear.position.z = .4;
         rotor.add(gear);
       } else if (object.type === 'motorGear') {
@@ -860,7 +860,7 @@
     function updateItemAnimations(now) {
       animatedItems.forEach(item => {
         if (item.type === 'gear') {
-          const active = item.object.type === 'generator' ? item.object.active !== false : item.object.powered;
+          const active = item.object.type === 'motorGear' || item.object.powered;
           item.rotor.rotation.z = active ? item.direction * now / 320 : 0;
         } else if (item.type === 'motorCylinder') {
           item.piston.position.z = item.object.powered ? -.42 * (.5 + .5 * Math.sin(now / 130)) : 0;
