@@ -735,17 +735,18 @@
   Game.prototype.pushAlong = function (sign) {
     if (this.won) return false;
     var step = mul(this.dir, sign);
+    var pushedDown = neg(this.up);
     var forward = add(this.position, step);
     var object = this.objectAt(forward);
     if (!isPushableObject(object)) return false;
     var destination = add(forward, step);
     if (!this.isUnoccupied(destination)) return false;
     this.moveObjectTo(object, destination);
-    if (this.isUnoccupied(add(forward, neg(this.up)))) this.rollClimbDown(step, sign);
+    if (this.isUnoccupied(add(forward, pushedDown))) this.rollClimbDown(step, sign);
     else this.position = forward;
     this.moves += 1;
     this.applyGravity();
-    this.applyObjectGravity(object, neg(this.up));
+    this.applyObjectGravity(object, pushedDown);
     this.checkExit();
     return true;
   };
@@ -916,15 +917,23 @@
   };
   Game.prototype.reset = function () { return new Game(this.level); };
 
-  function solve(level) {
+  function solve(level, options) {
+    options = options || {};
+    var maxStates = options.maxStates || 0;
+    var maxDepth = options.maxDepth || 0;
     var start = new Game(level);
     start.applyGravity();
     var queue = [{ game: start, path: [] }];
+    var queueIndex = 0;
     var visited = {}; visited[start.stateKey()] = true;
     var actions = level.solverActions || solverActions;
-    while (queue.length) {
-      var current = queue.shift();
+    while (queueIndex < queue.length) {
+      if (maxStates && queueIndex >= maxStates) return null;
+      var current = queue[queueIndex];
+      queue[queueIndex] = null;
+      queueIndex += 1;
       if (current.game.won) return current.path;
+      if (maxDepth && current.path.length >= maxDepth) continue;
       actions.forEach(function (action) {
         var next = current.game.clone();
         if (next.action(action)) {

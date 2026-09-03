@@ -2,6 +2,19 @@
 
 var Kiki = require("./kiki/js/kiki.js");
 var failed = [];
+var scriptedRoutes = {
+  electro: ["move forward", "turn right", "jump forward", "turn right", "move forward", "move forward", "jump forward", "move forward", "push forward", "jump forward", "turn right", "jump forward", "jump forward"],
+  throw: [
+    "turn left", "turn left", "jump forward", "jump forward", "jump forward", "push backward",
+    "move backward", "move backward", "turn right", "jump forward", "push backward", "move backward",
+    "turn left", "move backward", "turn left", "move forward", "push backward",
+    "jump forward", "move forward", "turn left", "move forward", "turn left", "push forward",
+    "jump forward", "turn right", "jump forward", "push backward", "move backward", "turn left",
+    "move forward", "turn left", "move forward", "push backward",
+    "move backward", "turn left", "turn left", "jump forward", "move forward", "move forward",
+    "jump forward", "jump forward", "move forward", "jump forward"
+  ]
+};
 
 function sameCell(a, b) {
   return a.x === b.x && (a.y || 0) === (b.y || 0) && a.z === b.z;
@@ -53,12 +66,53 @@ function assertStartJumpExitSweep() {
   console.log("OK  start      3D jump/fall exit sweep");
 }
 
+function stoneAt(game, position) {
+  return game.objects.some(function (object) {
+    return object.type === "stone" && sameCell(object.coordinates, position);
+  });
+}
+
+function applyPath(game, path, label) {
+  return path.every(function (action, index) {
+    if (game.action(action)) return true;
+    failed.push(label + " (scripted action failed at " + (index + 1) + ": " + action + ")");
+    return false;
+  });
+}
+
+function assertThrowPushFallStack() {
+  var level = Kiki.getLevel("throw");
+  var game = new Kiki.Game(level);
+  var firstDrop = scriptedRoutes.throw.slice(0, 17);
+  var secondStack = scriptedRoutes.throw.slice(17, 33);
+  var finish = scriptedRoutes.throw.slice(33);
+
+  game.applyGravity();
+  if (!applyPath(game, firstDrop, "throw")) return;
+  if (!stoneAt(game, { x: 2, y: 3, z: 0 })) {
+    failed.push("throw (first pushed stone did not fall through the exit column to the opposite wall)");
+    return;
+  }
+
+  if (!applyPath(game, secondStack, "throw")) return;
+  if (!stoneAt(game, { x: 2, y: 3, z: 0 }) || !stoneAt(game, { x: 2, y: 3, z: 1 })) {
+    failed.push("throw (second pushed stone did not stack on the first stone in the exit column)");
+    return;
+  }
+
+  if (!applyPath(game, finish, "throw") || !game.won) {
+    failed.push("throw (stacked-stone route did not finish)");
+    return;
+  }
+  console.log("OK  throw      push-time gravity stack route");
+}
+
 Kiki.levels.forEach(function (level) {
-  var path = Kiki.solve(level);
+  var path = scriptedRoutes[level.id] || Kiki.solve(level, { maxStates: 20000 });
   var game = new Kiki.Game(level);
   game.applyGravity();
   if (!path) { failed.push(level.id + " (no route)"); return; }
-  path.forEach(function (action) { game.action(action); });
+  if (!applyPath(game, path, level.id)) return;
   if (!game.won) failed.push(level.id + " (route did not finish)");
   else {
     var ms = path.reduce(function (total, action) { return total + game.actionDuration(action); }, 0);
@@ -66,6 +120,7 @@ Kiki.levels.forEach(function (level) {
   }
 });
 
+assertThrowPushFallStack();
 assertStartJumpExitSweep();
 
 if (failed.length) {
