@@ -87,13 +87,34 @@
 
     .levels {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
-      gap: 8px
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px
     }
 
     .levels a {
       padding: 10px;
       font: 13px monospace
+    }
+
+    .levels a.level-link {
+      display: flex;
+      flex-direction: column;
+      min-height: 44px;
+      padding: 0;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .18)
+    }
+
+    .level-link img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1/1;
+      object-fit: cover;
+      border-bottom: 1px solid var(--ink)
+    }
+
+    .level-label {
+      padding: 10px
     }
 
     .note {
@@ -286,13 +307,19 @@
     var CONTINUE_LEVEL_KEY = "kikiContinueLevel";
     function readCookie(name) { var match = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/[.$?*|{}()[\]\\/+^]/g, "\\$&") + "=([^;]*)")); return match ? decodeURIComponent(match[1]) : null; }
     function savedLevelIndex() { var saved = null; try { saved = localStorage.getItem(CONTINUE_LEVEL_KEY); } catch (error) { } if (saved === null) saved = readCookie(CONTINUE_LEVEL_KEY); var index = Kiki.getLevelIndex(saved); return Kiki.levels[index] ? index : 0; }
-    document.getElementById("levels").innerHTML = Kiki.levels.map(function (level) { return '<a href="play.html?level=' + level.index + '">' + String(level.index + 1).padStart(2, '0') + ' &nbsp;' + level.title + '</a>'; }).join('');
+    function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; }); }
+    function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, "&#96;"); }
+    function levelNumber(level) { return String(level.index + 1).padStart(2, '0'); }
+    function levelLabel(level) { return levelNumber(level) + ' &nbsp;' + escapeHtml(level.title); }
+    function levelScreenshot(level) {
+      return level.screenshot ? '<img src="' + escapeAttribute(level.screenshot) + '" alt="' + escapeAttribute(levelNumber(level) + ' ' + level.title) + '">' : '';
+    }
+    document.getElementById("levels").innerHTML = Kiki.levels.map(function (level) { return '<a class="level-link" href="play.html?level=' + level.index + '">' + levelScreenshot(level) + '<span class="level-label">' + levelLabel(level) + '</span></a>'; }).join('');
     var continueLevel = Kiki.getLevel(savedLevelIndex());
     document.getElementById("continue-link").href = "play.html?level=" + continueLevel.index;
     document.getElementById("continue-link").textContent = "Continue @ " + String(continueLevel.index + 1).padStart(2, '0') + " " + continueLevel.title;
     document.getElementById("source-link").href = Kiki.sourceUrl || "https://github.com/leweyg/kiki_nano_bot_web";
-    function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; }); }
-    function levelLink(id) { var level = Kiki.getLevel(id); return '<a href="play.html?level=' + level.index + '">' + String(level.index + 1).padStart(2, '0') + ' &nbsp;' + escapeHtml(level.title) + '</a>'; }
+    function levelLink(id) { var level = Kiki.getLevel(id); return '<a href="play.html?level=' + level.index + '">' + levelLabel(level) + '</a>'; }
     document.getElementById("game-items").innerHTML = Kiki.gameItems.map(function (item) { return '<div class="item"><div class="item-title"><strong>' + escapeHtml(item.title) + '</strong><span class="status status-' + escapeHtml(item.status) + '">' + escapeHtml(item.statusLabel) + '</span></div><p>' + escapeHtml(item.description) + '</p><div class="item-level">first seen: ' + levelLink(item.firstLevel) + '</div></div>'; }).join('');
   </script>
 </body>

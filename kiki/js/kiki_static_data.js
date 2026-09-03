@@ -6,10 +6,10 @@
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
   var levelDefinitions = [
-    { index: 0, id: "start", title: "start", source: "kiki/py/levels/start.py", scheme: "default_scheme", theme: "mint" },
-    { index: 1, id: "steps", title: "steps", source: "kiki/py/levels/steps.py", scheme: "blue_scheme", theme: "sky" },
-    { index: 2, id: "move", title: "move", source: "kiki/py/levels/move.py", scheme: "red_scheme", theme: "coral" },
-    { index: 3, id: "electro", title: "electro", source: "kiki/py/levels/electro.py", scheme: "metal_scheme", theme: "lime" },
+    { index: 0, id: "start", title: "start", source: "kiki/py/levels/start.py", scheme: "default_scheme", theme: "mint", screenshot: "kiki/levels/images/level1.png" },
+    { index: 1, id: "steps", title: "steps", source: "kiki/py/levels/steps.py", scheme: "blue_scheme", theme: "sky", screenshot: "kiki/levels/images/level2.png" },
+    { index: 2, id: "move", title: "move", source: "kiki/py/levels/move.py", scheme: "red_scheme", theme: "coral", screenshot: "kiki/levels/images/level3.png" },
+    { index: 3, id: "electro", title: "electro", source: "kiki/py/levels/electro.py", scheme: "metal_scheme", theme: "lime", screenshot: "kiki/levels/images/level4.png" },
     { index: 4, id: "elevate", title: "elevate", source: "kiki/py/levels/elevate.py", scheme: "bronze_scheme", theme: "copper" },
     { index: 5, id: "throw", title: "throw", source: "kiki/py/levels/throw.py", scheme: "tron_scheme", theme: "violet" },
     { index: 6, id: "gold", title: "gold", source: "kiki/py/levels/gold.py", scheme: "yellow_scheme" },

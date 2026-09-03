@@ -50,6 +50,7 @@
     level.index = definition.index;
     level.theme = definition.theme || level.theme || themes[level.index % themes.length];
     level.source = definition.source || level.source;
+    level.screenshot = definition.screenshot || level.screenshot;
     level.scheme = definition.scheme || level.scheme || "default_scheme";
     return level;
   }
