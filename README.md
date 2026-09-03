@@ -7,6 +7,9 @@ Downloaded from: https://sourceforge.net/projects/kiki/files/kiki-src/1.0.2
 
 Direct port of original to web (original controls, menus, etc.): https://transmutrix.itch.io/kiki-the-nanobot
 
+Navigate a chain of compact puzzle arenas, push movable blocks into shape, activate the chained components, and find the glowing exit. 
+      This web version tunes gameplay for mobile via redesigned touch controls, URLs per level, and proper page idling your battery isn't overused.</p>
+
 # Web Structure
 
 index.html - landing page, project intro, controls guide, links to levels, and guide to characters etc.
