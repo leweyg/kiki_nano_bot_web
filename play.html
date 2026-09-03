@@ -68,6 +68,12 @@
       pointer-events: none
     }
 
+    .header-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center
+    }
+
     header a,
     header button {
       pointer-events: auto;
@@ -77,6 +83,10 @@
       padding: 9px 12px;
       font: inherit;
       text-decoration: none
+    }
+
+    #screenshot[hidden] {
+      display: none
     }
 
     .debug-toggle {
@@ -285,7 +295,8 @@
 </head>
 
 <body>
-  <header><a href="index.html">KIKI</a><span id="title"></span><button id="reset">reset</button></header>
+  <header><a href="index.html">KIKI</a><span id="title"></span><span class="header-actions"><button id="screenshot"
+        type="button" hidden>screenshot</button><button id="reset">reset</button></span></header>
   <div id="hud"></div>
   <div class="controls">
     <div class="action-stack tool-actions"><button class="control-button" id="push">PUSH</button><button
@@ -957,6 +968,59 @@
         button.disabled = game.won || advancingLevel;
       });
     }
+    function isLocalhost() {
+      return location.hostname === 'localhost' || location.hostname === '127.0.0.1' || location.hostname === '[::1]' || location.hostname === '::1';
+    }
+    function saveToFile(path, content, callback) {
+      const request = new XMLHttpRequest();
+      request.overrideMimeType('application/json');
+      request.open('POST', 'php/save_to_file.php?path=' + encodeURIComponent(path), true);
+      request.onreadystatechange = () => {
+        if (request.readyState === 4 && callback) callback(request.status === 200, request.responseText);
+      };
+      request.send(content);
+    }
+    function renderScreenshotBlob(callback) {
+      const screenshotCamera = camera.clone();
+      screenshotCamera.aspect = 1;
+      screenshotCamera.fov = camera.fov / 1.31;
+      screenshotCamera.updateProjectionMatrix();
+      const screenshotRenderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+      screenshotRenderer.setPixelRatio(1);
+      screenshotRenderer.setSize(256, 256, false);
+      screenshotRenderer.render(scene, screenshotCamera);
+      screenshotRenderer.domElement.toBlob(blob => {
+        screenshotRenderer.dispose();
+        callback(blob);
+      }, 'image/png');
+    }
+    function screenshotPath() {
+      return 'kiki/levels/images/level' + (game.level.index + 1) + '.png';
+    }
+    function saveScreenshot() {
+      const button = document.getElementById('screenshot');
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'saving';
+      updateBot(game.level, visualState);
+      updateItemAnimations(performance.now());
+      updateShotEffect(performance.now());
+      renderScreenshotBlob(blob => {
+        if (!blob) {
+          button.disabled = false;
+          button.textContent = 'error';
+          setTimeout(() => { button.textContent = originalText; }, 1200);
+          return;
+        }
+        const path = screenshotPath();
+        saveToFile(path, blob, ok => {
+          button.disabled = false;
+          button.textContent = ok ? 'saved' : 'error';
+          button.title = ok ? path : 'Could not save ' + path;
+          setTimeout(() => { button.textContent = originalText; }, 1200);
+        });
+      });
+    }
     function animationSegment(kind, duration, from, to, extra) {
       return Object.assign({ kind, duration, from, to }, extra || {});
     }
@@ -1416,6 +1480,12 @@
     });
     addEventListener('pointercancel', event => { clearTapSequence(); releaseMove(event.pointerId); resetTouchpad(); });
     document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
+    const screenshotButton = document.getElementById('screenshot');
+    if (isLocalhost()) {
+      screenshotButton.hidden = false;
+      screenshotButton.title = screenshotPath();
+      screenshotButton.addEventListener('click', saveScreenshot);
+    }
     document.getElementById('reset').onclick = () => { location.reload(); };
     document.getElementById('push').onclick = () => act(heldInput.move === 'down' ? 'push backward' : 'push forward');
     document.getElementById('shoot').onclick = () => act('shoot');
