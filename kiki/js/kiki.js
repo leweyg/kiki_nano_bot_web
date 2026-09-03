@@ -517,10 +517,7 @@
 
     var queue = wireObjects.filter(function (wire) {
       return drivenGenerators.some(function (generator) {
-        return samePosition(generator.coordinates, wire.coordinates) ||
-          gearNeighborDirections(generator.face).some(function (direction) {
-            return samePosition(add(generator.coordinates, direction), wire.coordinates);
-          });
+        return samePosition(generator.coordinates, wire.coordinates);
       });
     });
     var visitedWires = {};

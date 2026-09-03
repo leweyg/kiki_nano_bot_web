@@ -107,6 +107,39 @@ function assertThrowPushFallStack() {
   console.log("OK  throw      push-time gravity stack route");
 }
 
+function makeGeneratorWireTestLevel(wirePosition) {
+  return {
+    id: "generator-wire-test",
+    size: { x: 5, y: 3, z: 5 },
+    player: { coordinates: { x: 0, y: 0, z: 0 } },
+    exits: [{ name: "exit", active: false, coordinates: { x: 4, y: 2, z: 4 } }],
+    powerCondition: "connectedMotor",
+    objects: [
+      { type: "motorGear", face: "PY", coordinates: { x: 1, y: 0, z: 1 } },
+      { type: "gear", face: "PY", coordinates: { x: 2, y: 0, z: 1 } },
+      { type: "generator", face: "PY", active: true, coordinates: { x: 3, y: 0, z: 1 } },
+      { type: "wire", face: "PY", connections: "all", coordinates: wirePosition }
+    ]
+  };
+}
+
+function assertGeneratorPowersOnlySameCellWires() {
+  var adjacent = new Kiki.Game(makeGeneratorWireTestLevel({ x: 3, y: 0, z: 2 }));
+  var adjacentWire = adjacent.objects.filter(function (object) { return object.type === "wire"; })[0];
+  if (adjacentWire.powered || adjacentWire.active) {
+    failed.push("generator (powered adjacent wire without sharing its cell)");
+    return;
+  }
+
+  var sameCell = new Kiki.Game(makeGeneratorWireTestLevel({ x: 3, y: 0, z: 1 }));
+  var sameCellWire = sameCell.objects.filter(function (object) { return object.type === "wire"; })[0];
+  if (!sameCellWire.powered || !sameCellWire.active) {
+    failed.push("generator (did not power wire in the same cell)");
+    return;
+  }
+  console.log("OK  generator  same-cell wire power");
+}
+
 Kiki.levels.forEach(function (level) {
   var path = scriptedRoutes[level.id] || Kiki.solve(level, { maxStates: 20000 });
   var game = new Kiki.Game(level);
@@ -121,6 +154,7 @@ Kiki.levels.forEach(function (level) {
 });
 
 assertThrowPushFallStack();
+assertGeneratorPowersOnlySameCellWires();
 assertStartJumpExitSweep();
 
 if (failed.length) {
