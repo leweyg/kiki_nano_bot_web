@@ -135,11 +135,19 @@
 	    header label {
 	      pointer-events: auto;
 	      color: inherit;
-	      background: #2b2b2b;
 	      border: 1px solid #707070;
 	      padding: 9px 12px;
 	      font: inherit;
 	      text-decoration: none
+	    }
+
+	    header a {
+	      background: #2b2b2b
+	    }
+
+	    header button,
+	    header label {
+	      background: transparent
 	    }
 	
 	    header button:disabled {
@@ -152,8 +160,7 @@
 	      gap: 7px;
 	      align-items: center;
 	      color: #c8c8a8;
-	      background: rgba(43, 43, 43, .78);
-	      border: 1px solid rgba(112, 112, 112, .8);
+	      border: 1px solid rgba(224, 224, 192, .72);
 	      padding: 7px 9px;
 	      font: 12px monospace;
 	      text-transform: uppercase;
@@ -368,8 +375,8 @@
 	  <header>
 	    <span class="header-brand"><a href="index.html">KIKI</a></span>
 	    <span class="level-nav-row"><button id="level-previous" type="button" aria-label="previous level"
-	        title="previous level">&lt;</button><span class="level-title"><span id="port-status"
-	          class="port-status"></span><span id="title"></span></span><button id="level-next" type="button"
+	        title="previous level">&lt;</button><span class="level-title"><span id="title"></span><span
+	          id="port-status" class="port-status"></span></span><button id="level-next" type="button"
 	        aria-label="next level" title="next level">&gt;</button></span>
 	    <span class="header-actions"><button id="reset" type="button">reset</button><span class="local-tools"
 	        id="local-tools" hidden><button id="screenshot" type="button" hidden>screenshot</button><label
