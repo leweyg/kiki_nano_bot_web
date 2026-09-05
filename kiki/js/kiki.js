@@ -52,6 +52,7 @@
     level.source = definition.source || level.source;
     level.screenshot = definition.screenshot || level.screenshot;
     level.scheme = definition.scheme || level.scheme || "default_scheme";
+    level.port_status = definition.port_status || "not_started";
     return level;
   }
 

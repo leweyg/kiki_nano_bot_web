@@ -57,6 +57,9 @@
     { index: 48, id: "evil", title: "evil", source: "kiki/py/levels/evil.py", scheme: "red_scheme" },
     { index: 49, id: "mutants", title: "mutants", source: "kiki/py/levels/mutants.py", scheme: "blue_scheme" }
   ];
+  levelDefinitions.forEach(function (level) {
+    level.port_status = level.index < 6 ? "ported" : level.index < 13 ? "in_progress" : "not_started";
+  });
 
   var commonIntroHelp = [
     "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\njump on the stones",

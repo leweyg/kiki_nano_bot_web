@@ -89,6 +89,33 @@
 	      min-width: 0
 	    }
 
+	    .level-title {
+	      display: flex;
+	      gap: 8px;
+	      align-items: center;
+	      justify-content: center;
+	      min-width: 0
+	    }
+
+	    .port-status {
+	      flex: 0 0 auto;
+	      width: 1.4em;
+	      text-align: center;
+	      font-weight: bold
+	    }
+
+	    .port-status-ported {
+	      color: #96e0a5
+	    }
+
+	    .port-status-in_progress {
+	      color: #f0bf66
+	    }
+
+	    .port-status-not_started {
+	      color: #9a9a8a
+	    }
+
 	    .header-actions {
 	      display: flex;
 	      flex-direction: column;
@@ -341,7 +368,8 @@
 	  <header>
 	    <span class="header-brand"><a href="index.html">KIKI</a></span>
 	    <span class="level-nav-row"><button id="level-previous" type="button" aria-label="previous level"
-	        title="previous level">&lt;</button><span id="title"></span><button id="level-next" type="button"
+	        title="previous level">&lt;</button><span class="level-title"><span id="port-status"
+	          class="port-status"></span><span id="title"></span></span><button id="level-next" type="button"
 	        aria-label="next level" title="next level">&gt;</button></span>
 	    <span class="header-actions"><button id="reset" type="button">reset</button><span class="local-tools"
 	        id="local-tools" hidden><button id="screenshot" type="button" hidden>screenshot</button><label
@@ -991,9 +1019,9 @@
       if (wallDistance < botToCamera.length() + .2) botToCamera.setLength(Math.max(.72, wallDistance - .2));
       return clampInsideRoom(level, position.clone().add(botToCamera), .2);
     }
-    function updateCamera(level, state) {
-      const position = centered(level, state.position, 0);
-      const vectors = stateVectors(state);
+	    function updateCamera(level, state) {
+	      const position = centered(level, state.position, 0);
+	      const vectors = stateVectors(state);
       const dir = vectors.dir;
       const up = vectors.up;
       camera.aspect = innerWidth / innerHeight;
@@ -1011,11 +1039,26 @@
       cameraReady = true;
       cameraLight.position.copy(camera.position);
       cameraLight.target.position.copy(position);
-      cameraLight.target.updateMatrixWorld();
-      camera.updateProjectionMatrix();
-    }
+	      cameraLight.target.updateMatrixWorld();
+	      camera.updateProjectionMatrix();
+	    }
+	    function portStatusMeta(level) {
+	      const status = level.port_status || 'not_started';
+	      const statuses = {
+	        ported: { symbol: '✓', label: 'ported' },
+	        in_progress: { symbol: '◐', label: 'being ported' },
+	        not_started: { symbol: '○', label: 'not ported yet' }
+	      };
+	      return Object.assign({ status: statuses[status] ? status : 'not_started' }, statuses[status] || statuses.not_started);
+	    }
 	    function updateHud() {
 	      const level = game.level;
+	      const portStatus = document.getElementById('port-status');
+	      const portStatusInfo = portStatusMeta(level);
+	      portStatus.textContent = portStatusInfo.symbol;
+	      portStatus.className = 'port-status port-status-' + portStatusInfo.status;
+	      portStatus.title = 'Porting status: ' + portStatusInfo.label;
+	      portStatus.setAttribute('aria-label', 'Porting status: ' + portStatusInfo.label);
 	      document.getElementById('title').textContent = String(level.index + 1).padStart(2, '0') + ' / ' + level.title;
 	      previousLevelButton.disabled = level.index <= 0;
 	      nextLevelButton.disabled = level.index >= Kiki.levels.length - 1;

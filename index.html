@@ -114,7 +114,48 @@
     }
 
     .level-label {
+      display: flex;
+      gap: 8px;
+      align-items: center;
       padding: 10px
+    }
+
+    .port-status {
+      flex: 0 0 auto;
+      width: 1.4em;
+      text-align: center;
+      font-weight: bold
+    }
+
+    .port-status-ported {
+      color: #397457
+    }
+
+    .port-status-in_progress {
+      color: #9a6422
+    }
+
+    .port-status-not_started {
+      color: #65736a
+    }
+
+    .port-legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin: -4px 0 16px;
+      color: #65736a;
+      font: 13px monospace
+    }
+
+    .port-legend-label {
+      flex-basis: 100%
+    }
+
+    .port-legend-item {
+      display: inline-flex;
+      gap: 5px;
+      align-items: center
     }
 
     .note {
@@ -228,7 +269,7 @@
 <body>
   <main>
     <h3><pre>Kiki the Nano Bot</pre></h3>
-    <div class="eyebrow">3D puzzle exploring game, combining Sokoban and Kula-World</div>
+    <div class="eyebrow">3D puzzle & exploring game</div>
     
     <p>Navigate a chain of compact puzzle arenas, push movable blocks into shape, activate the chained components, and find the glowing exit. 
       This web version tunes gameplay for mobile via redesigned touch controls, URLs per level, and proper page idling your battery isn't overused.</p>
@@ -239,8 +280,13 @@
       <a href="https://transmutrix.itch.io/kiki-the-nanobot" class="secondary">Classic Web Emulation</a>
     </div>
     <section>
-      <div class="eyebrow">50 arenas</div>
       <h2>Choose a level</h2>
+      <div class="port-legend" aria-label="Porting status legend">
+        
+        <span class="port-legend-item"><span
+            class="port-status port-status-ported">✓</span>ported</span><span class="port-legend-item"><span
+            class="port-status port-status-in_progress">◐</span>being ported</span><span
+          class="port-legend-item"><span class="port-status port-status-not_started">○</span>not ported yet</span></div>
       <div class="levels" id="levels"></div>
     </section>
     <section>
@@ -310,7 +356,22 @@
     function escapeHtml(value) { return String(value || "").replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#39;" }[c]; }); }
     function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, "&#96;"); }
     function levelNumber(level) { return String(level.index + 1).padStart(2, '0'); }
-    function levelLabel(level) { return levelNumber(level) + ' &nbsp;' + escapeHtml(level.title); }
+    function portStatusMeta(level) {
+      var status = level.port_status || "not_started";
+      var statuses = {
+        ported: { symbol: "✓", label: "ported" },
+        in_progress: { symbol: "◐", label: "being ported" },
+        not_started: { symbol: "○", label: "not ported yet" }
+      };
+      if (!statuses[status]) status = "not_started";
+      var meta = statuses[status];
+      return { status: status, symbol: meta.symbol, label: meta.label };
+    }
+    function portStatusSymbol(level) {
+      var meta = portStatusMeta(level);
+      return '<span class="port-status port-status-' + escapeAttribute(meta.status) + '" title="Porting status: ' + escapeAttribute(meta.label) + '" aria-label="Porting status: ' + escapeAttribute(meta.label) + '">' + escapeHtml(meta.symbol) + '</span>';
+    }
+    function levelLabel(level) { return portStatusSymbol(level) + '<span>' + levelNumber(level) + ' &nbsp;' + escapeHtml(level.title) + '</span>'; }
     function levelScreenshot(level) {
       return level.screenshot ? '<img src="' + escapeAttribute(level.screenshot) + '" alt="' + escapeAttribute(levelNumber(level) + ' ' + level.title) + '">' : '';
     }
