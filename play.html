@@ -731,6 +731,9 @@
       ringB.rotation.x = Math.PI / 2;
       group.add(ringA, ringB, core);
       group.position.copy(centered(level, exit.coordinates || exit, 0));
+      const gateCoordinates = exit.coordinates || exit;
+      const gatePhase = ((gateCoordinates.x * 37 + gateCoordinates.z * 17 + (gateCoordinates.y || 0) * 13) % 360) * Math.PI / 180;
+      animatedItems.push({ type: 'gate', active: exit.active !== false, ringA, ringB, phase: gatePhase });
       board.add(group);
     }
     const botMesh = KikiMeshes.createBot(THREE, { body: materials.botBody, tire: materials.botTire });
@@ -965,6 +968,17 @@
           item.rotor.rotation.z = active ? (item.object.spinDirection || gearClockwise(item.object)) * now / 320 : 0;
         } else if (item.type === 'motorCylinder') {
           item.piston.position.z = item.object.powered ? -.42 * (.5 + .5 * Math.sin(now / 130)) : 0;
+        } else if (item.type === 'gate') {
+          if (!item.active) {
+            item.ringA.rotation.set(0, 0, 0);
+            item.ringB.rotation.set(Math.PI / 2, 0, 0);
+            return;
+          }
+          const time = now / 1000;
+          const spin = time * 1.6 + item.phase;
+          const wobble = .35 * Math.sin(time * 2.2 + item.phase);
+          item.ringA.rotation.set(wobble * .6, spin, wobble);
+          item.ringB.rotation.set(Math.PI / 2 + wobble, -spin * 1.1, -wobble * .5);
         }
       });
     }
