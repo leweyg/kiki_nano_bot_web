@@ -401,6 +401,7 @@
   <script src="kiki/js/kiki_item_meshes.js"></script>
   <script type="module">
     import * as THREE from './kiki/js/threejs/three.module.js';
+    import { InstanceBatches } from './kiki/js/kiki_instances.js';
     const query = new URLSearchParams(location.search);
 	    const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
 	    let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
@@ -482,11 +483,16 @@
     const staticBoard = new THREE.Group();
     const board = new THREE.Group();
     scene.add(staticBoard, board);
-    const sharedItemGeometries = new Set();
+    const staticInstances = new InstanceBatches();
+    const objectInstances = new InstanceBatches({ dynamic: true });
+    const primitiveGeometries = new Map();
+    function primitiveGeometry(type, ...args) {
+      const key = type + args.join(',');
+      if (!primitiveGeometries.has(key)) primitiveGeometries.set(key, new THREE[type](...args));
+      return primitiveGeometries.get(key);
+    }
     function createItemMesh(name, material) {
-      const mesh = KikiItemMeshes.createMesh(THREE, name, material);
-      sharedItemGeometries.add(mesh.geometry);
-      return mesh;
+      return KikiItemMeshes.createMesh(THREE, name, material);
     }
     const effects = new THREE.Group();
     scene.add(effects);
@@ -519,8 +525,16 @@
       room: materialFromScheme('KikiWorld', 'base', '#212121', { roughness: .7, transparent: true, opacity: .12, side: THREE.BackSide }),
       roomLine: lineMaterialFromScheme('KikiWorld', 'plate', '#808080', { transparent: true, opacity: .45 })
     };
-    function cube(size, material) { return new THREE.Mesh(new THREE.BoxGeometry(size, size, size), material); }
-    function box(size, material) { return new THREE.Mesh(new THREE.BoxGeometry(size.x, size.y, size.z), material); }
+    function cube(size, material) {
+      const mesh = new THREE.Mesh(primitiveGeometry('BoxGeometry', 1, 1, 1), material);
+      mesh.scale.setScalar(size);
+      return mesh;
+    }
+    function box(size, material) {
+      const mesh = new THREE.Mesh(primitiveGeometry('BoxGeometry', 1, 1, 1), material);
+      mesh.scale.copy(size);
+      return mesh;
+    }
     function v(position) { return new THREE.Vector3(position.x, position.y, position.z); }
     function centered(level, position, lift) {
       return new THREE.Vector3(
@@ -605,7 +619,8 @@
       return connections;
     }
     function addWireArm(group, x, y, width, height, material) {
-      const arm = new THREE.Mesh(new THREE.BoxGeometry(width, height, .012), material);
+      const arm = new THREE.Mesh(primitiveGeometry('BoxGeometry', 1, 1, 1), material);
+      arm.scale.set(width, height, .012);
       arm.position.set(x, y, .006);
       group.add(arm);
     }
@@ -653,9 +668,9 @@
     }
     function addSwitch(level, object) {
       const group = new THREE.Group();
-      const ringA = new THREE.Mesh(new THREE.TorusGeometry(.35, .035, 8, 24), materials.switchRing);
+      const ringA = new THREE.Mesh(primitiveGeometry('TorusGeometry', .35, .035, 8, 24), materials.switchRing);
       const ringB = ringA.clone();
-      const core = new THREE.Mesh(new THREE.SphereGeometry(.22, 14, 10), object.active ? materials.switchCore : materials.switchOffCore);
+      const core = new THREE.Mesh(primitiveGeometry('SphereGeometry', .22, 14, 10), object.active ? materials.switchCore : materials.switchOffCore);
       ringB.rotation.y = Math.PI / 2;
       group.add(ringA, ringB, core);
       group.position.copy(centered(level, object.coordinates, 0));
@@ -715,8 +730,8 @@
     }
     function addBomb(level, object) {
       const group = new THREE.Group();
-      const core = new THREE.Mesh(new THREE.SphereGeometry(.34, 18, 12), materials.bomb);
-      const belt = new THREE.Mesh(new THREE.TorusGeometry(.35, .025, 8, 24), materials.wire);
+      const core = new THREE.Mesh(primitiveGeometry('SphereGeometry', .34, 18, 12), materials.bomb);
+      const belt = new THREE.Mesh(primitiveGeometry('TorusGeometry', .35, .025, 8, 24), materials.wire);
       belt.rotation.x = Math.PI / 2;
       group.add(core, belt);
       group.position.copy(centered(level, object.coordinates, 0));
@@ -732,9 +747,9 @@
       const ringMaterial = exit.active ? materials.gate : materials.gateInactive;
       const sphereMaterial = exit.active ? materials.gateSphere : materials.gateInactiveSphere;
       const group = new THREE.Group();
-      const ringA = new THREE.Mesh(new THREE.TorusGeometry(.33, .035, 8, 32), ringMaterial);
+      const ringA = new THREE.Mesh(primitiveGeometry('TorusGeometry', .33, .035, 8, 32), ringMaterial);
       const ringB = ringA.clone();
-      const core = new THREE.Mesh(new THREE.SphereGeometry(.16, 16, 12), sphereMaterial);
+      const core = new THREE.Mesh(primitiveGeometry('SphereGeometry', .16, 16, 12), sphereMaterial);
       ringB.rotation.x = Math.PI / 2;
       group.add(ringA, ringB, core);
       group.position.copy(centered(level, exit.coordinates || exit, 0));
@@ -745,7 +760,7 @@
     }
     const botMesh = KikiMeshes.createBot(THREE, { body: materials.botBody, tire: materials.botTire });
     botMesh.matrixAutoUpdate = false;
-    const bulletMesh = new THREE.Mesh(new THREE.SphereGeometry(.1, 16, 10), materials.bullet);
+    const bulletMesh = new THREE.Mesh(primitiveGeometry('SphereGeometry', .1, 16, 10), materials.bullet);
     bulletMesh.visible = false;
     effects.add(bulletMesh);
     const TIRE_VISUAL_SCALE = .25;
@@ -954,17 +969,12 @@
       (game.objects || []).forEach(object => {
         if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall, staticBoard);
       });
+      staticInstances.rebuild(staticBoard);
     }
     function rebuildDynamicScene() {
-      // The player and cached item geometries survive refreshes. Dispose only
-      // geometry owned by the outgoing objects (rings and tires can share it).
+      // Geometry is cached for the level; instance buffers survive state refreshes.
       board.remove(botMesh);
-      const geometries = new Set();
-      board.traverse(object => {
-        if (object.geometry && !sharedItemGeometries.has(object.geometry)) geometries.add(object.geometry);
-      });
       board.clear();
-      geometries.forEach(geometry => geometry.dispose());
       animatedItems = [];
       const level = game.level;
       (game.objects || []).forEach(object => {
@@ -980,6 +990,7 @@
       (game.exits || [{ active: true, coordinates: level.exit }]).forEach(exit => {
         addGate(level, exit);
       });
+      objectInstances.rebuild(board, animatedItems.flatMap(item => item.rotor || item.piston || []));
       board.add(botMesh);
     }
     function updateItemAnimations(now) {
@@ -1002,6 +1013,7 @@
           item.ringB.rotation.set(Math.PI / 2 + wobble, -spin * 1.1, -wobble * .5);
         }
       });
+      objectInstances.updateAnimations();
     }
     function updateBot(level, state) {
       const q = state.quaternion || quaternionForState(state);

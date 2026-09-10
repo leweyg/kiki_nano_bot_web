@@ -52,13 +52,16 @@
     return geometry;
   }
 
+  // All bots in a level share the same body and tire geometry.
+  var bodyGeometry;
+  var tireGeometry;
   function createBot(THREE, materials) {
     var group = new THREE.Group();
-    var bodyGeometry = geometryFromParts(THREE, [
+    bodyGeometry = bodyGeometry || geometryFromParts(THREE, [
       { kind: "quadStrips", vertices: data.body.bodyInterleavedQuadStrips, indices: data.body.bodyQuadStripIndices },
       { kind: "triangleFans", vertices: data.body.bodyInterleavedTriangleFans, indices: data.body.bodyTriangleFanIndices }
     ]);
-    var tireGeometry = geometryFromParts(THREE, [
+    tireGeometry = tireGeometry || geometryFromParts(THREE, [
       { kind: "quadStrips", vertices: data.tire.tireInterleavedQuadStrips, indices: data.tire.tireQuadStripIndices }
     ]);
     var body = new THREE.Mesh(bodyGeometry, materials.body);
