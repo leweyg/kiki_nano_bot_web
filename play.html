@@ -479,8 +479,15 @@
     const cameraLight = new THREE.SpotLight(schemeColor('KikiLight', 'specular', '#ffffff'), 2.15, 0, Math.PI / 2, .16, .45);
     cameraLight.target = new THREE.Object3D();
     scene.add(cameraLight, cameraLight.target);
+    const staticBoard = new THREE.Group();
     const board = new THREE.Group();
-    scene.add(board);
+    scene.add(staticBoard, board);
+    const sharedItemGeometries = new Set();
+    function createItemMesh(name, material) {
+      const mesh = KikiItemMeshes.createMesh(THREE, name, material);
+      sharedItemGeometries.add(mesh.geometry);
+      return mesh;
+    }
     const effects = new THREE.Group();
     scene.add(effects);
     const materials = {
@@ -562,16 +569,16 @@
       const q = quaternionForState(from).slerp(quaternionForState(to), amount);
       return stateFromQuaternion(position || lerpPosition(from.position, to.position, amount), q);
     }
-    function addCube(position, size, material) {
+    function addCube(position, size, material, parent = board) {
       const mesh = cube(size, material);
       mesh.position.copy(position);
-      board.add(mesh);
+      parent.add(mesh);
       return mesh;
     }
     function addBox(position, size, material) {
       const mesh = box(size, material);
       mesh.position.copy(position);
-      board.add(mesh);
+      staticBoard.add(mesh);
       return mesh;
     }
     function faceName(face) { return face || 'PZ'; }
@@ -613,7 +620,7 @@
     function addRoom(level) {
       const room = new THREE.Mesh(new THREE.BoxGeometry(level.size.x, level.size.y, level.size.z), materials.room);
       const edges = new THREE.LineSegments(new THREE.EdgesGeometry(room.geometry), materials.roomLine);
-      board.add(room, edges);
+      staticBoard.add(room, edges);
     }
     function borderMaterial(a, b, c) {
       return (a + b + c) % 2 ? materials.borderA : materials.borderB;
@@ -658,7 +665,7 @@
       const material = object.active || object.powered ? materials.wireActive : materials.wire;
       const group = new THREE.Group();
       const mask = connectionMask(object.connections);
-      const core = KikiItemMeshes.createMesh(THREE, 'wire', material);
+      const core = createItemMesh('wire', material);
       group.add(core);
       if (mask & 2) addWireArm(group, .25, 0, .5, .1, material);
       if (mask & 8) addWireArm(group, -.25, 0, .5, .1, material);
@@ -676,18 +683,18 @@
       const group = new THREE.Group();
       const rotor = new THREE.Group();
       if (object.type === 'generator') {
-        rotor.add(KikiItemMeshes.createMesh(THREE, 'generator', materials.generator));
-        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
+        rotor.add(createItemMesh('generator', materials.generator));
+        const gear = createItemMesh('gear', object.powered ? materials.wireActive : materials.gear);
         gear.position.z = .4;
         rotor.add(gear);
       } else if (object.type === 'motorGear') {
-        group.add(KikiItemMeshes.createMesh(THREE, 'motor', materials.motor));
-        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
+        group.add(createItemMesh('motor', materials.motor));
+        const gear = createItemMesh('gear', object.powered ? materials.wireActive : materials.gear);
         gear.position.z = .4;
         rotor.add(gear);
       } else {
-        rotor.add(KikiItemMeshes.createMesh(THREE, 'valve', materials.motor));
-        const gear = KikiItemMeshes.createMesh(THREE, 'gear', object.powered ? materials.wireActive : materials.gear);
+        rotor.add(createItemMesh('valve', materials.motor));
+        const gear = createItemMesh('gear', object.powered ? materials.wireActive : materials.gear);
         gear.position.z = .4;
         rotor.add(gear);
       }
@@ -699,8 +706,8 @@
     }
     function addMotorCylinder(level, object) {
       const group = new THREE.Group();
-      const piston = KikiItemMeshes.createMesh(THREE, 'kolben', object.powered ? materials.wireActive : materials.gear);
-      group.add(KikiItemMeshes.createMesh(THREE, 'cylinder', materials.motorCylinder), piston);
+      const piston = createItemMesh('kolben', object.powered ? materials.wireActive : materials.gear);
+      group.add(createItemMesh('cylinder', materials.motorCylinder), piston);
       group.position.copy(centered(level, object.coordinates, 0));
       applyFaceOrientation(group, object.face);
       animatedItems.push({ type: 'motorCylinder', object, piston });
@@ -935,19 +942,33 @@
 	      if (debugEnabled) beginDebugTrace('page-load');
 	    }
     function buildStaticScene() {
-      while (board.children.length) board.remove(board.children[0]);
-      animatedItems = [];
+      // Reset and level navigation load a new page; these meshes live for that level.
       const level = game.level;
       addRoom(level);
       addBoundaryWalls(level);
       for (let z = 0; z < level.size.z; z += 1) {
         for (let x = 0; x < level.size.x; x += 1) {
-          addCube(centered(level, { x, y: 0, z }, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB);
+          addCube(centered(level, { x, y: 0, z }, -.98), .96, (x + z) % 2 ? materials.floorA : materials.floorB, staticBoard);
         }
       }
       (game.objects || []).forEach(object => {
-        if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall);
-        else if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
+        if (object.type === 'wall') addCube(centered(level, object.coordinates, 0), .88, materials.wall, staticBoard);
+      });
+    }
+    function rebuildDynamicScene() {
+      // The player and cached item geometries survive refreshes. Dispose only
+      // geometry owned by the outgoing objects (rings and tires can share it).
+      board.remove(botMesh);
+      const geometries = new Set();
+      board.traverse(object => {
+        if (object.geometry && !sharedItemGeometries.has(object.geometry)) geometries.add(object.geometry);
+      });
+      board.clear();
+      geometries.forEach(geometry => geometry.dispose());
+      animatedItems = [];
+      const level = game.level;
+      (game.objects || []).forEach(object => {
+        if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
         else if (object.type === 'wireStone') addWireStone(level, object);
         else if (object.type === 'wire') addWire(level, object);
         else if (object.type === 'switch') addSwitch(level, object);
@@ -1512,7 +1533,7 @@
       const segments = buildAnimation(direction, from, to, before);
       startAnimation(segments, to, direction);
       recordDebugAction(direction, from, to, segments);
-      buildStaticScene();
+      rebuildDynamicScene();
       if (direction === 'shoot') startShotEffect(shot);
       updateHud();
     }
@@ -1698,6 +1719,7 @@
     const spawnTo = snapshot(game);
     visualState = withTires(spawnFrom, tireAngles);
     buildStaticScene();
+    rebuildDynamicScene();
     updateHud();
     if (!near(spawnFrom.position, spawnTo.position) || !sameOrientation(spawnFrom, spawnTo)) {
       startAnimation(buildSettleAnimation(spawnFrom, spawnTo), spawnTo, 'settle');
