@@ -16,3 +16,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 15 | mini | being-ported | 5×5×7 chamber with eight walls and five stones; original sideways start restored. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 16 | blocks | being-ported | Stepped walls and colored stones, including slippery stones. Slippery grabbing rules and slit visuals are missing. |
 | 17 | bombs | being-ported | Three bombs in the original chamber. Blast propagation is simplified; original bomb-assisted route is unverified. |
+| 18 | sandbox | being-ported | Sandbox border, twelve stones and switch retained. Nine-cell occupancy callback is missing; exit remains closed. |

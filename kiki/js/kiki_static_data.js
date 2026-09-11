@@ -1429,6 +1429,89 @@
   ]
 };
 
+  // Source capture: sandbox
+  levelTemplates.sandbox = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Sandbox border, twelve stones and switch retained. Nine-cell occupancy callback is missing; exit remains closed."
+  ],
+  "size": { "x": 9, "y": 9, "z": 6 },
+  "intro": "sandbox",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nAll you have to do\nis to put nine stones\ninto the sandbox\nand shoot at the switch"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 6, "z": 2 },
+    "orientation": "rotx90"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 3 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "switch",
+        "sourceEvents": [
+          "switched"
+        ]
+      },
+      "at": [
+        { "x": 0, "y": 5, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 2, "y": 2, "z": 0 },
+        { "x": 2, "y": 3, "z": 0 },
+        { "x": 2, "y": 4, "z": 0 },
+        { "x": 2, "y": 5, "z": 0 },
+        { "x": 2, "y": 6, "z": 0 },
+        { "x": 3, "y": 6, "z": 0 },
+        { "x": 4, "y": 6, "z": 0 },
+        { "x": 5, "y": 6, "z": 0 },
+        { "x": 6, "y": 6, "z": 0 },
+        { "x": 6, "y": 5, "z": 0 },
+        { "x": 6, "y": 4, "z": 0 },
+        { "x": 6, "y": 3, "z": 0 },
+        { "x": 6, "y": 2, "z": 0 },
+        { "x": 5, "y": 2, "z": 0 },
+        { "x": 4, "y": 2, "z": 0 },
+        { "x": 3, "y": 2, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 2 },
+        { "x": 3, "y": 5, "z": 1 },
+        { "x": 5, "y": 3, "z": 1 },
+        { "x": 5, "y": 4, "z": 2 },
+        { "x": 3, "y": 6, "z": 1 },
+        { "x": 4, "y": 6, "z": 1 },
+        { "x": 3, "y": 2, "z": 1 },
+        { "x": 5, "y": 2, "z": 1 },
+        { "x": 6, "y": 4, "z": 1 },
+        { "x": 6, "y": 3, "z": 1 },
+        { "x": 5, "y": 1, "z": 0 },
+        { "x": 1, "y": 7, "z": 0 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
