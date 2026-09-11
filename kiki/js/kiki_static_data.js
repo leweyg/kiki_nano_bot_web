@@ -10100,6 +10100,227 @@
   ]
 };
 
+  // Source capture: conductor
+  levelTemplates.conductor = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original three wired wall bars, wire stones, motor assembly and wired wall. Electrical exit activation is missing; exit remains closed."
+  ],
+  "size": { "x": 11, "y": 9, "z": 11 },
+  "intro": "conductor",
+  "help": "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit\nfeed it with electricity:\n\nconnect the generator\nwith the motor\n\nand place a powered wirestone\nnext to the exit",
+  "player": {
+    "coordinates": { "x": 3, "y": 0, "z": 3 },
+    "nostatus": 0
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 9 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 2 },
+        { "x": 5, "y": 3, "z": 2 },
+        { "x": 5, "y": 4, "z": 2 },
+        { "x": 5, "y": 5, "z": 2 },
+        { "x": 5, "y": 2, "z": 4 },
+        { "x": 5, "y": 3, "z": 4 },
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 5, "y": 5, "z": 4 },
+        { "x": 5, "y": 2, "z": 6 },
+        { "x": 5, "y": 3, "z": 6 },
+        { "x": 5, "y": 4, "z": 6 },
+        { "x": 5, "y": 5, "z": 6 },
+        { "x": 5, "y": 4, "z": 8 },
+        { "x": 0, "y": 0, "z": 0 },
+        { "x": 10, "y": 0, "z": 0 },
+        { "x": 10, "y": 8, "z": 0 },
+        { "x": 0, "y": 8, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 2 },
+        { "x": 5, "y": 6, "z": 2 },
+        { "x": 5, "y": 1, "z": 4 },
+        { "x": 5, "y": 6, "z": 4 },
+        { "x": 5, "y": 1, "z": 6 },
+        { "x": 5, "y": 6, "z": 6 },
+        { "x": 5, "y": 2, "z": 0 },
+        { "x": 5, "y": 2, "z": 1 },
+        { "x": 5, "y": 5, "z": 3 },
+        { "x": 5, "y": 5, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 1 },
+        { "x": 5, "y": 3, "z": 1 },
+        { "x": 5, "y": 4, "z": 1 },
+        { "x": 5, "y": 5, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 3 },
+        { "x": 5, "y": 3, "z": 3 },
+        { "x": 5, "y": 4, "z": 3 },
+        { "x": 5, "y": 5, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 5, "y": 6, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "PZ"
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PZ"
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "NX"
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PX"
+      },
+      "at": [
+        { "x": 6, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "PZ",
+        "active": true
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PX",
+        "connections": 15
+      },
+      "at": [
+        { "x": 6, "y": 4, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NX",
+        "connections": 15
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 15
+      },
+      "at": [
+        { "x": 5, "y": 5, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 15
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PZ",
+        "connections": 15
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 9 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NZ",
+        "connections": 15
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 7 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

@@ -46,3 +46,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 45 | captured | being-ported | Six stone cage polygons and twelve axial stones. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 46 | circuit | being-ported | Original seven-part wire circuit, eight wire stones and motor/generator. Wire face overlaps retained. Electrical exit activation is missing; exit remains closed. |
 | 47 | regal | being-ported | Original narrow wall corridors, gears, generators and motor pairs. Electrical exit activation is missing; exit remains closed. |
+| 48 | conductor | being-ported | Original three wired wall bars, wire stones, motor assembly and wired wall. Electrical exit activation is missing; exit remains closed. |
