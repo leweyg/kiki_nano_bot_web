@@ -421,6 +421,262 @@
     }
   };
 
+  // Source capture: gears
+  levelTemplates.gears = {
+  "size": { "x": 9, "y": 9, "z": 9 },
+  "intro": "gears",
+  "powerCondition": "connectedMotor",
+  "solverActions": [
+    "move forward",
+    "move backward",
+    "turn left",
+    "turn right",
+    "jump forward",
+    "jump"
+  ],
+  "help": "$scale(1.5)mission:\nactivate the exit!\n\nconnect the generator with the motor and close the circuit with the wire stones",
+  "player": {
+    "position": { "x": 0, "y": 0, "z": 0 },
+    "nostatus": false
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "space": "position",
+      "at": [
+        { "x": 0, "y": 4, "z": 0 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 3, "y": 4, "z": 4 },
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 4, "y": 3, "z": 4 },
+        { "x": 4, "y": 5, "z": 4 },
+        { "x": 4, "y": 4, "z": 3 },
+        { "x": 4, "y": 4, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "gear",
+        "face": "PY"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 3, "y": 0, "z": 3 },
+        { "x": 5, "y": 0, "z": 3 },
+        { "x": 3, "y": 0, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "PY",
+        "active": true
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 5, "y": 0, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PY"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 4, "y": 1, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "PY"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 4, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 10
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 2, "y": 0, "z": 1 },
+        { "x": 3, "y": 0, "z": 1 },
+        { "x": 4, "y": 0, "z": 1 },
+        { "x": 5, "y": 0, "z": 1 },
+        { "x": 6, "y": 0, "z": 1 },
+        { "x": 2, "y": 0, "z": 7 },
+        { "x": 3, "y": 0, "z": 7 },
+        { "x": 4, "y": 0, "z": 7 },
+        { "x": 5, "y": 0, "z": 7 },
+        { "x": 6, "y": 0, "z": 7 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 5
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 1, "y": 0, "z": 2 },
+        { "x": 1, "y": 0, "z": 3 },
+        { "x": 1, "y": 0, "z": 4 },
+        { "x": 1, "y": 0, "z": 5 },
+        { "x": 1, "y": 0, "z": 6 },
+        { "x": 7, "y": 0, "z": 2 },
+        { "x": 7, "y": 0, "z": 3 },
+        { "x": 7, "y": 0, "z": 4 },
+        { "x": 7, "y": 0, "z": 5 },
+        { "x": 7, "y": 0, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 6
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 1, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 3
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 1, "y": 0, "z": 7 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 9
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 7, "y": 0, "z": 7 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 12
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 7, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PX",
+        "connections": 1
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 0, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NX",
+        "connections": 1
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 8, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PX",
+        "connections": 5
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 0, "y": 1, "z": 4 },
+        { "x": 0, "y": 2, "z": 4 },
+        { "x": 0, "y": 3, "z": 4 },
+        { "x": 0, "y": 4, "z": 4 },
+        { "x": 0, "y": 5, "z": 4 },
+        { "x": 0, "y": 6, "z": 4 },
+        { "x": 0, "y": 7, "z": 4 },
+        { "x": 0, "y": 8, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NX",
+        "connections": 5
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 8, "y": 1, "z": 4 },
+        { "x": 8, "y": 2, "z": 4 },
+        { "x": 8, "y": 3, "z": 4 },
+        { "x": 8, "y": 4, "z": 4 },
+        { "x": 8, "y": 5, "z": 4 },
+        { "x": 8, "y": 6, "z": 4 },
+        { "x": 8, "y": 7, "z": 4 },
+        { "x": 8, "y": 8, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 10
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 0, "y": 8, "z": 4 },
+        { "x": 1, "y": 8, "z": 4 },
+        { "x": 2, "y": 8, "z": 4 },
+        { "x": 3, "y": 8, "z": 4 },
+        { "x": 4, "y": 8, "z": 4 },
+        { "x": 5, "y": 8, "z": 4 },
+        { "x": 6, "y": 8, "z": 4 },
+        { "x": 7, "y": 8, "z": 4 },
+        { "x": 8, "y": 8, "z": 4 }
+      ]
+    }
+  ],
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original gear, generator, motor and wire layout retained. Circuit activation and mechanical timing remain approximate; no verified completion route."
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
