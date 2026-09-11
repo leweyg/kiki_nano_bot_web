@@ -204,11 +204,19 @@
       width: min(100vw - 24px, 560px);
       display: grid;
       grid-template-columns: minmax(72px, 96px) minmax(148px, 220px) minmax(72px, 96px);
-      gap: 14px;
+      gap: 6px 14px;
       align-items: end;
       justify-content: center;
       transform: translateX(-50%);
       touch-action: none
+    }
+
+    .control-hint {
+      text-align: center;
+      color: var(--ink);
+      font-size: 12px;
+      line-height: 1.2;
+      pointer-events: none
     }
 
     .action-stack {
@@ -356,7 +364,7 @@
         width: 100%;
         padding: 0 10px;
         grid-template-columns: minmax(62px, 76px) minmax(136px, 1fr) minmax(62px, 76px);
-        gap: 8px
+        gap: 6px 8px
       }
 
       .control-button {
@@ -403,6 +411,9 @@
     <div class="action-stack jump-actions"><button class="control-button"
         data-action="jump far forward">+FAR</button><button class="control-button"
         data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div>
+    <span class="control-hint">Press</span>
+    <span class="control-hint">Swipe</span>
+    <span class="control-hint">Tap</span>
   </div>
 	  <script id="kiki-debug-trace" type="application/json"></script>
   <script src="kiki/js/kiki_static_data.js"></script>
