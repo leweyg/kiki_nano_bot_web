@@ -1781,6 +1781,51 @@
   ]
 };
 
+  // Source capture: towers
+  levelTemplates.towers = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original two stone towers and sideways starting orientation.",
+    "No route certified within the bounded search; full puzzle completion remains unverified."
+  ],
+  "size": { "x": 9, "y": 9, "z": 15 },
+  "intro": "towers",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\nmove the stones"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 5, "z": 0 },
+    "orientation": "rotx90"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 3, "y": 5, "z": 0 },
+        { "x": 3, "y": 5, "z": 1 },
+        { "x": 3, "y": 5, "z": 2 },
+        { "x": 5, "y": 5, "z": 0 },
+        { "x": 5, "y": 5, "z": 1 },
+        { "x": 5, "y": 5, "z": 2 },
+        { "x": 5, "y": 5, "z": 3 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

@@ -20,3 +20,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 19 | energy | being-ported | Tall cross-shaped room, eight mutants and four switches. Four-switch exit condition translated; mutant AI/damage are missing. |
 | 20 | maze | being-ported | 4×4×4 maze with 29 walls and source light. Source inside-camera mode retained; point light is data only. |
 | 21 | love | being-ported | Bomb and stone heart outlines, central mutant and peace exit. Mutant AI/damage and original bomb timing are incomplete. |
+| 22 | towers | being-ported | Original two stone towers and sideways starting orientation. No route certified within the bounded search; full puzzle completion remains unverified. |
