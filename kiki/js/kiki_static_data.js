@@ -1512,6 +1512,119 @@
   ]
 };
 
+  // Source capture: energy
+  levelTemplates.energy = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Tall cross-shaped room, eight mutants and four switches. Four-switch exit condition translated; mutant AI/damage are missing."
+  ],
+  "size": { "x": 9, "y": 17, "z": 9 },
+  "intro": "energy",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nshoot the 4 switches"
+  ],
+  "player": {
+    "orientation": "roty90",
+    "coordinates": { "x": 4, "y": 9, "z": 4 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 8, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 0, "y": 8, "z": 4 },
+        { "x": 1, "y": 8, "z": 4 },
+        { "x": 2, "y": 8, "z": 4 },
+        { "x": 3, "y": 8, "z": 4 },
+        { "x": 5, "y": 8, "z": 4 },
+        { "x": 6, "y": 8, "z": 4 },
+        { "x": 7, "y": 8, "z": 4 },
+        { "x": 8, "y": 8, "z": 4 },
+        { "x": 4, "y": 8, "z": 0 },
+        { "x": 4, "y": 8, "z": 1 },
+        { "x": 4, "y": 8, "z": 2 },
+        { "x": 4, "y": 8, "z": 3 },
+        { "x": 4, "y": 8, "z": 5 },
+        { "x": 4, "y": 8, "z": 6 },
+        { "x": 4, "y": 8, "z": 7 },
+        { "x": 4, "y": 8, "z": 8 },
+        { "x": 4, "y": 11, "z": 4 },
+        { "x": 4, "y": 14, "z": 4 },
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 6, "y": 3, "z": 5 },
+        { "x": 3, "y": 3, "z": 6 },
+        { "x": 2, "y": 3, "z": 3 },
+        { "x": 5, "y": 3, "z": 2 },
+        { "x": 4, "y": 11, "z": 8 },
+        { "x": 4, "y": 13, "z": 8 },
+        { "x": 5, "y": 12, "z": 8 },
+        { "x": 3, "y": 12, "z": 8 },
+        { "x": 8, "y": 11, "z": 4 },
+        { "x": 8, "y": 13, "z": 4 },
+        { "x": 8, "y": 12, "z": 5 },
+        { "x": 8, "y": 12, "z": 3 },
+        { "x": 4, "y": 11, "z": 0 },
+        { "x": 4, "y": 13, "z": 0 },
+        { "x": 5, "y": 12, "z": 0 },
+        { "x": 3, "y": 12, "z": 0 },
+        { "x": 0, "y": 11, "z": 4 },
+        { "x": 0, "y": 13, "z": 4 },
+        { "x": 0, "y": 12, "z": 5 },
+        { "x": 0, "y": 12, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "mutant"
+      },
+      "at": [
+        { "x": 6, "y": 3, "z": 6 },
+        { "x": 2, "y": 3, "z": 2 },
+        { "x": 5, "y": 3, "z": 5 },
+        { "x": 3, "y": 3, "z": 3 },
+        { "x": 6, "y": 3, "z": 2 },
+        { "x": 2, "y": 3, "z": 6 },
+        { "x": 5, "y": 3, "z": 3 },
+        { "x": 3, "y": 3, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "switch",
+        "sourceEvents": [
+          "switched"
+        ],
+        "switchGroup": "energy"
+      },
+      "at": [
+        { "x": 0, "y": 12, "z": 4 },
+        { "x": 8, "y": 12, "z": 4 },
+        { "x": 4, "y": 12, "z": 0 },
+        { "x": 4, "y": 12, "z": 8 }
+      ]
+    }
+  ],
+  "switchConditions": [
+    {
+      "group": "energy",
+      "activeCount": 4,
+      "exit": "exit"
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
