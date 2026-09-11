@@ -2857,6 +2857,112 @@
   ]
 };
 
+  // Source capture: slick
+  levelTemplates.slick = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original slippery stone layers and central support. Slippery grabbing rules and slit visuals are missing."
+  ],
+  "size": { "x": 9, "y": 11, "z": 15 },
+  "intro": "slick",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nThe green stone is slicky\nyou can't grab it while falling"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 10, "z": 0 },
+    "orientation": "rotx90"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 4, "y": 5, "z": 11 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0,
+          1,
+          0,
+          0.5
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 2, "y": 2, "z": 3 },
+        { "x": 2, "y": 3, "z": 3 },
+        { "x": 2, "y": 4, "z": 3 },
+        { "x": 2, "y": 5, "z": 3 },
+        { "x": 2, "y": 6, "z": 3 },
+        { "x": 2, "y": 7, "z": 3 },
+        { "x": 2, "y": 8, "z": 3 },
+        { "x": 3, "y": 2, "z": 3 },
+        { "x": 3, "y": 3, "z": 3 },
+        { "x": 3, "y": 4, "z": 3 },
+        { "x": 3, "y": 5, "z": 3 },
+        { "x": 3, "y": 6, "z": 3 },
+        { "x": 3, "y": 7, "z": 3 },
+        { "x": 3, "y": 8, "z": 3 },
+        { "x": 4, "y": 2, "z": 3 },
+        { "x": 4, "y": 3, "z": 3 },
+        { "x": 4, "y": 4, "z": 3 },
+        { "x": 4, "y": 5, "z": 3 },
+        { "x": 4, "y": 6, "z": 3 },
+        { "x": 4, "y": 7, "z": 3 },
+        { "x": 4, "y": 8, "z": 3 },
+        { "x": 5, "y": 2, "z": 3 },
+        { "x": 5, "y": 3, "z": 3 },
+        { "x": 5, "y": 4, "z": 3 },
+        { "x": 5, "y": 5, "z": 3 },
+        { "x": 5, "y": 6, "z": 3 },
+        { "x": 5, "y": 7, "z": 3 },
+        { "x": 5, "y": 8, "z": 3 },
+        { "x": 6, "y": 2, "z": 3 },
+        { "x": 6, "y": 3, "z": 3 },
+        { "x": 6, "y": 4, "z": 3 },
+        { "x": 6, "y": 5, "z": 3 },
+        { "x": 6, "y": 6, "z": 3 },
+        { "x": 6, "y": 7, "z": 3 },
+        { "x": 6, "y": 8, "z": 3 },
+        { "x": 3, "y": 3, "z": 6 },
+        { "x": 3, "y": 4, "z": 6 },
+        { "x": 3, "y": 5, "z": 6 },
+        { "x": 3, "y": 6, "z": 6 },
+        { "x": 3, "y": 7, "z": 6 },
+        { "x": 4, "y": 3, "z": 6 },
+        { "x": 4, "y": 4, "z": 6 },
+        { "x": 4, "y": 5, "z": 6 },
+        { "x": 4, "y": 6, "z": 6 },
+        { "x": 4, "y": 7, "z": 6 },
+        { "x": 5, "y": 3, "z": 6 },
+        { "x": 5, "y": 4, "z": 6 },
+        { "x": 5, "y": 5, "z": 6 },
+        { "x": 5, "y": 6, "z": 6 },
+        { "x": 5, "y": 7, "z": 6 },
+        { "x": 4, "y": 4, "z": 9 },
+        { "x": 4, "y": 5, "z": 9 },
+        { "x": 4, "y": 6, "z": 9 },
+        { "x": 4, "y": 5, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 4, "y": 5, "z": 0 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
