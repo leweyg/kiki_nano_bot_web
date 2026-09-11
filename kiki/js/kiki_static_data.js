@@ -5896,6 +5896,181 @@
   ]
 };
 
+  // Source capture: strange
+  levelTemplates.strange = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original bomb arrays, wire stones, motor and boundary wires. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate."
+  ],
+  "size": { "x": 9, "y": 9, "z": 9 },
+  "intro": "strange",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity:\n\nconnect the generator\nwith the motor\n\nplace a wire stone\nnext to the exit"
+  ],
+  "player": {
+    "coordinates": { "x": 5, "y": 6, "z": 4 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 2 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 1, "y": 1, "z": 2 },
+        { "x": 7, "y": 7, "z": 2 },
+        { "x": 7, "y": 1, "z": 2 },
+        { "x": 1, "y": 7, "z": 2 },
+        { "x": 1, "y": 1, "z": 7 },
+        { "x": 7, "y": 7, "z": 7 },
+        { "x": 7, "y": 1, "z": 7 },
+        { "x": 1, "y": 7, "z": 7 },
+        { "x": 4, "y": 4, "z": 7 },
+        { "x": 4, "y": 1, "z": 7 },
+        { "x": 1, "y": 4, "z": 7 },
+        { "x": 4, "y": 7, "z": 7 },
+        { "x": 7, "y": 4, "z": 7 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 4, "y": 5, "z": 4 },
+        { "x": 3, "y": 4, "z": 4 },
+        { "x": 4, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 2 },
+        { "x": 5, "y": 1, "z": 2 },
+        { "x": 3, "y": 7, "z": 2 },
+        { "x": 5, "y": 7, "z": 2 },
+        { "x": 1, "y": 3, "z": 2 },
+        { "x": 1, "y": 5, "z": 2 },
+        { "x": 7, "y": 3, "z": 2 },
+        { "x": 7, "y": 5, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "NZ"
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "NZ"
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 7 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "NZ"
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 8, "z": 0 },
+        { "x": 4, "y": 8, "z": 1 },
+        { "x": 4, "y": 8, "z": 2 },
+        { "x": 4, "y": 8, "z": 3 },
+        { "x": 4, "y": 8, "z": 4 },
+        { "x": 4, "y": 8, "z": 5 },
+        { "x": 4, "y": 8, "z": 6 },
+        { "x": 4, "y": 8, "z": 7 },
+        { "x": 4, "y": 8, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 0 },
+        { "x": 4, "y": 0, "z": 1 },
+        { "x": 4, "y": 0, "z": 2 },
+        { "x": 4, "y": 0, "z": 3 },
+        { "x": 4, "y": 0, "z": 4 },
+        { "x": 4, "y": 0, "z": 5 },
+        { "x": 4, "y": 0, "z": 6 },
+        { "x": 4, "y": 0, "z": 7 },
+        { "x": 4, "y": 0, "z": 8 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 0 },
+        { "x": 4, "y": 1, "z": 0 },
+        { "x": 4, "y": 2, "z": 0 },
+        { "x": 4, "y": 3, "z": 0 },
+        { "x": 4, "y": 4, "z": 0 },
+        { "x": 4, "y": 5, "z": 0 },
+        { "x": 4, "y": 6, "z": 0 },
+        { "x": 4, "y": 7, "z": 0 },
+        { "x": 4, "y": 8, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 8 },
+        { "x": 4, "y": 1, "z": 8 },
+        { "x": 4, "y": 2, "z": 8 },
+        { "x": 4, "y": 3, "z": 8 },
+        { "x": 4, "y": 4, "z": 8 },
+        { "x": 4, "y": 5, "z": 8 },
+        { "x": 4, "y": 6, "z": 8 },
+        { "x": 4, "y": 7, "z": 8 },
+        { "x": 4, "y": 8, "z": 8 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

@@ -38,3 +38,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 37 | pool | being-ported | Original pool shell and dense slippery stone fill. Slippery grabbing rules and slit visuals are missing. |
 | 38 | hidden | being-ported | Five concealed switches, stone covers and upper stone ring. Five-switch exit condition translated. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 39 | church | being-ported | Original wire-stone pillars, generator, motor and bomb. Electrical exit activation is missing; exit remains closed. |
+| 40 | strange | being-ported | Original bomb arrays, wire stones, motor and boundary wires. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate. |
