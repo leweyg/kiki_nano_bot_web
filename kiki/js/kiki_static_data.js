@@ -1205,6 +1205,65 @@
   ]
 };
 
+  // Source capture: mini
+  levelTemplates.mini = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "5\u00d75\u00d77 chamber with eight walls and five stones; original sideways start restored.",
+    "No route certified within the bounded search; full puzzle completion remains unverified."
+  ],
+  "size": { "x": 5, "y": 5, "z": 7 },
+  "intro": "mini",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!"
+  ],
+  "player": {
+    "coordinates": { "x": 2, "y": 4, "z": 4 },
+    "nostatus": 0,
+    "orientation": "rotx90"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 2, "y": 2, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 0 },
+        { "x": 3, "y": 1, "z": 0 },
+        { "x": 1, "y": 3, "z": 0 },
+        { "x": 3, "y": 3, "z": 0 },
+        { "x": 1, "y": 1, "z": 6 },
+        { "x": 3, "y": 1, "z": 6 },
+        { "x": 1, "y": 3, "z": 6 },
+        { "x": 3, "y": 3, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 1 },
+        { "x": 3, "y": 1, "z": 1 },
+        { "x": 1, "y": 3, "z": 1 },
+        { "x": 3, "y": 3, "z": 1 },
+        { "x": 2, "y": 4, "z": 0 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
