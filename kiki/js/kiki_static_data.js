@@ -1625,6 +1625,82 @@
   ]
 };
 
+  // Source capture: maze
+  levelTemplates.maze = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "4\u00d74\u00d74 maze with 29 walls and source light. Source inside-camera mode retained; point light is data only."
+  ],
+  "size": { "x": 4, "y": 4, "z": 4 },
+  "intro": "maze",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nbut don't get confused :) !"
+  ],
+  "player": {
+    "coordinates": { "x": 3, "y": 0, "z": 0 },
+    "nostatus": 0,
+    "orientation": "rotz90"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 1 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 0 },
+        { "x": 2, "y": 0, "z": 0 },
+        { "x": 3, "y": 1, "z": 0 },
+        { "x": 1, "y": 2, "z": 0 },
+        { "x": 2, "y": 3, "z": 0 },
+        { "x": 2, "y": 0, "z": 1 },
+        { "x": 0, "y": 1, "z": 1 },
+        { "x": 1, "y": 1, "z": 1 },
+        { "x": 3, "y": 1, "z": 1 },
+        { "x": 0, "y": 2, "z": 1 },
+        { "x": 2, "y": 2, "z": 1 },
+        { "x": 3, "y": 2, "z": 1 },
+        { "x": 0, "y": 3, "z": 1 },
+        { "x": 2, "y": 3, "z": 1 },
+        { "x": 0, "y": 0, "z": 2 },
+        { "x": 1, "y": 0, "z": 2 },
+        { "x": 2, "y": 0, "z": 2 },
+        { "x": 1, "y": 1, "z": 2 },
+        { "x": 3, "y": 1, "z": 2 },
+        { "x": 0, "y": 2, "z": 2 },
+        { "x": 2, "y": 2, "z": 2 },
+        { "x": 3, "y": 2, "z": 2 },
+        { "x": 1, "y": 3, "z": 2 },
+        { "x": 2, "y": 3, "z": 2 },
+        { "x": 3, "y": 3, "z": 2 },
+        { "x": 1, "y": 1, "z": 3 },
+        { "x": 2, "y": 1, "z": 3 },
+        { "x": 2, "y": 2, "z": 3 },
+        { "x": 1, "y": 3, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "light"
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 0 }
+      ]
+    }
+  ],
+  "cameraMode": "inside"
+};
+
   var gameItems = [
     {
       id: "player",

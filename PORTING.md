@@ -18,3 +18,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 17 | bombs | being-ported | Three bombs in the original chamber. Blast propagation is simplified; original bomb-assisted route is unverified. |
 | 18 | sandbox | being-ported | Sandbox border, twelve stones and switch retained. Nine-cell occupancy callback is missing; exit remains closed. |
 | 19 | energy | being-ported | Tall cross-shaped room, eight mutants and four switches. Four-switch exit condition translated; mutant AI/damage are missing. |
+| 20 | maze | being-ported | 4×4×4 maze with 29 walls and source light. Source inside-camera mode retained; point light is data only. |
