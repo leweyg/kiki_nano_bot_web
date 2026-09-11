@@ -319,8 +319,8 @@
       toggles: object.toggles ? object.toggles.slice() : undefined,
       coordinates: copyPosition(object.coordinates || object.position || object)
     };
-    ["face", "connections", "circuitPart", "powered", "splitted", "switchGroup"].forEach(function (name) {
-      if (object[name] !== undefined) clone[name] = object[name];
+    ["face", "connections", "circuitPart", "powered", "splitted", "switchGroup", "slippery", "color", "sourceEvents"].forEach(function (name) {
+      if (object[name] !== undefined) clone[name] = cloneValue(object[name]);
     });
     return clone;
   }

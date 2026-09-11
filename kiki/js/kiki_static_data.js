@@ -10898,6 +10898,11 @@
     }
   };
 
+  levelDefinitions.forEach(function (definition) {
+    var template = levelTemplates[definition.id];
+    if (template && template.port_status) definition.port_status = template.port_status;
+  });
+
   return {
     themes: themes,
     levelDefinitions: levelDefinitions,

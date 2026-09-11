@@ -80,7 +80,27 @@
     </main>
     <script src="kiki/js/kiki_static_data.js"></script>
     <script src="kiki/js/kiki.js"></script>
-    <script>function run() { var results = Kiki.levels.map(function (level) { var path = Kiki.solve(level), game = new Kiki.Game(level); game.applyGravity(); (path || []).forEach(function (action) { game.action(action) }); var ms = (path || []).reduce(function (total, action) { return total + game.actionDuration(action) }, 0); return { level: level, path: path, won: game.won, ms: ms } }); var good = results.filter(function (r) { return r.won }).length; document.getElementById('summary').innerHTML = '<strong>' + good + ' / ' + results.length + ' playable</strong>'; document.getElementById('results').innerHTML = results.map(function (r) { return '<div class="row ' + (r.won ? 'ok' : 'fail') + '"><span>' + r.level.title + '</span><span>' + (r.won ? 'PASS · ' + r.path.length + ' moves · ' + r.ms + ' ms' : 'FAIL') + '</span></div>' }).join('') } document.getElementById('run').onclick = run; run();</script>
+    <script>
+      function run() {
+        var results = Kiki.levels.map(function (level) {
+          if (level.port_status !== 'ported') return { level: level, incomplete: true };
+          var path = level.solution || Kiki.solve(level, { maxStates: 20000 });
+          var game = new Kiki.Game(level);
+          game.applyGravity();
+          (path || []).forEach(function (action) { game.action(action); });
+          return { level: level, path: path, won: game.won };
+        });
+        var good = results.filter(function (r) { return r.won; }).length;
+        var incomplete = results.filter(function (r) { return r.incomplete; }).length;
+        document.getElementById('summary').textContent = good + ' verified; ' + incomplete + ' incomplete; ' + (results.length - good - incomplete) + ' failed';
+        document.getElementById('results').innerHTML = results.map(function (r) {
+          return '<div class="row ' + (r.won ? 'ok' : 'fail') + '"><span>' + r.level.title + '</span><span>' +
+            (r.incomplete ? r.level.port_status : r.won ? 'PASS · ' + r.path.length + ' moves' : 'FAIL') + '</span></div>';
+        }).join('');
+      }
+      document.getElementById('run').onclick = run;
+      run();
+    </script>
 </body>
 
 </html>

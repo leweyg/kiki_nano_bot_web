@@ -454,7 +454,7 @@
     const scene = new THREE.Scene();
     scene.background = schemeColor('KikiWorld', 'base', '#212121');
     const camera = new THREE.PerspectiveCamera(90, innerWidth / innerHeight, .1, 120);
-    let cameraMode = 'behind';
+    let cameraMode = game.level.cameraMode || 'behind';
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     renderer.setSize(innerWidth, innerHeight);
@@ -971,6 +971,20 @@
       });
       staticInstances.rebuild(staticBoard);
     }
+    const stoneMaterials = new Map();
+    function stoneMaterial(object) {
+      if (!object.color) return materials.stone;
+      const key = object.color.join(',');
+      if (!stoneMaterials.has(key)) {
+        const material = materials.stone.clone();
+        material.color.setRGB(object.color[0], object.color[1], object.color[2]);
+        material.opacity = object.color.length > 3 ? object.color[3] : 1;
+        material.transparent = material.opacity < 1;
+        material.depthWrite = !material.transparent;
+        stoneMaterials.set(key, material);
+      }
+      return stoneMaterials.get(key);
+    }
     function rebuildDynamicScene() {
       // Geometry is cached for the level; instance buffers survive state refreshes.
       board.remove(botMesh);
@@ -978,7 +992,7 @@
       animatedItems = [];
       const level = game.level;
       (game.objects || []).forEach(object => {
-        if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, materials.stone);
+        if (object.type === 'stone') addCube(centered(level, object.coordinates, 0), .92, stoneMaterial(object));
         else if (object.type === 'wireStone') addWireStone(level, object);
         else if (object.type === 'wire') addWire(level, object);
         else if (object.type === 'switch') addSwitch(level, object);
@@ -1090,6 +1104,7 @@
         camera.position.copy(cameraReady ? camera.position.lerp(desired, cameraMode === 'follow' ? .12 : .2) : desired);
         camera.lookAt(position.clone().addScaledVector(dir, .35));
       }
+      botMesh.visible = cameraMode !== 'inside' && camera.position.distanceToSquared(position) >= 1;
       cameraReady = true;
       cameraLight.position.copy(camera.position);
       cameraLight.target.position.copy(position);
@@ -1111,7 +1126,7 @@
 	      const portStatusInfo = portStatusMeta(level);
 	      portStatus.textContent = portStatusInfo.symbol;
 	      portStatus.className = 'port-status port-status-' + portStatusInfo.status;
-	      portStatus.title = 'Porting status: ' + portStatusInfo.label;
+	      portStatus.title = 'Porting status: ' + portStatusInfo.label + '\n' + (level.portNotes || []).join('\n');
 	      portStatus.setAttribute('aria-label', 'Porting status: ' + portStatusInfo.label);
 	      document.getElementById('title').textContent = String(level.index + 1).padStart(2, '0') + ' / ' + level.title;
 	      previousLevelButton.disabled = level.index <= 0;

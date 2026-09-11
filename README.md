@@ -50,7 +50,7 @@ Level numbers are **1-based**, following `kiki/py/levels.py`. See [PORTING.md](P
 
 Statuses are `ported` (working with a replay-verified completion route), `being-ported` (original space is present but mechanics or completion are incomplete), and `not-ported` (placeholder).
 
-`./sim_test.sh` validates certified levels and reports incomplete levels separately; `node sim.js --all` also attempts incomplete levels and fails when no route is found. A successful default run does **not** certify every level. `node level_port_test.js` checks all layouts and source-derived invariants. The pre-existing `elevate` level failed the 20,000-state solver audit and is now marked `being-ported` pending investigation.
+`./sim_test.sh` validates certified levels and reports incomplete levels separately; `node sim.js --all` also attempts incomplete levels and fails when no route is found. A successful default run does **not** certify every level. `node level_port_test.js` checks all layouts and source-derived invariants. `python3 kiki/js/tools/port_levels.py --check` compares the 37 newly converted layouts against fresh execution of the original construction code (Python is only needed for this optional source audit). The pre-existing `elevate` level failed the 20,000-state solver audit and is now marked `being-ported` pending investigation.
 
 The remaining implementation work is:
 

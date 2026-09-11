@@ -9,6 +9,7 @@ import json
 import random
 import re
 import sys
+import subprocess
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -202,5 +203,29 @@ def write(name):
     print(name, sum(len(g['at']) for g in template['objects']))
 
 
+def check_sources():
+    """Compare all newly captured layouts against fresh source executions."""
+    levels = json.loads(subprocess.check_output(
+        ['node', '-e', "console.log(JSON.stringify(require('./kiki/js/kiki.js').levels.slice(13)))"],
+        cwd=ROOT, text=True))
+    for level in levels:
+        expected = json.loads(json.dumps(capture(level['id'])))
+        assert level['size'] == expected['size'], level['id'] + ' size'
+        assert level['player'] == expected['player'], level['id'] + ' player'
+        assert level['help'] == expected['help'], level['id'] + ' help'
+        objects = [dict(group['clone'], coordinates=p) for group in expected['objects'] for p in group['at']]
+        assert len(objects) == len(level['objects']), level['id'] + ' object count'
+        for actual, original in zip(level['objects'], objects):
+            for key, value in original.items():
+                assert actual[key] == value, (level['id'], key, actual, original)
+        for actual, group in zip(level['exits'], expected['exits']):
+            assert actual['coordinates'] == group['at'][0], level['id'] + ' exit position'
+            assert actual['active'] == group['clone']['active'], level['id'] + ' exit state'
+    print('PASS fresh source capture comparison for all 37 newly converted levels')
+
+
 if __name__ == '__main__':
-    write(sys.argv[1])
+    if sys.argv[1] == '--check':
+        check_sources()
+    else:
+        write(sys.argv[1])

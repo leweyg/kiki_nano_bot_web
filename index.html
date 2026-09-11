@@ -403,7 +403,7 @@
     }
     function portStatusSymbol(level) {
       var meta = portStatusMeta(level);
-      return '<span class="port-status port-status-' + escapeAttribute(meta.status) + '" title="Porting status: ' + escapeAttribute(meta.label) + '" aria-label="Porting status: ' + escapeAttribute(meta.label) + '">' + escapeHtml(meta.symbol) + '</span>';
+      return '<span class="port-status port-status-' + escapeAttribute(meta.status) + '" title="Porting status: ' + escapeAttribute(meta.label + '. ' + (level.portNotes || []).join(' ')) + '" aria-label="Porting status: ' + escapeAttribute(meta.label) + '">' + escapeHtml(meta.symbol) + '</span>';
     }
     function levelLabel(level) { return '<span>' + levelNumber(level) + ' &nbsp;' + escapeHtml(level.title) + '</span>' + portStatusSymbol(level); }
     function levelScreenshot(level) {

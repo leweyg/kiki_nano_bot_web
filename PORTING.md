@@ -49,3 +49,9 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 48 | conductor | being-ported | Original three wired wall bars, wire stones, motor assembly and wired wall. Electrical exit activation is missing; exit remains closed. |
 | 49 | evil | being-ported | Original nested walls, generator, motor, wire stones and bombs. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate. |
 | 50 | mutants | being-ported | Original wall loop and five seeded mutants. Mutant combat, all-deactivated exit callback and outro transition are missing; exit remains closed. |
+
+## Validation of this pass
+
+Levels 10–50: 3 `ported` (`switch`, `edge`, `rings`), 38 `being-ported`, 0 `not-ported`. All 37 newly converted layouts match a fresh capture of their original construction sources. Levels 10–13 retain their earlier authored geometry and now have explicit completion audits.
+
+Validation passed: `./sim_test.sh` (8 certified levels across the full game, 42 explicitly incomplete), `node level_port_test.js`, `node render_test.mjs`, and the optional Python source audit. All 41 level pages loaded in headless Chrome without browser errors; index, play and simulator pages were smoke-tested at a 390px mobile viewport. Representative screenshots were inspected, including dense colored stone volumes. These are layout/rendering checks, not proof of completion for the 38 partial ports.
