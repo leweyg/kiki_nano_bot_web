@@ -5800,6 +5800,102 @@
   ]
 };
 
+  // Source capture: church
+  levelTemplates.church = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original wire-stone pillars, generator, motor and bomb. Electrical exit activation is missing; exit remains closed."
+  ],
+  "size": { "x": 5, "y": 7, "z": 5 },
+  "intro": "church",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity:\n\nconnect the generator\nwith the motor\n\nplace a wire stone\nnext to the exit"
+  ],
+  "player": {
+    "coordinates": { "x": 3, "y": 3, "z": 2 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 2, "y": 2, "z": 2 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 0, "y": 0, "z": 0 },
+        { "x": 0, "y": 1, "z": 0 },
+        { "x": 0, "y": 2, "z": 0 },
+        { "x": 0, "y": 3, "z": 0 },
+        { "x": 0, "y": 4, "z": 0 },
+        { "x": 4, "y": 0, "z": 0 },
+        { "x": 4, "y": 1, "z": 0 },
+        { "x": 4, "y": 2, "z": 0 },
+        { "x": 4, "y": 3, "z": 0 },
+        { "x": 4, "y": 4, "z": 0 },
+        { "x": 4, "y": 0, "z": 4 },
+        { "x": 4, "y": 1, "z": 4 },
+        { "x": 4, "y": 2, "z": 4 },
+        { "x": 4, "y": 3, "z": 4 },
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 0, "y": 0, "z": 4 },
+        { "x": 0, "y": 1, "z": 4 },
+        { "x": 0, "y": 2, "z": 4 },
+        { "x": 0, "y": 3, "z": 4 },
+        { "x": 0, "y": 4, "z": 4 },
+        { "x": 1, "y": 5, "z": 1 },
+        { "x": 3, "y": 5, "z": 1 },
+        { "x": 1, "y": 5, "z": 3 },
+        { "x": 3, "y": 5, "z": 3 },
+        { "x": 2, "y": 6, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 2, "y": 5, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 2, "y": 3, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 2, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 2, "y": 1, "z": 0 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
