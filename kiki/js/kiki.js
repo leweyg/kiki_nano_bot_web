@@ -52,7 +52,7 @@
     level.source = definition.source || level.source;
     level.screenshot = definition.screenshot || level.screenshot;
     level.scheme = definition.scheme || level.scheme || "default_scheme";
-    level.port_status = definition.port_status || "not_started";
+    level.port_status = definition.port_status || "not-ported";
     return level;
   }
 
@@ -142,6 +142,9 @@
       scheme: definition.scheme,
       size: size,
       intro: template.intro,
+      portNotes: cloneValue(template.portNotes || []),
+      solution: cloneValue(template.solution),
+      cameraMode: template.cameraMode,
       powerCondition: template.powerCondition,
       switchConditions: cloneValue(template.switchConditions),
       solverActions: cloneValue(template.solverActions),
@@ -196,6 +199,7 @@
   function makeLevelFromDefinition(definition) {
     var template = levelTemplates[definition.id];
     var level = template ? compileLevelTemplate(template, definition) : makeGeneratedLevel(definition.id, definition.index, definition);
+    if (template && template.port_status) level.port_status = template.port_status;
     level.colorScheme = getColorScheme(level.scheme);
     return level;
   }
@@ -326,6 +330,10 @@
   function same(a, b) { return a.x === b.x && a.y === b.y && a.z === b.z; }
   function vectorKey(a) { return a.x + "," + a.y + "," + a.z; }
   function orientationForName(name) {
+    if (name === "rotx90") return { dir: vec(0, -1, 0), up: vec(0, 0, 1) };
+    if (name === "rotx270") return { dir: vec(0, 1, 0), up: vec(0, 0, -1) };
+    if (name === "rotz90") return { dir: vec(0, 0, 1), up: vec(-1, 0, 0) };
+    if (name === "rotx90*roty180") return { dir: vec(0, 1, 0), up: vec(0, 0, 1) };
     if (name === "rot0") return { dir: vec(0, 0, 1), up: vec(0, 1, 0) };
     if (name === "roty90") return { dir: vec(1, 0, 0), up: vec(0, 1, 0) };
     if (name === "roty180") return { dir: vec(0, 0, -1), up: vec(0, 1, 0) };

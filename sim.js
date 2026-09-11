@@ -2,6 +2,7 @@
 
 var Kiki = require("./kiki/js/kiki.js");
 var failed = [];
+var incomplete = [];
 var scriptedRoutes = {
   electro: ["move forward", "turn right", "jump forward", "turn right", "move forward", "move forward", "jump forward", "move forward", "push forward", "jump forward", "turn right", "jump forward", "jump forward"],
   throw: [
@@ -141,7 +142,12 @@ function assertGeneratorPowersOnlySameCellWires() {
 }
 
 Kiki.levels.forEach(function (level) {
-  var path = scriptedRoutes[level.id] || Kiki.solve(level, { maxStates: 20000 });
+  if (level.port_status !== "ported" && !process.argv.includes("--all")) {
+    incomplete.push(level.id);
+    console.log("INCOMPLETE " + level.id + " (" + level.port_status + ")");
+    return;
+  }
+  var path = level.solution || scriptedRoutes[level.id] || Kiki.solve(level, { maxStates: 20000 });
   var game = new Kiki.Game(level);
   game.applyGravity();
   if (!path) { failed.push(level.id + " (no route)"); return; }
@@ -161,5 +167,5 @@ if (failed.length) {
   console.error("\nFAILED: " + failed.join(", "));
   process.exitCode = 1;
 } else {
-  console.log("\nPASS: " + Kiki.levels.length + " levels are playable");
+  console.log("\nPASS: " + (Kiki.levels.length - incomplete.length) + " verified levels; " + incomplete.length + " incomplete (not certified playable)");
 }

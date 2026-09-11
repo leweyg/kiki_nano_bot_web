@@ -46,15 +46,11 @@ General iteration loop will be:
 
 # Current Porting Notes
 
-The first authored JavaScript level-data pass now covers the original level sequence from `start` through `switch`, stopping before `borg`. These levels use static clone/instance groups in `kiki/js/kiki_static_data.js` rather than procedural runtime creation, and keep each level's original color scheme.
+Level numbers are **1-based**, following `kiki/py/levels.py`. See [PORTING.md](PORTING.md) for the level-by-level audit of levels 10–50 and known missing features.
 
-Known gaps from this pass:
+Statuses are `ported` (working with a replay-verified completion route), `being-ported` (original space is present but mechanics or completion are incomplete), and `not-ported` (placeholder).
 
-- `escape`, `gamma`, `cube`, and `switch` have original 3D volume, but the headless solver is not yet authoritative for their full movement routes.
-- `gears` uses the current simplified circuit model. Static circuit objects render, but original wire face connectivity and animated mechanical behavior are still approximate.
-- `gamma` includes its early mutant as visible blocking volume only. Mutant AI, hazard/damage handling, and scripted behavior are deferred until the larger `borg` pass.
-- `gamma`'s color-cycling switch is represented as a switch object, but arbitrary switch callbacks are not implemented yet.
-- Multi-switch exit activation is now data-driven through declarative switch groups, but original event/action timing remains simplified.
+`./sim_test.sh` validates certified levels and reports incomplete levels separately; `node sim.js --all` also attempts incomplete levels and fails when no route is found. A successful default run does **not** certify every level. `node level_port_test.js` checks all layouts and source-derived invariants. The pre-existing `elevate` level failed the 20,000-state solver audit and is now marked `being-ported` pending investigation.
 
 The remaining implementation work is:
 

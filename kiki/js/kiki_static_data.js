@@ -58,7 +58,7 @@
     { index: 49, id: "mutants", title: "mutants", source: "kiki/py/levels/mutants.py", scheme: "blue_scheme" }
   ];
   levelDefinitions.forEach(function (level) {
-    level.port_status = level.index < 6 ? "ported" : level.index < 13 ? "in_progress" : "not_started";
+    level.port_status = level.index < 6 && level.id !== "elevate" ? "ported" : level.index < 13 ? "being-ported" : "not-ported";
   });
 
   var commonIntroHelp = [

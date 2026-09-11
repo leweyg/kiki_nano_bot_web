@@ -108,11 +108,11 @@
 	      color: #96e0a5
 	    }
 
-	    .port-status-in_progress {
+	    .port-status-being-ported {
 	      color: #f0bf66
 	    }
 
-	    .port-status-not_started {
+	    .port-status-not-ported {
 	      color: #9a9a8a
 	    }
 
@@ -1097,13 +1097,13 @@
 	      camera.updateProjectionMatrix();
 	    }
 	    function portStatusMeta(level) {
-	      const status = level.port_status || 'not_started';
+	      const status = level.port_status || 'not-ported';
 	      const statuses = {
 	        ported: { symbol: '✓', label: 'ported' },
-	        in_progress: { symbol: '◐', label: 'being ported' },
-	        not_started: { symbol: '○', label: 'not ported yet' }
+	        "being-ported": { symbol: '◐', label: 'being ported' },
+	        "not-ported": { symbol: '○', label: 'not ported yet' }
 	      };
-	      return Object.assign({ status: statuses[status] ? status : 'not_started' }, statuses[status] || statuses.not_started);
+	      return Object.assign({ status: statuses[status] ? status : 'not-ported' }, statuses[status] || statuses['not-ported']);
 	    }
 	    function updateHud() {
 	      const level = game.level;

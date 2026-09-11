@@ -154,11 +154,11 @@
       color: #397457
     }
 
-    .port-status-in_progress {
+    .port-status-being-ported {
       color: #9a6422
     }
 
-    .port-status-not_started {
+    .port-status-not-ported {
       color: #65736a
     }
 
@@ -311,8 +311,8 @@
         
         <span class="port-legend-item"><span
             class="port-status port-status-ported">✓</span>ported</span><span class="port-legend-item"><span
-            class="port-status port-status-in_progress">◐</span>being ported</span><span
-          class="port-legend-item"><span class="port-status port-status-not_started">○</span>not ported yet</span></div>
+            class="port-status port-status-being-ported">◐</span>being ported</span><span
+          class="port-legend-item"><span class="port-status port-status-not-ported">○</span>not ported yet</span></div>
       <div class="levels" id="levels"></div>
     </section>
     <section>
@@ -391,13 +391,13 @@
     function escapeAttribute(value) { return escapeHtml(value).replace(/`/g, "&#96;"); }
     function levelNumber(level) { return String(level.index + 1).padStart(2, '0'); }
     function portStatusMeta(level) {
-      var status = level.port_status || "not_started";
+      var status = level.port_status || "not-ported";
       var statuses = {
         ported: { symbol: "✓", label: "ported" },
-        in_progress: { symbol: "◐", label: "being ported" },
-        not_started: { symbol: "○", label: "not ported yet" }
+        "being-ported": { symbol: "◐", label: "being ported" },
+        "not-ported": { symbol: "○", label: "not ported yet" }
       };
-      if (!statuses[status]) status = "not_started";
+      if (!statuses[status]) status = "not-ported";
       var meta = statuses[status];
       return { status: status, symbol: meta.symbol, label: meta.label };
     }

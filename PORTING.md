@@ -1,0 +1,10 @@
+# Level port audit
+
+Numbers follow the original 1-based progression. `ported` requires a replayed completion route and no known required mechanic gap. `being-ported` means original space/basic objects are available, but completion or behavior remains incomplete. `not-ported` means a placeholder remains.
+
+This pass captures initial layouts, not Python callbacks. Source files remain unchanged. The capture tool under `kiki/js/tools/` reproduces Python 2 integer division, legacy range truncation, endpoint-exclusive lines, occupancy replacement, and polygon edges. Random mutant placement is a fixed seed per level for reproducibility. Initial orientations, dimensions, exits, help, object faces, colors, and slippery flags are retained.
+
+Shared limitations: mutant AI/damage/deactivation is absent; source lights and inside-camera requests are data only; slippery stone grabbing and slit visuals are not implemented; circuit exit conditions and action timing remain approximate. A geometry-only route does not certify levels needing these features. The original `core` uses fractional range bounds, captured with legacy integer truncation.
+
+| Level | Name | Status | Layout and remaining work |
+| --- | --- | --- | --- |
