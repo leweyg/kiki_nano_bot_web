@@ -40,3 +40,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 39 | church | being-ported | Original wire-stone pillars, generator, motor and bomb. Electrical exit activation is missing; exit remains closed. |
 | 40 | strange | being-ported | Original bomb arrays, wire stones, motor and boundary wires. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate. |
 | 41 | mesh | being-ported | 216 colored slippery stones in the original 11×11×11 lattice. Slippery grabbing rules and slit visuals are missing. |
+| 42 | columns | being-ported | Original stone columns, with four source cells removed. No route certified within the bounded search; full puzzle completion remains unverified. |
