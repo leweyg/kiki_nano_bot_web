@@ -30,3 +30,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 29 | bridge | being-ported | Original bridge stones, motor, generator and face-specific boundary wires. Electrical exit activation is missing; exit remains closed. |
 | 30 | flower | being-ported | Original wall/stone columns and four slippery center stones. Slippery grabbing rules and slit visuals are missing. |
 | 31 | stones | being-ported | Four stepped square wall rings and eight stones; compound starting rotation restored. No route certified within the bounded search; full puzzle completion remains unverified. |
+| 32 | walls | being-ported | Three full colored stone planes, including stone concealing the center exit. No route certified within the bounded search; full puzzle completion remains unverified. |

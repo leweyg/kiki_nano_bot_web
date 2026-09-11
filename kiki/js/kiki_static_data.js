@@ -3341,6 +3341,1162 @@
   ]
 };
 
+  // Source capture: walls
+  levelTemplates.walls = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Three full colored stone planes, including stone concealing the center exit.",
+    "No route certified within the bounded search; full puzzle completion remains unverified."
+  ],
+  "size": { "x": 7, "y": 5, "z": 5 },
+  "intro": "walls",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nThe exit is hidden\nin the middle of\nthe central wall"
+  ],
+  "player": {
+    "coordinates": { "x": 0, "y": 0, "z": 2 },
+    "nostatus": 0
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 2 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.0,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.0,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.0,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.0,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.0,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.1,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.1,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.1,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.1,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.1,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.2,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.2,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.2,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.2,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.2,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.30000000000000004,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 3, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.30000000000000004,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 3, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.30000000000000004,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 3, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.30000000000000004,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 3, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.30000000000000004,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.4,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 4, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.4,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 4, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.4,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 4, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.4,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 4, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.1,
+          0.4,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 4, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.0,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.0,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.0,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.0,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.0,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.1,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.1,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.1,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.1,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.1,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 1, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.2,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.2,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.2,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.2,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.2,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 2, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.30000000000000004,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.30000000000000004,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.30000000000000004,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.30000000000000004,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.30000000000000004,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.4,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.4,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.4,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.4,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.30000000000000004,
+          0.4,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.0,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.0,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.0,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.0,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.0,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.1,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.1,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.1,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.1,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.1,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 1, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.2,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.2,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.2,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.2,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.2,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 2, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.30000000000000004,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.30000000000000004,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.30000000000000004,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.30000000000000004,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.30000000000000004,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.4,
+          0.0,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.4,
+          0.1,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 1 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.4,
+          0.2,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.4,
+          0.30000000000000004,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.4,
+          0.4,
+          0.6
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 5, "y": 4, "z": 4 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
