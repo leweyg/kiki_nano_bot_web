@@ -11,3 +11,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 10 | gears | being-ported | Original gear, generator, motor and wire layout retained. Circuit activation and mechanical timing remain approximate; no verified completion route. |
 | 11 | gamma | being-ported | Original room, mutant and switches retained. Mutant AI/damage and color-cycling callback are missing; completion unverified. |
 | 12 | cube | being-ported | Original nested cube walls and start/exit retained. No route certified within the bounded search; full puzzle completion remains unverified. |
+| 13 | switch | ported | Original switches and declarative multi-switch exit condition retained. Completion route replay-verified in the shared simulator (14 actions). |

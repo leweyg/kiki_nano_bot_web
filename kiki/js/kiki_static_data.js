@@ -897,6 +897,119 @@
   ]
 };
 
+  // Source capture: switch
+  levelTemplates.switch = {
+  "size": { "x": 7, "y": 7, "z": 7 },
+  "intro": "switch",
+  "switchConditions": [
+    {
+      "group": "exitCounter",
+      "exit": "exit",
+      "activeCount": 4
+    }
+  ],
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the 4 switches\n\nto activate the switches,\nshoot them",
+    "to move the center stone,\n\nuse the bomb.\n\nthe bomb will detonate if you shoot it"
+  ],
+  "player": {
+    "coordinates": { "x": 3, "y": 0, "z": 3 },
+    "nostatus": false
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "space": "position",
+      "at": [
+        { "x": 0, "y": -1, "z": 0 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 3, "y": 3, "z": 3 },
+        { "x": 3, "y": 5, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 3, "y": 1, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 3, "y": 2, "z": 6 },
+        { "x": 3, "y": 4, "z": 6 },
+        { "x": 4, "y": 3, "z": 6 },
+        { "x": 2, "y": 3, "z": 6 },
+        { "x": 6, "y": 2, "z": 3 },
+        { "x": 6, "y": 4, "z": 3 },
+        { "x": 6, "y": 3, "z": 4 },
+        { "x": 6, "y": 3, "z": 2 },
+        { "x": 3, "y": 2, "z": 1 },
+        { "x": 3, "y": 4, "z": 1 },
+        { "x": 4, "y": 3, "z": 1 },
+        { "x": 2, "y": 3, "z": 1 },
+        { "x": 1, "y": 2, "z": 3 },
+        { "x": 1, "y": 4, "z": 3 },
+        { "x": 1, "y": 3, "z": 4 },
+        { "x": 1, "y": 3, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "switch",
+        "active": false,
+        "switchGroup": "exitCounter"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 1, "y": 3, "z": 3 },
+        { "x": 6, "y": 3, "z": 3 },
+        { "x": 3, "y": 3, "z": 1 },
+        { "x": 3, "y": 3, "z": 6 }
+      ]
+    }
+  ],
+  "port_status": "ported",
+  "portNotes": [
+    "Original switches and declarative multi-switch exit condition retained.",
+    "Completion route replay-verified in the shared simulator (14 actions)."
+  ],
+  "solution": [
+    "move forward",
+    "move forward",
+    "jump forward",
+    "move forward",
+    "shoot",
+    "jump far forward",
+    "shoot",
+    "turn left",
+    "shoot",
+    "turn left",
+    "shoot",
+    "turn left",
+    "shoot",
+    "jump forward"
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
