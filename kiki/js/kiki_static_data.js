@@ -1701,6 +1701,86 @@
   "cameraMode": "inside"
 };
 
+  // Source capture: love
+  levelTemplates.love = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Bomb and stone heart outlines, central mutant and peace exit. Mutant AI/damage and original bomb timing are incomplete."
+  ],
+  "size": { "x": 13, "y": 13, "z": 13 },
+  "intro": "love",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!"
+  ],
+  "player": {
+    "orientation": "rot0",
+    "coordinates": { "x": 6, "y": 7, "z": 2 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "peace",
+        "active": true
+      },
+      "at": [
+        { "x": 6, "y": 6, "z": 10 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 6, "y": 7, "z": 10 },
+        { "x": 7, "y": 8, "z": 10 },
+        { "x": 8, "y": 8, "z": 10 },
+        { "x": 9, "y": 7, "z": 10 },
+        { "x": 9, "y": 6, "z": 10 },
+        { "x": 8, "y": 5, "z": 10 },
+        { "x": 7, "y": 4, "z": 10 },
+        { "x": 6, "y": 3, "z": 10 },
+        { "x": 5, "y": 8, "z": 10 },
+        { "x": 4, "y": 8, "z": 10 },
+        { "x": 3, "y": 7, "z": 10 },
+        { "x": 3, "y": 6, "z": 10 },
+        { "x": 4, "y": 5, "z": 10 },
+        { "x": 5, "y": 4, "z": 10 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 6, "y": 7, "z": 2 },
+        { "x": 7, "y": 8, "z": 2 },
+        { "x": 8, "y": 8, "z": 2 },
+        { "x": 9, "y": 7, "z": 2 },
+        { "x": 9, "y": 6, "z": 2 },
+        { "x": 8, "y": 5, "z": 2 },
+        { "x": 7, "y": 4, "z": 2 },
+        { "x": 6, "y": 3, "z": 2 },
+        { "x": 5, "y": 8, "z": 2 },
+        { "x": 4, "y": 8, "z": 2 },
+        { "x": 3, "y": 7, "z": 2 },
+        { "x": 3, "y": 6, "z": 2 },
+        { "x": 4, "y": 5, "z": 2 },
+        { "x": 5, "y": 4, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "mutant"
+      },
+      "at": [
+        { "x": 6, "y": 2, "z": 6 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
