@@ -9631,6 +9631,56 @@
   ]
 };
 
+  // Source capture: neutron
+  levelTemplates.neutron = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Six axis-end stones in the original 11\u00d711\u00d711 room; source translucent stone color retained.",
+    "No route certified within the bounded search; full puzzle completion remains unverified."
+  ],
+  "size": { "x": 11, "y": 11, "z": 11 },
+  "intro": "neutron",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nit looks simpler than it is"
+  ],
+  "player": {
+    "nostatus": 0,
+    "coordinates": { "x": 5, "y": 4, "z": 5 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 5, "y": 5, "z": 5 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "at": [
+        { "x": 5, "y": 5, "z": 0 },
+        { "x": 5, "y": 5, "z": 10 },
+        { "x": 10, "y": 5, "z": 5 },
+        { "x": 0, "y": 5, "z": 5 },
+        { "x": 5, "y": 10, "z": 5 },
+        { "x": 5, "y": 0, "z": 5 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
