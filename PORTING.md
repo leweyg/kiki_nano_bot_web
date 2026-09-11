@@ -25,3 +25,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 24 | random | being-ported | Original authored 21×21×21 stone field, eight corner walls and two source lights. Repeated source stone placements replace occupants; lights are data only. |
 | 25 | plate | being-ported | Slippery 3×3 plate and five bombs; original inverted start restored. Slippery grabbing/slit visuals and bomb timing are incomplete. |
 | 26 | nice | being-ported | Four diagonal wall lines and nested wall/stone polygons; center deletion retained. No route certified within the bounded search; full puzzle completion remains unverified. |
+| 27 | entropy | being-ported | Dense patterned slippery stone volume. Slippery grabbing rules and slit visuals are missing. |
