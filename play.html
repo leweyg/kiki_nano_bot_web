@@ -327,6 +327,16 @@
       transition: transform 80ms linear
     }
 
+    .touchpad.charging .touchpad-knob {
+      background: rgba(255, 128, 0, .35);
+      box-shadow: 0 0 14px rgba(255, 128, 0, .8)
+    }
+
+    #shoot.charging {
+      color: #ffff8a;
+      border-color: var(--accent)
+    }
+
     .touchpad.active .touchpad-knob {
       transition: none
     }
@@ -409,9 +419,9 @@
         class="touchpad-mark right">→</span><span class="touchpad-mark down">↓</span><span class="touchpad-knob"
         id="touchpad-knob"></span></div>
     <div class="action-stack jump-actions"><button class="control-button"
-        data-action="jump far forward">+FAR</button><button class="control-button"
-        data-action="jump forward">+FWD</button><button class="control-button" data-action="jump">JUMP</button></div>
-    <span class="control-hint">Press</span>
+        data-action="jump far forward">3x FAR</button><button class="control-button"
+        data-action="jump forward">2x FWD</button><button class="control-button" data-action="jump">JUMP</button></div>
+    <span class="control-hint">Hold</span>
     <span class="control-hint">Swipe</span>
     <span class="control-hint">Tap</span>
   </div>
@@ -1610,6 +1620,7 @@
       updateHud();
     }
     function continueHeldInput() {
+      if (resolveStationaryHold()) return;
       const next = heldInput.move;
       if (next && !activeAnimation && !queuedAction) {
         const action = actionForMove(next);
@@ -1635,7 +1646,34 @@
     }
     const touchpad = document.getElementById('touchpad');
     const touchpadKnob = document.getElementById('touchpad-knob');
-    const touchpadState = { pointerId: null, originX: 0, originY: 0, dragging: false };
+    const HOLD_GESTURE_MS = 350;
+    const touchpadState = { pointerId: null, originX: 0, originY: 0, dragging: false, holdTimer: null, holdMode: null };
+    function clearHoldTimer() {
+      if (touchpadState.holdTimer !== null) clearTimeout(touchpadState.holdTimer);
+      touchpadState.holdTimer = null;
+    }
+    function showEnergyCharge(charging) {
+      touchpad.classList.toggle('charging', charging);
+      document.getElementById('shoot').classList.toggle('charging', charging);
+    }
+    function resolveStationaryHold() {
+      if (touchpadState.pointerId === null || touchpadState.dragging || touchpadState.holdMode !== 'pending') return false;
+      if (activeAnimation || queuedAction) return false;
+      if (game.won || advancingLevel || Date.now() < suppressInputUntil) return false;
+      // Probe the actual push rules without changing the live game.
+      const canPush = game.clone().pushAlong(1);
+      touchpadState.holdMode = canPush ? 'push' : 'charge';
+      if (canPush) act('push forward');
+      else showEnergyCharge(true);
+      return true;
+    }
+    function beginStationaryHold() {
+      touchpadState.holdTimer = null;
+      if (touchpadState.pointerId === null || touchpadState.dragging) return;
+      touchpadState.holdMode = 'pending';
+      clearTapSequence();
+      resolveStationaryHold();
+    }
     function directionFromSwipe(dx, dy) {
       if (Math.max(Math.abs(dx), Math.abs(dy)) < 18) return null;
       return Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
@@ -1647,6 +1685,9 @@
       touchpadKnob.style.setProperty('--pad-y', (dy * scale).toFixed(1) + 'px');
     }
     function resetTouchpad() {
+      clearHoldTimer();
+      showEnergyCharge(false);
+      touchpadState.holdMode = null;
       touchpadState.pointerId = null;
       touchpadState.dragging = false;
       touchpad.classList.remove('active');
@@ -1661,12 +1702,17 @@
       return !isButtonLikeTarget(event.target);
     }
     addEventListener('pointerdown', event => {
-      if (!canStartDragGesture(event)) return;
+      if (!canStartDragGesture(event) || touchpadState.pointerId !== null || game.won || advancingLevel || Date.now() < suppressInputUntil) return;
       event.preventDefault();
       touchpadState.pointerId = event.pointerId;
       touchpadState.originX = event.clientX;
       touchpadState.originY = event.clientY;
       touchpadState.dragging = false;
+      touchpadState.holdMode = null;
+      // Pause the tap sequence while deciding whether this press is a tap or hold.
+      if (tapSequence.timer) clearTimeout(tapSequence.timer);
+      tapSequence.timer = null;
+      touchpadState.holdTimer = setTimeout(beginStationaryHold, HOLD_GESTURE_MS);
       if (event.target.setPointerCapture) {
         try { event.target.setPointerCapture(event.pointerId); } catch (_) { }
       }
@@ -1680,19 +1726,37 @@
       moveTouchpadKnob(dx, dy);
       const direction = directionFromSwipe(dx, dy);
       if (direction) {
+        clearHoldTimer();
+        showEnergyCharge(false);
+        touchpadState.holdMode = null;
         if (!touchpadState.dragging) clearTapSequence();
         touchpadState.dragging = true;
         setHeldMove(direction, event.pointerId);
       }
     });
     addEventListener('pointerup', event => {
-      const wasActivePointer = touchpadState.pointerId === event.pointerId;
-      const wasTap = wasActivePointer && !touchpadState.dragging;
+      if (touchpadState.pointerId !== event.pointerId) return;
+      const wasTap = !touchpadState.dragging && touchpadState.holdMode === null;
+      const releaseShot = touchpadState.holdMode === 'charge';
       releaseMove(event.pointerId);
       resetTouchpad();
-      if (wasTap) queueTapJump();
+      if (releaseShot) act('shoot');
+      else if (wasTap) queueTapJump();
     });
-	    addEventListener('pointercancel', event => { clearTapSequence(); releaseMove(event.pointerId); resetTouchpad(); });
+    function cancelTouchpadGesture() {
+      clearTapSequence();
+      if (touchpadState.pointerId !== null) releaseMove(touchpadState.pointerId);
+      resetTouchpad();
+    }
+    addEventListener('pointercancel', event => {
+      if (touchpadState.pointerId === event.pointerId) cancelTouchpadGesture();
+    });
+    addEventListener('lostpointercapture', event => {
+      if (touchpadState.pointerId === event.pointerId) cancelTouchpadGesture();
+    });
+    addEventListener('blur', cancelTouchpadGesture);
+    addEventListener('pagehide', cancelTouchpadGesture);
+    document.addEventListener('visibilitychange', () => { if (document.hidden) cancelTouchpadGesture(); });
 	    document.querySelectorAll('[data-action]').forEach(button => button.addEventListener('click', () => act(button.dataset.action)));
 	    function goToLevel(index) {
 	      if (index < 0 || index >= Kiki.levels.length || index === game.level.index) return;
