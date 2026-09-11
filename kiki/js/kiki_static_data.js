@@ -1826,6 +1826,108 @@
   ]
 };
 
+  // Source capture: edge
+  levelTemplates.edge = {
+  "port_status": "ported",
+  "portNotes": [
+    "Four colored corner stone clusters in the original cube.",
+    "Completion route replay-verified in the shared simulator (12 actions)."
+  ],
+  "size": { "x": 7, "y": 7, "z": 7 },
+  "intro": "edge",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!"
+  ],
+  "player": {
+    "coordinates": { "x": 3, "y": 0, "z": 0 },
+    "nostatus": 0,
+    "orientation": "rot0"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 3 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.3,
+          0,
+          0.8999999999999999,
+          0.8
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 2 },
+        { "x": 5, "y": 5, "z": 4 },
+        { "x": 5, "y": 1, "z": 2 },
+        { "x": 1, "y": 5, "z": 4 },
+        { "x": 1, "y": 2, "z": 1 },
+        { "x": 5, "y": 4, "z": 5 },
+        { "x": 5, "y": 2, "z": 1 },
+        { "x": 1, "y": 4, "z": 5 },
+        { "x": 2, "y": 1, "z": 1 },
+        { "x": 4, "y": 5, "z": 5 },
+        { "x": 4, "y": 1, "z": 1 },
+        { "x": 2, "y": 5, "z": 5 },
+        { "x": 2, "y": 2, "z": 2 },
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 4, "y": 2, "z": 2 },
+        { "x": 2, "y": 4, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.8999999999999999,
+          0,
+          0.3,
+          0.8
+        ],
+        "slippery": false
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 2 },
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 5, "y": 2, "z": 2 },
+        { "x": 1, "y": 4, "z": 4 },
+        { "x": 2, "y": 1, "z": 2 },
+        { "x": 4, "y": 5, "z": 4 },
+        { "x": 4, "y": 1, "z": 2 },
+        { "x": 2, "y": 5, "z": 4 },
+        { "x": 2, "y": 2, "z": 1 },
+        { "x": 4, "y": 4, "z": 5 },
+        { "x": 4, "y": 2, "z": 1 },
+        { "x": 2, "y": 4, "z": 5 }
+      ]
+    }
+  ],
+  "solution": [
+    "move forward",
+    "turn left",
+    "move backward",
+    "move backward",
+    "jump forward",
+    "push forward",
+    "turn right",
+    "push forward",
+    "jump forward",
+    "turn left",
+    "move backward",
+    "jump far forward"
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

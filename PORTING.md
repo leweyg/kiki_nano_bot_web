@@ -21,3 +21,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 20 | maze | being-ported | 4×4×4 maze with 29 walls and source light. Source inside-camera mode retained; point light is data only. |
 | 21 | love | being-ported | Bomb and stone heart outlines, central mutant and peace exit. Mutant AI/damage and original bomb timing are incomplete. |
 | 22 | towers | being-ported | Original two stone towers and sideways starting orientation. No route certified within the bounded search; full puzzle completion remains unverified. |
+| 23 | edge | ported | Four colored corner stone clusters in the original cube. Completion route replay-verified in the shared simulator (12 actions). |
