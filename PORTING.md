@@ -44,3 +44,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 43 | machine | being-ported | Original motor, gear rows, generator and supporting walls. Electrical exit activation is missing; exit remains closed. |
 | 44 | neutron | being-ported | Six axis-end stones in the original 11×11×11 room; source translucent stone color retained. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 45 | captured | being-ported | Six stone cage polygons and twelve axial stones. No route certified within the bounded search; full puzzle completion remains unverified. |
+| 46 | circuit | being-ported | Original seven-part wire circuit, eight wire stones and motor/generator. Wire face overlaps retained. Electrical exit activation is missing; exit remains closed. |
