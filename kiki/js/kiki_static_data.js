@@ -5711,6 +5711,95 @@
   ]
 };
 
+  // Source capture: hidden
+  levelTemplates.hidden = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Five concealed switches, stone covers and upper stone ring. Five-switch exit condition translated.",
+    "No route certified within the bounded search; full puzzle completion remains unverified."
+  ],
+  "size": { "x": 9, "y": 9, "z": 9 },
+  "intro": "hidden",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nactivate the 5 switches\n\nuse the stones to\nreach the exit"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 1, "z": 5 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 0, "y": 0, "z": 1 },
+        { "x": 0, "y": 1, "z": 0 },
+        { "x": 1, "y": 0, "z": 1 },
+        { "x": 1, "y": 1, "z": 0 },
+        { "x": 2, "y": 0, "z": 0 },
+        { "x": 8, "y": 0, "z": 1 },
+        { "x": 8, "y": 1, "z": 0 },
+        { "x": 7, "y": 0, "z": 1 },
+        { "x": 7, "y": 1, "z": 0 },
+        { "x": 6, "y": 0, "z": 0 },
+        { "x": 0, "y": 0, "z": 7 },
+        { "x": 0, "y": 1, "z": 8 },
+        { "x": 1, "y": 0, "z": 7 },
+        { "x": 1, "y": 1, "z": 8 },
+        { "x": 2, "y": 0, "z": 8 },
+        { "x": 8, "y": 0, "z": 7 },
+        { "x": 8, "y": 1, "z": 8 },
+        { "x": 7, "y": 0, "z": 7 },
+        { "x": 7, "y": 1, "z": 8 },
+        { "x": 6, "y": 0, "z": 8 },
+        { "x": 3, "y": 8, "z": 3 },
+        { "x": 3, "y": 8, "z": 4 },
+        { "x": 3, "y": 8, "z": 5 },
+        { "x": 4, "y": 8, "z": 5 },
+        { "x": 5, "y": 8, "z": 5 },
+        { "x": 5, "y": 8, "z": 4 },
+        { "x": 5, "y": 8, "z": 3 },
+        { "x": 4, "y": 8, "z": 3 },
+        { "x": 4, "y": 7, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "switch",
+        "sourceEvents": [
+          "switched"
+        ],
+        "switchGroup": "hidden"
+      },
+      "at": [
+        { "x": 1, "y": 0, "z": 0 },
+        { "x": 7, "y": 0, "z": 0 },
+        { "x": 1, "y": 0, "z": 8 },
+        { "x": 7, "y": 0, "z": 8 },
+        { "x": 4, "y": 8, "z": 4 }
+      ]
+    }
+  ],
+  "switchConditions": [
+    {
+      "group": "hidden",
+      "activeCount": 5,
+      "exit": "exit"
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
