@@ -10471,6 +10471,81 @@
   ]
 };
 
+  // Source capture: mutants
+  levelTemplates.mutants = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original wall loop and five seeded mutants. Mutant combat, all-deactivated exit callback and outro transition are missing; exit remains closed."
+  ],
+  "size": { "x": 9, "y": 9, "z": 9 },
+  "intro": "mutants",
+  "help": [
+    "$scale(1.5)mission:\ndeactivate the mutants!\n\nto deactivate a mutant,\nshoot him until it get's transparent\n\nthe exit will open,\nwhen all mutant bots\nare deactivated"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 3, "z": 4 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 2, "y": 2, "z": 2 },
+        { "x": 3, "y": 2, "z": 2 },
+        { "x": 4, "y": 2, "z": 2 },
+        { "x": 5, "y": 2, "z": 2 },
+        { "x": 6, "y": 2, "z": 2 },
+        { "x": 6, "y": 3, "z": 2 },
+        { "x": 6, "y": 4, "z": 2 },
+        { "x": 6, "y": 5, "z": 2 },
+        { "x": 6, "y": 6, "z": 2 },
+        { "x": 6, "y": 6, "z": 3 },
+        { "x": 6, "y": 6, "z": 4 },
+        { "x": 6, "y": 6, "z": 5 },
+        { "x": 6, "y": 6, "z": 6 },
+        { "x": 5, "y": 6, "z": 6 },
+        { "x": 4, "y": 6, "z": 6 },
+        { "x": 3, "y": 6, "z": 6 },
+        { "x": 2, "y": 6, "z": 6 },
+        { "x": 2, "y": 5, "z": 6 },
+        { "x": 2, "y": 4, "z": 6 },
+        { "x": 2, "y": 3, "z": 6 },
+        { "x": 2, "y": 2, "z": 6 },
+        { "x": 2, "y": 2, "z": 5 },
+        { "x": 2, "y": 2, "z": 4 },
+        { "x": 2, "y": 2, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "mutant",
+        "sourceEvents": [
+          "died"
+        ]
+      },
+      "at": [
+        { "x": 7, "y": 3, "z": 4 },
+        { "x": 3, "y": 1, "z": 2 },
+        { "x": 3, "y": 3, "z": 0 },
+        { "x": 1, "y": 8, "z": 6 },
+        { "x": 0, "y": 6, "z": 8 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
