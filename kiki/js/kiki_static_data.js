@@ -1264,6 +1264,132 @@
   ]
 };
 
+  // Source capture: blocks
+  levelTemplates.blocks = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Stepped walls and colored stones, including slippery stones. Slippery grabbing rules and slit visuals are missing."
+  ],
+  "size": { "x": 18, "y": 12, "z": 5 },
+  "intro": "blocks",
+  "help": [
+    "As you might know: you can grab\nmost stones by pressing forward\nwhile jumping or falling down\nnext to them.",
+    "The stone with the slits is a\nspecial stone, that means that\nyou can't grab it while jumping\nor falling",
+    "The color of a stone doesn't matter."
+  ],
+  "player": {
+    "coordinates": { "x": 1, "y": 6, "z": 2 },
+    "nostatus": 0
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 7, "y": 9, "z": 2 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 1, "y": 1, "z": 2 },
+        { "x": 4, "y": 2, "z": 2 },
+        { "x": 7, "y": 2, "z": 2 },
+        { "x": 0, "y": 0, "z": 2 },
+        { "x": 1, "y": 0, "z": 2 },
+        { "x": 2, "y": 0, "z": 2 },
+        { "x": 3, "y": 0, "z": 2 },
+        { "x": 4, "y": 0, "z": 2 },
+        { "x": 5, "y": 0, "z": 2 },
+        { "x": 6, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone"
+      },
+      "at": [
+        { "x": 10, "y": 2, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "slippery": true
+      },
+      "at": [
+        { "x": 13, "y": 2, "z": 2 },
+        { "x": 15, "y": 4, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0,
+          1,
+          0,
+          0.8
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 13, "y": 7, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          1,
+          0,
+          0,
+          0.8
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 10, "y": 7, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0,
+          0,
+          1,
+          0.8
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 7, "y": 7, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.5,
+          0.5,
+          0,
+          0.8
+        ]
+      },
+      "at": [
+        { "x": 4, "y": 7, "z": 2 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
