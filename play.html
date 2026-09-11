@@ -424,10 +424,11 @@
     ['keydown', 'keyup'].forEach(type => soundToggle.addEventListener(type, event => {
       if (event.key === ' ' || event.key === 'Enter') event.stopPropagation();
     }));
-    soundToggle.addEventListener('click', () => {
+    soundToggle.addEventListener('click', event => {
       sound.setEnabled(!sound.enabled);
       updateSoundToggle();
       if (sound.enabled) sound.play('menu_select');
+      if (event.detail > 0) renderer.domElement.focus({ preventScroll: true });
     });
     addEventListener('pointerdown', () => sound.unlock(), { capture: true });
     addEventListener('keydown', () => sound.unlock(), { capture: true });
@@ -1707,7 +1708,7 @@
         if (!event.repeat) act('jump forward');
         return;
       }
-      if (event.key === 'Enter' || key === 'r') {
+      if (event.key === 'Enter' || key === 'r' || event.key === '\\' || event.code === 'Backslash') {
         event.preventDefault();
         if (!event.repeat) act('jump far forward');
         return;
