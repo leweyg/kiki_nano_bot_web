@@ -2181,6 +2181,84 @@
   ]
 };
 
+  // Source capture: plate
+  levelTemplates.plate = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Slippery 3\u00d73 plate and five bombs; original inverted start restored. Slippery grabbing/slit visuals and bomb timing are incomplete."
+  ],
+  "size": { "x": 7, "y": 7, "z": 9 },
+  "intro": "plate",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nuse the bombs : )"
+  ],
+  "player": {
+    "coordinates": { "x": 3, "y": 2, "z": 1 },
+    "nostatus": 0,
+    "orientation": "rotx270"
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.8,
+          0.8,
+          0.3
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 3, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "stone",
+        "color": [
+          0.6,
+          0.6,
+          0.6
+        ],
+        "slippery": true
+      },
+      "at": [
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 4, "y": 3, "z": 4 },
+        { "x": 4, "y": 2, "z": 4 },
+        { "x": 3, "y": 2, "z": 4 },
+        { "x": 2, "y": 2, "z": 4 },
+        { "x": 2, "y": 3, "z": 4 },
+        { "x": 2, "y": 4, "z": 4 },
+        { "x": 3, "y": 4, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 3, "y": 4, "z": 0 },
+        { "x": 3, "y": 2, "z": 0 },
+        { "x": 4, "y": 3, "z": 0 },
+        { "x": 2, "y": 3, "z": 0 },
+        { "x": 3, "y": 3, "z": 2 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

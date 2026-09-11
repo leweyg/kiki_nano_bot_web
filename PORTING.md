@@ -23,3 +23,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 22 | towers | being-ported | Original two stone towers and sideways starting orientation. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 23 | edge | ported | Four colored corner stone clusters in the original cube. Completion route replay-verified in the shared simulator (12 actions). |
 | 24 | random | being-ported | Original authored 21×21×21 stone field, eight corner walls and two source lights. Repeated source stone placements replace occupants; lights are data only. |
+| 25 | plate | being-ported | Slippery 3×3 plate and five bombs; original inverted start restored. Slippery grabbing/slit visuals and bomb timing are incomplete. |
