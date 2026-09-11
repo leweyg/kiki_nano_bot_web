@@ -677,6 +677,125 @@
   ]
 };
 
+  // Source capture: gamma
+  levelTemplates.gamma = {
+  "size": { "x": 10, "y": 10, "z": 10 },
+  "intro": "gamma",
+  "switchConditions": [
+    {
+      "group": "exitCounter",
+      "exit": "exit",
+      "activeCount": 4
+    }
+  ],
+  "help": "$scale(1.5)mission:\nactivate the exit!\n\nshoot at the switches to activate the exit",
+  "player": {
+    "coordinates": { "x": 0, "y": 5, "z": 0 },
+    "nostatus": false
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 2, "y": 7, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "switch",
+        "name": "color switch",
+        "active": false
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 9, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "switch",
+        "active": false,
+        "switchGroup": "exitCounter"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 0, "y": 0, "z": 0 },
+        { "x": 7, "y": 4, "z": 4 },
+        { "x": 4, "y": 4, "z": 7 },
+        { "x": 4, "y": 7, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "mutant"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 5, "y": 0, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "space": "coordinates",
+      "at": [
+        { "x": 0, "y": 0, "z": 1 },
+        { "x": 1, "y": 0, "z": 1 },
+        { "x": 2, "y": 0, "z": 1 },
+        { "x": 3, "y": 0, "z": 1 },
+        { "x": 4, "y": 0, "z": 1 },
+        { "x": 5, "y": 0, "z": 1 },
+        { "x": 6, "y": 0, "z": 1 },
+        { "x": 7, "y": 0, "z": 1 },
+        { "x": 8, "y": 0, "z": 1 },
+        { "x": 9, "y": 0, "z": 1 },
+        { "x": 0, "y": 1, "z": 0 },
+        { "x": 1, "y": 1, "z": 0 },
+        { "x": 2, "y": 1, "z": 0 },
+        { "x": 3, "y": 1, "z": 0 },
+        { "x": 4, "y": 1, "z": 0 },
+        { "x": 5, "y": 1, "z": 0 },
+        { "x": 6, "y": 1, "z": 0 },
+        { "x": 7, "y": 1, "z": 0 },
+        { "x": 8, "y": 1, "z": 0 },
+        { "x": 9, "y": 1, "z": 0 },
+        { "x": 0, "y": 2, "z": 2 },
+        { "x": 1, "y": 2, "z": 2 },
+        { "x": 2, "y": 2, "z": 2 },
+        { "x": 3, "y": 2, "z": 2 },
+        { "x": 4, "y": 2, "z": 2 },
+        { "x": 5, "y": 2, "z": 2 },
+        { "x": 6, "y": 2, "z": 2 },
+        { "x": 2, "y": 2, "z": 3 },
+        { "x": 2, "y": 2, "z": 4 },
+        { "x": 2, "y": 2, "z": 5 },
+        { "x": 2, "y": 2, "z": 6 },
+        { "x": 2, "y": 3, "z": 4 },
+        { "x": 2, "y": 4, "z": 4 },
+        { "x": 2, "y": 5, "z": 4 },
+        { "x": 2, "y": 6, "z": 4 },
+        { "x": 3, "y": 4, "z": 4 },
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 4, "y": 4, "z": 5 },
+        { "x": 4, "y": 4, "z": 6 },
+        { "x": 4, "y": 5, "z": 6 }
+      ]
+    }
+  ],
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original room, mutant and switches retained. Mutant AI/damage and color-cycling callback are missing; completion unverified."
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

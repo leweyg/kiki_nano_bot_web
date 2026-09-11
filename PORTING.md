@@ -9,3 +9,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | Level | Name | Status | Layout and remaining work |
 | --- | --- | --- | --- |
 | 10 | gears | being-ported | Original gear, generator, motor and wire layout retained. Circuit activation and mechanical timing remain approximate; no verified completion route. |
+| 11 | gamma | being-ported | Original room, mutant and switches retained. Mutant AI/damage and color-cycling callback are missing; completion unverified. |
