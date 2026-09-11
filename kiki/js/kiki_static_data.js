@@ -10321,6 +10321,156 @@
   ]
 };
 
+  // Source capture: evil
+  levelTemplates.evil = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original nested walls, generator, motor, wire stones and bombs. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate."
+  ],
+  "size": { "x": 13, "y": 5, "z": 13 },
+  "intro": "evil",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nplace a powered\nwire stone next to it.",
+    "a wirestone is powered by\na rotating generator\nor it shares at least\none edge with\nanother powered wirestone.",
+    "this one is hard,\nreally hard,\nbut it's possible.\n\ngood luck!"
+  ],
+  "player": {
+    "coordinates": { "x": 7, "y": 3, "z": 7 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 6, "y": 2, "z": 10 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "wall"
+      },
+      "at": [
+        { "x": 1, "y": 2, "z": 1 },
+        { "x": 11, "y": 2, "z": 1 },
+        { "x": 1, "y": 2, "z": 2 },
+        { "x": 11, "y": 2, "z": 2 },
+        { "x": 1, "y": 2, "z": 3 },
+        { "x": 11, "y": 2, "z": 3 },
+        { "x": 1, "y": 2, "z": 4 },
+        { "x": 11, "y": 2, "z": 4 },
+        { "x": 1, "y": 2, "z": 5 },
+        { "x": 11, "y": 2, "z": 5 },
+        { "x": 1, "y": 2, "z": 6 },
+        { "x": 11, "y": 2, "z": 6 },
+        { "x": 1, "y": 2, "z": 7 },
+        { "x": 11, "y": 2, "z": 7 },
+        { "x": 1, "y": 2, "z": 8 },
+        { "x": 11, "y": 2, "z": 8 },
+        { "x": 1, "y": 2, "z": 9 },
+        { "x": 11, "y": 2, "z": 9 },
+        { "x": 1, "y": 2, "z": 10 },
+        { "x": 11, "y": 2, "z": 10 },
+        { "x": 1, "y": 2, "z": 11 },
+        { "x": 11, "y": 2, "z": 11 },
+        { "x": 3, "y": 2, "z": 4 },
+        { "x": 9, "y": 2, "z": 4 },
+        { "x": 3, "y": 2, "z": 5 },
+        { "x": 9, "y": 2, "z": 5 },
+        { "x": 3, "y": 2, "z": 6 },
+        { "x": 9, "y": 2, "z": 6 },
+        { "x": 3, "y": 2, "z": 7 },
+        { "x": 9, "y": 2, "z": 7 },
+        { "x": 3, "y": 2, "z": 8 },
+        { "x": 9, "y": 2, "z": 8 },
+        { "x": 2, "y": 2, "z": 1 },
+        { "x": 2, "y": 2, "z": 11 },
+        { "x": 3, "y": 2, "z": 1 },
+        { "x": 3, "y": 2, "z": 11 },
+        { "x": 4, "y": 2, "z": 1 },
+        { "x": 4, "y": 2, "z": 11 },
+        { "x": 5, "y": 2, "z": 1 },
+        { "x": 5, "y": 2, "z": 11 },
+        { "x": 6, "y": 2, "z": 1 },
+        { "x": 6, "y": 2, "z": 11 },
+        { "x": 7, "y": 2, "z": 1 },
+        { "x": 7, "y": 2, "z": 11 },
+        { "x": 8, "y": 2, "z": 1 },
+        { "x": 8, "y": 2, "z": 11 },
+        { "x": 9, "y": 2, "z": 1 },
+        { "x": 9, "y": 2, "z": 11 },
+        { "x": 10, "y": 2, "z": 1 },
+        { "x": 10, "y": 2, "z": 11 },
+        { "x": 3, "y": 2, "z": 3 },
+        { "x": 3, "y": 2, "z": 9 },
+        { "x": 4, "y": 2, "z": 3 },
+        { "x": 4, "y": 2, "z": 9 },
+        { "x": 5, "y": 2, "z": 3 },
+        { "x": 5, "y": 2, "z": 9 },
+        { "x": 6, "y": 2, "z": 3 },
+        { "x": 7, "y": 2, "z": 3 },
+        { "x": 7, "y": 2, "z": 9 },
+        { "x": 8, "y": 2, "z": 3 },
+        { "x": 8, "y": 2, "z": 9 },
+        { "x": 9, "y": 2, "z": 3 },
+        { "x": 9, "y": 2, "z": 9 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 6, "y": 2, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 10, "y": 2, "z": 6 },
+        { "x": 2, "y": 2, "z": 6 },
+        { "x": 6, "y": 0, "z": 4 },
+        { "x": 6, "y": 1, "z": 4 },
+        { "x": 6, "y": 2, "z": 9 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 6, "y": 2, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 6, "y": 3, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 6, "y": 4, "z": 4 },
+        { "x": 7, "y": 2, "z": 4 },
+        { "x": 5, "y": 2, "z": 4 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

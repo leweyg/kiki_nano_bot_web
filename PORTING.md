@@ -47,3 +47,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 46 | circuit | being-ported | Original seven-part wire circuit, eight wire stones and motor/generator. Wire face overlaps retained. Electrical exit activation is missing; exit remains closed. |
 | 47 | regal | being-ported | Original narrow wall corridors, gears, generators and motor pairs. Electrical exit activation is missing; exit remains closed. |
 | 48 | conductor | being-ported | Original three wired wall bars, wire stones, motor assembly and wired wall. Electrical exit activation is missing; exit remains closed. |
+| 49 | evil | being-ported | Original nested walls, generator, motor, wire stones and bombs. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate. |
