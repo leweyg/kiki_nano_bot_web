@@ -4978,6 +4978,303 @@
   ]
 };
 
+  // Source capture: bronze
+  levelTemplates.bronze = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original two-sided wire loops, gears, generator, bomb and wire stones. Electrical exit activation is missing; exit remains closed. Bomb timing is approximate."
+  ],
+  "size": { "x": 9, "y": 6, "z": 9 },
+  "intro": "bronze",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit\nfeed it with electricity:\n\nconnect the generator\nwith the motor\nand close the circuit\nwith the wire stones"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 4, "z": 4 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 3, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 4, "y": 1, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "gear",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 3, "y": 5, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "PY"
+      },
+      "at": [
+        { "x": 5, "y": 5, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 3, "y": 5, "z": 5 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 4, "y": 5, "z": 4 },
+        { "x": 5, "y": 4, "z": 4 },
+        { "x": 3, "y": 4, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 10
+      },
+      "at": [
+        { "x": 3, "y": 0, "z": 2 },
+        { "x": 4, "y": 0, "z": 2 },
+        { "x": 5, "y": 0, "z": 2 },
+        { "x": 3, "y": 0, "z": 6 },
+        { "x": 4, "y": 0, "z": 6 },
+        { "x": 5, "y": 0, "z": 6 },
+        { "x": 0, "y": 0, "z": 4 },
+        { "x": 1, "y": 0, "z": 4 },
+        { "x": 7, "y": 0, "z": 4 },
+        { "x": 8, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 2, "y": 0, "z": 5 },
+        { "x": 2, "y": 0, "z": 3 },
+        { "x": 6, "y": 0, "z": 5 },
+        { "x": 6, "y": 0, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 13
+      },
+      "at": [
+        { "x": 2, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 7
+      },
+      "at": [
+        { "x": 6, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 6
+      },
+      "at": [
+        { "x": 2, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 3
+      },
+      "at": [
+        { "x": 2, "y": 0, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 9
+      },
+      "at": [
+        { "x": 6, "y": 0, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 12
+      },
+      "at": [
+        { "x": 6, "y": 0, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 10
+      },
+      "at": [
+        { "x": 3, "y": 5, "z": 2 },
+        { "x": 4, "y": 5, "z": 2 },
+        { "x": 5, "y": 5, "z": 2 },
+        { "x": 3, "y": 5, "z": 6 },
+        { "x": 4, "y": 5, "z": 6 },
+        { "x": 5, "y": 5, "z": 6 },
+        { "x": 0, "y": 5, "z": 4 },
+        { "x": 1, "y": 5, "z": 4 },
+        { "x": 7, "y": 5, "z": 4 },
+        { "x": 8, "y": 5, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 2, "y": 5, "z": 5 },
+        { "x": 2, "y": 5, "z": 3 },
+        { "x": 6, "y": 5, "z": 5 },
+        { "x": 6, "y": 5, "z": 3 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 13
+      },
+      "at": [
+        { "x": 2, "y": 5, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 7
+      },
+      "at": [
+        { "x": 6, "y": 5, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 3
+      },
+      "at": [
+        { "x": 2, "y": 5, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 6
+      },
+      "at": [
+        { "x": 2, "y": 5, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 12
+      },
+      "at": [
+        { "x": 6, "y": 5, "z": 6 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 9
+      },
+      "at": [
+        { "x": 6, "y": 5, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PX",
+        "connections": 5
+      },
+      "at": [
+        { "x": 0, "y": 0, "z": 4 },
+        { "x": 0, "y": 1, "z": 4 },
+        { "x": 0, "y": 2, "z": 4 },
+        { "x": 0, "y": 3, "z": 4 },
+        { "x": 0, "y": 4, "z": 4 },
+        { "x": 0, "y": 5, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NX",
+        "connections": 5
+      },
+      "at": [
+        { "x": 8, "y": 0, "z": 4 },
+        { "x": 8, "y": 1, "z": 4 },
+        { "x": 8, "y": 2, "z": 4 },
+        { "x": 8, "y": 3, "z": 4 },
+        { "x": 8, "y": 4, "z": 4 },
+        { "x": 8, "y": 5, "z": 4 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
