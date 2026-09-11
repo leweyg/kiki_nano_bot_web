@@ -12,3 +12,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 11 | gamma | being-ported | Original room, mutant and switches retained. Mutant AI/damage and color-cycling callback are missing; completion unverified. |
 | 12 | cube | being-ported | Original nested cube walls and start/exit retained. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 13 | switch | ported | Original switches and declarative multi-switch exit condition retained. Completion route replay-verified in the shared simulator (14 actions). |
+| 14 | borg | being-ported | 9×9×9 arena with 150 mutants and source light. Mutant AI, damage and combat are missing; light is data only. Fixed random seed. |
