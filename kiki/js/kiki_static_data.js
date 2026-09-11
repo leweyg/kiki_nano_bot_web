@@ -2963,6 +2963,139 @@
   ]
 };
 
+  // Source capture: bridge
+  levelTemplates.bridge = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Original bridge stones, motor, generator and face-specific boundary wires. Electrical exit activation is missing; exit remains closed."
+  ],
+  "size": { "x": 9, "y": 9, "z": 5 },
+  "intro": "bridge",
+  "help": [
+    "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity:\n\nconnect the generator\nwith the motor\n\nplace a wire stone\nnext to the exit"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 1, "z": 3 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": false
+      },
+      "at": [
+        { "x": 4, "y": 3, "z": 2 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "motorGear",
+        "face": "NY"
+      },
+      "at": [
+        { "x": 3, "y": 8, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "motorCylinder",
+        "face": "NY"
+      },
+      "at": [
+        { "x": 3, "y": 7, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "generator",
+        "face": "NY"
+      },
+      "at": [
+        { "x": 5, "y": 8, "z": 2 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 8, "z": 0 },
+        { "x": 4, "y": 8, "z": 1 },
+        { "x": 4, "y": 8, "z": 2 },
+        { "x": 4, "y": 8, "z": 3 },
+        { "x": 4, "y": 8, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PY",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 0 },
+        { "x": 4, "y": 0, "z": 1 },
+        { "x": 4, "y": 0, "z": 2 },
+        { "x": 4, "y": 0, "z": 3 },
+        { "x": 4, "y": 0, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "PZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 0 },
+        { "x": 4, "y": 1, "z": 0 },
+        { "x": 4, "y": 2, "z": 0 },
+        { "x": 4, "y": 3, "z": 0 },
+        { "x": 4, "y": 4, "z": 0 },
+        { "x": 4, "y": 5, "z": 0 },
+        { "x": 4, "y": 6, "z": 0 },
+        { "x": 4, "y": 7, "z": 0 },
+        { "x": 4, "y": 8, "z": 0 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wire",
+        "face": "NZ",
+        "connections": 5
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 4 },
+        { "x": 4, "y": 1, "z": 4 },
+        { "x": 4, "y": 2, "z": 4 },
+        { "x": 4, "y": 3, "z": 4 },
+        { "x": 4, "y": 4, "z": 4 },
+        { "x": 4, "y": 5, "z": 4 },
+        { "x": 4, "y": 6, "z": 4 },
+        { "x": 4, "y": 7, "z": 4 },
+        { "x": 4, "y": 8, "z": 4 }
+      ]
+    },
+    {
+      "clone": {
+        "type": "wireStone"
+      },
+      "at": [
+        { "x": 7, "y": 0, "z": 2 },
+        { "x": 1, "y": 0, "z": 2 },
+        { "x": 6, "y": 1, "z": 2 },
+        { "x": 2, "y": 1, "z": 2 },
+        { "x": 5, "y": 2, "z": 2 },
+        { "x": 3, "y": 2, "z": 2 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",

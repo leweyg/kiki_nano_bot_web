@@ -27,3 +27,4 @@ Shared limitations: mutant AI/damage/deactivation is absent; source lights are d
 | 26 | nice | being-ported | Four diagonal wall lines and nested wall/stone polygons; center deletion retained. No route certified within the bounded search; full puzzle completion remains unverified. |
 | 27 | entropy | being-ported | Dense patterned slippery stone volume. Slippery grabbing rules and slit visuals are missing. |
 | 28 | slick | being-ported | Original slippery stone layers and central support. Slippery grabbing rules and slit visuals are missing. |
+| 29 | bridge | being-ported | Original bridge stones, motor, generator and face-specific boundary wires. Electrical exit activation is missing; exit remains closed. |
