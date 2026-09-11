@@ -327,11 +327,17 @@
       transition: transform 80ms linear
     }
 
-    .touchpad.charging .touchpad-knob {
+    .touchpad.charging .touchpad-knob,
+    .touchpad.gesture-active .touchpad-knob,
+    .control-button.gesture-active,
+    .control-button.gesture-held,
+    #shoot.charging {
       background: rgba(255, 128, 0, .35);
       box-shadow: 0 0 14px rgba(255, 128, 0, .8)
     }
 
+    .control-button.gesture-active,
+    .control-button.gesture-held,
     #shoot.charging {
       color: #ffff8a;
       border-color: var(--accent)
@@ -1551,8 +1557,34 @@
         act('jump');
       }, delay);
     }
+    const gestureButtons = {
+      'push forward': document.getElementById('push'),
+      'push backward': document.getElementById('push'),
+      shoot: document.getElementById('shoot'),
+      jump: document.querySelector('[data-action="jump"]'),
+      'jump forward': document.querySelector('[data-action="jump forward"]'),
+      'jump far forward': document.querySelector('[data-action="jump far forward"]')
+    };
+    let gestureFeedbackButton = null;
+    let gestureFeedbackTimer = null;
+    function clearGestureFeedback() {
+      if (gestureFeedbackTimer !== null) clearTimeout(gestureFeedbackTimer);
+      gestureFeedbackTimer = null;
+      if (gestureFeedbackButton) gestureFeedbackButton.classList.remove('gesture-active');
+      gestureFeedbackButton = null;
+    }
+    function showGestureFeedback(action) {
+      clearGestureFeedback();
+      gestureFeedbackButton = gestureButtons[action] || document.getElementById('touchpad');
+      gestureFeedbackButton.classList.add('gesture-active');
+      gestureFeedbackTimer = setTimeout(clearGestureFeedback, 450);
+    }
+    function tapAction(count) {
+      return count >= 3 ? 'jump far forward' : count === 2 ? 'jump forward' : 'jump';
+    }
     const tapSequence = { count: 0, timer: null };
     function clearTapSequence() {
+      clearGestureFeedback();
       if (tapSequence.timer) clearTimeout(tapSequence.timer);
       tapSequence.count = 0;
       tapSequence.timer = null;
@@ -1560,10 +1592,11 @@
     function runTapSequence() {
       const count = tapSequence.count;
       clearTapSequence();
-      act(count >= 3 ? 'jump far forward' : count === 2 ? 'jump forward' : 'jump');
+      act(tapAction(count));
     }
     function queueTapJump() {
       tapSequence.count = Math.min(3, tapSequence.count + 1);
+      showGestureFeedback(tapAction(tapSequence.count));
       if (tapSequence.timer) clearTimeout(tapSequence.timer);
       if (tapSequence.count >= 3) {
         runTapSequence();
@@ -1593,6 +1626,7 @@
     }
     function act(direction) {
       if (game.won || advancingLevel || Date.now() < suppressInputUntil) return;
+      showGestureFeedback(direction);
       if (activeAnimation) {
         if (direction.indexOf('jump') === 0) return;
         queuedAction = direction;
@@ -1663,7 +1697,10 @@
       // Probe the actual push rules without changing the live game.
       const canPush = game.clone().pushAlong(1);
       touchpadState.holdMode = canPush ? 'push' : 'charge';
-      if (canPush) act('push forward');
+      if (canPush) {
+        gestureButtons['push forward'].classList.add('gesture-held');
+        act('push forward');
+      }
       else showEnergyCharge(true);
       return true;
     }
@@ -1687,6 +1724,7 @@
     function resetTouchpad() {
       clearHoldTimer();
       showEnergyCharge(false);
+      gestureButtons['push forward'].classList.remove('gesture-held');
       touchpadState.holdMode = null;
       touchpadState.pointerId = null;
       touchpadState.dragging = false;
@@ -1728,6 +1766,7 @@
       if (direction) {
         clearHoldTimer();
         showEnergyCharge(false);
+        gestureButtons['push forward'].classList.remove('gesture-held');
         touchpadState.holdMode = null;
         if (!touchpadState.dragging) clearTapSequence();
         touchpadState.dragging = true;
