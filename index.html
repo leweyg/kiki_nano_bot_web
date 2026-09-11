@@ -29,7 +29,12 @@
     main {
       max-width: 1080px;
       margin: auto;
-      padding: 8vh 6vw
+      padding: 24px 6vw
+    }
+
+    main > h3,
+    main > h3 pre {
+      margin: 0 0 12px
     }
 
     .eyebrow {
@@ -55,7 +60,7 @@
     .actions {
       display: flex;
       gap: 12px;
-      margin: 32px 0;
+      margin: 16px 0;
       flex-wrap: wrap
     }
 
@@ -75,6 +80,7 @@
 
     a.secondary {
       border: 0px;
+      padding: 13px 0px;
       border-color: transparent;
       text-decoration: underline;
     }
@@ -88,8 +94,18 @@
 
     section {
       border-top: 1px solid var(--line);
-      padding-top: 24px;
-      margin-top: 60px
+      padding-top: 12px;
+      margin-top: 24px
+    }
+
+    section.level-selection {
+      border-top: 0;
+      padding-top: 0;
+      margin-top: 16px
+    }
+
+    h2 {
+      margin: 0 0 12px
     }
 
     .levels {
@@ -290,7 +306,7 @@
       <a href="https://transmutrix.itch.io/kiki-the-nanobot" class="secondary">Classic Web Emulation</a>
     </div>
     <section>
-      <h2>Choose a level</h2>
+      <h2>Levels</h2>
       <div class="port-legend" aria-label="Porting status legend">
         
         <span class="port-legend-item"><span
@@ -300,7 +316,7 @@
       <div class="levels" id="levels"></div>
     </section>
     <section>
-      <h2>Mission</h2>
+      <h2>Story</h2>
 
     <p>Energize each micro device by walking walls to shift gravity, leaping, pushing and chaining blocks to complete the circuit. 
     </p><p>This web version tunes gameplay for mobile via redesigned touch controls, URLs per level, and proper page idling so that your battery isn't overused.
@@ -393,7 +409,8 @@
     function levelScreenshot(level) {
       return level.screenshot ? '<img src="' + escapeAttribute(level.screenshot) + '" alt="' + escapeAttribute(levelNumber(level) + ' ' + level.title) + '">' : '';
     }
-    document.getElementById("levels").innerHTML = Kiki.levels.map(function (level) { return '<a class="level-link" href="play.html?level=' + level.index + '">' + levelScreenshot(level) + '<span class="level-label">' + levelLabel(level) + '</span></a>'; }).join('');
+    var homepageLevels = Kiki.levels.filter(function (level) { return level.index < 10 || (level.index + 1) % 10 === 0; });
+    document.getElementById("levels").innerHTML = homepageLevels.map(function (level) { return '<a class="level-link" href="play.html?level=' + level.index + '">' + levelScreenshot(level) + '<span class="level-label">' + levelLabel(level) + '</span></a>'; }).join('');
     var continueLevel = Kiki.getLevel(savedLevelIndex());
     document.getElementById("continue-link").href = "play.html?level=" + continueLevel.index;
     document.getElementById("continue-link").textContent = "Continue @ " + String(continueLevel.index + 1).padStart(2, '0') + " " + continueLevel.title;
