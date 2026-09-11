@@ -1390,6 +1390,45 @@
   ]
 };
 
+  // Source capture: bombs
+  levelTemplates.bombs = {
+  "port_status": "being-ported",
+  "portNotes": [
+    "Three bombs in the original chamber. Blast propagation is simplified; original bomb-assisted route is unverified."
+  ],
+  "size": { "x": 9, "y": 9, "z": 9 },
+  "intro": "bombs",
+  "help": [
+    "$scale(1.5)mission:\nget to the exit!\n\nto get to the exit,\nuse the bombs"
+  ],
+  "player": {
+    "coordinates": { "x": 4, "y": 0, "z": 4 }
+  },
+  "exits": [
+    {
+      "clone": {
+        "name": "exit",
+        "active": true
+      },
+      "at": [
+        { "x": 4, "y": 6, "z": 4 }
+      ]
+    }
+  ],
+  "objects": [
+    {
+      "clone": {
+        "type": "bomb"
+      },
+      "at": [
+        { "x": 4, "y": 0, "z": 6 },
+        { "x": 4, "y": 0, "z": 2 },
+        { "x": 1, "y": 2, "z": 4 }
+      ]
+    }
+  ]
+};
+
   var gameItems = [
     {
       id: "player",
