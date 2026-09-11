@@ -323,6 +323,9 @@
       transition: none
     }
 
+    #sound-toggle { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; }
+    #sound-toggle[aria-pressed="true"] .sound-off,
+    #sound-toggle[aria-pressed="false"] .sound-on { display: none; }
     .won {
       border-color: #dede45 !important;
       color: #ffff8a !important
@@ -378,7 +381,14 @@
 	        title="previous level">&lt;</button><span class="level-title"><span id="title"></span><span
 	          id="port-status" class="port-status"></span></span><button id="level-next" type="button"
 	        aria-label="next level" title="next level">&gt;</button></span>
-	    <span class="header-actions"><button id="reset" type="button">reset</button><span class="local-tools"
+	    <span class="header-actions"><button id="reset" type="button">reset</button>
+        <button id="sound-toggle" type="button" aria-label="Mute sound" aria-pressed="true" title="Sound on — mute">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M11 5 6 9H3v6h3l5 4Z"/>
+            <path class="sound-on" d="M15 8a6 6 0 0 1 0 8m3-11a10 10 0 0 1 0 14"/>
+            <path class="sound-off" d="m16 9 6 6m0-6-6 6"/>
+          </svg>
+        </button><span class="local-tools"
 	        id="local-tools" hidden><button id="screenshot" type="button" hidden>screenshot</button><label
 	          class="debug-toggle"><input id="debug-path-toggle" type="checkbox">debug</label></span></span>
 	  </header>
@@ -397,11 +407,33 @@
 	  <script id="kiki-debug-trace" type="application/json"></script>
   <script src="kiki/js/kiki_static_data.js"></script>
   <script src="kiki/js/kiki.js"></script>
+  <script src="kiki/js/kiki_sound.js"></script>
   <script src="kiki/js/kiki_meshes.js"></script>
   <script src="kiki/js/kiki_item_meshes.js"></script>
   <script type="module">
     import * as THREE from './kiki/js/threejs/three.module.js';
     import { InstanceBatches } from './kiki/js/kiki_instances.js';
+    const sound = new KikiSound.Player(window);
+    const soundToggle = document.getElementById('sound-toggle');
+    function updateSoundToggle() {
+      soundToggle.setAttribute('aria-pressed', String(sound.enabled));
+      soundToggle.setAttribute('aria-label', sound.enabled ? 'Mute sound' : 'Enable sound');
+      soundToggle.title = sound.enabled ? 'Sound on — mute' : 'Sound off — enable';
+    }
+    updateSoundToggle();
+    ['keydown', 'keyup'].forEach(type => soundToggle.addEventListener(type, event => {
+      if (event.key === ' ' || event.key === 'Enter') event.stopPropagation();
+    }));
+    soundToggle.addEventListener('click', () => {
+      sound.setEnabled(!sound.enabled);
+      updateSoundToggle();
+      if (sound.enabled) sound.play('menu_select');
+    });
+    addEventListener('pointerdown', () => sound.unlock(), { capture: true });
+    addEventListener('keydown', () => sound.unlock(), { capture: true });
+    document.addEventListener('visibilitychange', () => sound.setHidden(document.hidden));
+    addEventListener('pagehide', () => sound.setHidden(true));
+    addEventListener('pageshow', () => sound.setHidden(document.hidden));
     const query = new URLSearchParams(location.search);
 	    const requestedLevelIndex = Kiki.getLevelIndex(query.get('level'));
 	    let game = new Kiki.Game(Kiki.getLevel(requestedLevelIndex));
@@ -1558,6 +1590,7 @@
       const shot = game.lastShot && copyPosition(game.lastShot.start) ? game.lastShot : null;
       const to = snapshot(game);
       const segments = buildAnimation(direction, from, to, before);
+      sound.action(before, game, direction, segments);
       startAnimation(segments, to, direction);
       recordDebugAction(direction, from, to, segments);
       rebuildDynamicScene();
