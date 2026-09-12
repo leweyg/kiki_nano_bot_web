@@ -384,10 +384,10 @@
   },
   "cube": {
     "status": "unsolvable",
-    "reason": "process-time-limit",
+    "reason": "memory-or-process-limit",
     "port_status": "not-ported",
     "notes": [
-      "No route found within bounded time/state/frontier limits; search stopped.",
+      "Worker aborted (SIGABRT) under the 900 MB heap limit before returning a route; no route certified.",
       "Unsolvable in this audit means unresolved within the budget, not proof that the original puzzle is impossible."
     ]
   },
@@ -995,6 +995,286 @@
     "port_status": "semi-ported",
     "notes": [
       "Conservative review flag: four actions, including one push, bypass most of the stacked rings. Replay succeeds, but this unusually short route needs human review."
+    ]
+  },
+  "core": {
+    "status": "solved",
+    "reason": "replay-verified",
+    "elapsedMs": 6123,
+    "attempts": [
+      {
+        "method": "breadth-first",
+        "elapsedMs": 6122,
+        "reason": "found",
+        "explored": 9934,
+        "discovered": 15943,
+        "actionChecks": 99330,
+        "validTransitions": 58875,
+        "queued": 6009,
+        "maxStates": 40000,
+        "depth": 12
+      }
+    ],
+    "actions": [
+      "move backward",
+      "push backward",
+      "move forward",
+      "move forward",
+      "move forward",
+      "turn left",
+      "jump forward",
+      "turn left",
+      "jump far forward",
+      "jump forward",
+      "jump forward",
+      "jump far forward"
+    ],
+    "metrics": {
+      "moves": 12,
+      "pushes": 1,
+      "shots": 0,
+      "activeSwitches": 0,
+      "objects": 170,
+      "initiallyWon": false
+    },
+    "port_status": "ported",
+    "notes": [
+      "Golden path replayed from the initial state through the active exit; no known required mechanic gap.",
+      "Fractional source range bounds retain the previous capture’s legacy integer truncation."
+    ]
+  },
+  "bronze": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "pool": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Slippery-stone grabbing rules are missing.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "hidden": {
+    "status": "unsolvable",
+    "reason": "bounded-search-limit",
+    "elapsedMs": 36206,
+    "attempts": [
+      {
+        "method": "breadth-first",
+        "elapsedMs": 5985,
+        "reason": "limit",
+        "explored": 40000,
+        "discovered": 64635,
+        "actionChecks": 400000,
+        "validTransitions": 319545,
+        "queued": 24635,
+        "maxStates": 40000,
+        "depth": 16
+      },
+      {
+        "method": "weighted-best-first",
+        "weight": 4,
+        "reason": "budget",
+        "explored": 100000,
+        "discovered": 120446,
+        "actionChecks": 1000000,
+        "elapsedMs": 14877
+      },
+      {
+        "method": "weighted-best-first",
+        "weight": 1.5,
+        "reason": "budget",
+        "explored": 100000,
+        "discovered": 158007,
+        "actionChecks": 1000000,
+        "elapsedMs": 15344
+      }
+    ],
+    "port_status": "not-ported",
+    "notes": [
+      "No route found within bounded time/state/frontier limits; search stopped.",
+      "Unsolvable in this audit means unresolved within the budget, not proof that the original puzzle is impossible."
+    ]
+  },
+  "church": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "strange": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "mesh": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Slippery-stone grabbing rules are missing.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "columns": {
+    "status": "solved",
+    "reason": "replay-verified",
+    "elapsedMs": 6791,
+    "attempts": [
+      {
+        "method": "breadth-first",
+        "elapsedMs": 6790,
+        "reason": "found",
+        "explored": 12663,
+        "discovered": 26136,
+        "actionChecks": 126620,
+        "validTransitions": 83784,
+        "queued": 13473,
+        "maxStates": 40000,
+        "depth": 9
+      }
+    ],
+    "actions": [
+      "jump far forward",
+      "jump forward",
+      "move forward",
+      "jump far forward",
+      "turn left",
+      "push backward",
+      "move forward",
+      "move forward",
+      "jump far forward"
+    ],
+    "metrics": {
+      "moves": 9,
+      "pushes": 1,
+      "shots": 0,
+      "activeSwitches": 0,
+      "objects": 140,
+      "initiallyWon": false
+    },
+    "port_status": "ported",
+    "notes": [
+      "Golden path replayed from the initial state through the active exit; no known required mechanic gap."
+    ]
+  },
+  "machine": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "neutron": {
+    "status": "unsolvable",
+    "reason": "bounded-search-limit",
+    "elapsedMs": 8883,
+    "attempts": [
+      {
+        "method": "breadth-first",
+        "elapsedMs": 1647,
+        "reason": "limit",
+        "explored": 40000,
+        "discovered": 70671,
+        "actionChecks": 400000,
+        "validTransitions": 321430,
+        "queued": 30671,
+        "maxStates": 40000,
+        "depth": 11
+      },
+      {
+        "method": "weighted-best-first",
+        "weight": 4,
+        "reason": "budget",
+        "explored": 76976,
+        "discovered": 180000,
+        "actionChecks": 769760,
+        "elapsedMs": 3437
+      },
+      {
+        "method": "weighted-best-first",
+        "weight": 1.5,
+        "reason": "budget",
+        "explored": 85083,
+        "discovered": 180001,
+        "actionChecks": 850830,
+        "elapsedMs": 3798
+      }
+    ],
+    "port_status": "not-ported",
+    "notes": [
+      "No route found within bounded time/state/frontier limits; search stopped.",
+      "Unsolvable in this audit means unresolved within the budget, not proof that the original puzzle is impossible."
+    ]
+  },
+  "captured": {
+    "status": "unsolvable",
+    "reason": "memory-or-process-limit",
+    "port_status": "not-ported",
+    "notes": [
+      "Worker aborted (SIGABRT) under the 900 MB heap limit before returning a route; no route certified.",
+      "Unsolvable in this audit means unresolved within the budget, not proof that the original puzzle is impossible."
+    ]
+  },
+  "circuit": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "regal": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "conductor": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "evil": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Electrical exit activation is missing; the exit stays closed.",
+      "Search intentionally stopped at the known mechanic gap."
+    ]
+  },
+  "mutants": {
+    "status": "unsolvable",
+    "port_status": "not-ported",
+    "reason": "missing-mechanics",
+    "notes": [
+      "Mutant combat, the all-deactivated exit callback and the outro transition are missing.",
+      "Search intentionally stopped at the known mechanic gap."
     ]
   }
 };

@@ -38,7 +38,9 @@ state as the offline simulator. Search diagnostics report explored/queued states
 action checks, route depth, cell/facing direction and the last six route actions;
 replay diagnostics show the current solution step. Search updates are throttled
 to roughly ten per second. Stop terminates the worker; restarting resets results.
-Incomplete ports remain explicitly skipped rather than certified playable.
+Saved semi-ported routes replay with an incomplete result and their audit notes.
+Levels with missing mechanics or failed bounded searches are skipped. Final row
+diagnostics also include stored offline search counts when available.
 
 Row expansion is `autoExpanded || userExpanded`: the active check opens its row,
 and clicking a result pins/unpins it independently. Pins survive stop/restart;
@@ -48,7 +50,8 @@ finished unpinned rows collapse but retain their diagnostics. Run
 Golden routes live in `kiki_golden_paths.js` and are replayed from a fresh level
 state. The Hint button starts off on every page load. It draws small instanced
 dots 0.32 cells toward the surface below the bot, sampling the same animation
-curves used by movement and wall transitions. Dots advance during ordinary game
+curves used by movement and wall transitions, capped near the camera at about
+three screen pixels in radius. Dots advance during ordinary game
 frames and a 1.6-second toggle preview, then freeze when the page idles. Turning
 hints on never solves a level in the browser or modifies the live game. The route
 is a walkthrough from the initial state, not a replan after moving puzzle pieces.

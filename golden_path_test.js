@@ -2,6 +2,7 @@
 const assert = require('node:assert/strict');
 const Kiki = require('./kiki/js/kiki.js');
 const golden = require('./kiki/js/kiki_golden_paths.js');
+assert.equal(Object.keys(golden).length, Kiki.levels.length, 'every level needs a completion audit');
 let solved=0;
 for (const [id, audit] of Object.entries(golden)) {
   const level=Kiki.getLevel(id);

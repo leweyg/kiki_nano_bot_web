@@ -81,9 +81,19 @@
     var trace = replay ? replay.trace : search ? search.trace : [];
     if (trace.length) lines.push('Recent route: ' + trace.join(' → '));
     if (lines.length) lines.push(result.elapsed.toLocaleString() + ' ms elapsed');
-    if (!lines.length && result.status === 'incomplete') {
-      var template = KikiStaticData.levelTemplates[entry.level.id];
-      lines = template && template.portNotes && template.portNotes.length ? template.portNotes : ['This level is not certified playable; its completion check was skipped.'];
+    var template = KikiStaticData.levelTemplates[entry.level.id];
+    if (result.status === 'incomplete') {
+      lines = lines.concat(template && template.portNotes && template.portNotes.length ? template.portNotes : ['This level is not certified playable; its completion check was skipped.']);
+    }
+    var audit = template && template.goldenPath;
+    if (result.type === 'result' && audit && audit.attempts) {
+      audit.attempts.forEach(function (attempt) {
+        var detail = 'Offline ' + attempt.method + ': ' + (attempt.stopped || attempt.reason);
+        if (attempt.explored != null) detail += ' · ' + attempt.explored.toLocaleString() + ' states';
+        if (attempt.actionChecks != null) detail += ' · ' + attempt.actionChecks.toLocaleString() + ' action checks';
+        if (attempt.elapsedMs != null) detail += ' · ' + attempt.elapsedMs.toLocaleString() + ' ms';
+        lines.push(detail);
+      });
     }
     entry.diagnostics.textContent = lines.join('\n') || 'No additional search details.';
   }

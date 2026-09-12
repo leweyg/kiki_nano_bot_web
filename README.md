@@ -46,11 +46,11 @@ General iteration loop will be:
 
 # Current Porting Notes
 
-Level numbers are **1-based**, following `kiki/py/levels.py`. See [PORTING.md](PORTING.md) for the level-by-level audit of levels 10–50 and known missing features.
+Level numbers are **1-based**, following `kiki/py/levels.py`. See [GOLDEN_PATHS.md](GOLDEN_PATHS.md) for current completion statuses and routes for all 50 levels; [PORTING.md](PORTING.md) preserves the earlier layout audit.
 
 Statuses are `ported` (working with a replay-verified completion route), `being-ported` (original space is present but mechanics or completion are incomplete), and `not-ported` (placeholder).
 
-`./sim_test.sh` validates certified levels and reports incomplete levels separately; `node sim.js --all` also attempts incomplete levels and fails when no route is found. A successful default run does **not** certify every level. `node level_port_test.js` checks all layouts and source-derived invariants. `python3 kiki/js/tools/port_levels.py --check` compares the 37 newly converted layouts against fresh execution of the original construction code (Python is only needed for this optional source audit). The pre-existing `elevate` level failed the 20,000-state solver audit and is now marked `being-ported` pending investigation.
+`./sim_test.sh` validates certified levels and reports incomplete levels separately; `node sim.js --all` also attempts incomplete levels and fails when no route is found. A successful default run does **not** certify every level. `node level_port_test.js` checks all layouts and source-derived invariants. `python3 kiki/js/tools/port_levels.py --check` compares the 37 newly converted layouts against fresh execution of the original construction code (Python is only needed for this optional source audit). Run `node golden_path_test.js` to replay all 19 saved routes, including five semi-ported review routes. Fourteen levels are certified; the other 31 have missing mechanics or reached a search/resource limit. The default-off **hint** button below KIKI shows the saved route as low animated dots and preserves page idling.
 
 The remaining implementation work is:
 
