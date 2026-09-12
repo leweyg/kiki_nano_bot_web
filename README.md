@@ -38,7 +38,7 @@ The proting should be firstly translating the level files into json or javascrip
 
 # Implementation Roadmap
 
-The current web files provide a working scaffold: `index.html`, `play.html`, `sim.html`, `sim.js`, and `sim_test.sh`. The first levels are authored from the original sources, while later unported levels still fall back to deterministic placeholder layouts that are useful for testing the shared state and renderer.
+The current web files provide a working scaffold: `index.html`, `play.html`, `sim.html`, `sim.js`, and `sim_test.sh`. All 50 levels retain original 3D layouts. Completion routes and remaining mechanic gaps are tracked in [GOLDEN_PATHS.md](GOLDEN_PATHS.md); a captured layout alone does not certify a playable puzzle.
 
 General iteration loop will be:
 

@@ -154,7 +154,7 @@
       color: #397457
     }
 
-    .port-status-being-ported {
+    .port-status-being-ported, .port-status-semi-ported {
       color: #9a6422
     }
 
@@ -311,7 +311,7 @@
         
         <span class="port-legend-item"><span
             class="port-status port-status-ported">✓</span>ported</span><span class="port-legend-item"><span
-            class="port-status port-status-being-ported">◐</span>being ported</span><span
+            class="port-status port-status-semi-ported">◐</span>semi-ported</span><span
           class="port-legend-item"><span class="port-status port-status-not-ported">○</span>not ported yet</span></div>
       <div class="levels" id="levels"></div>
     </section>
@@ -398,6 +398,7 @@
       var status = level.port_status || "not-ported";
       var statuses = {
         ported: { symbol: "✓", label: "ported" },
+        "semi-ported": { symbol: "◐", label: "semi-ported" },
         "being-ported": { symbol: "◐", label: "being ported" },
         "not-ported": { symbol: "○", label: "not ported yet" }
       };

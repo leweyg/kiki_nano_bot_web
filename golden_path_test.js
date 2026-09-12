@@ -18,3 +18,31 @@ for (const [id, audit] of Object.entries(golden)) {
   solved++;
 }
 console.log('PASS '+solved+' saved golden paths replay to an active exit; audit statuses match');
+
+// Exercise the browser worker's classification with the real shared game.
+const fs = require('node:fs');
+const vm = require('node:vm');
+const messages=[];
+const worker={Kiki,performance,importScripts(){},self:{postMessage(message){messages.push(structuredClone(message));}}};
+vm.runInNewContext(fs.readFileSync('kiki/js/kiki_sim_worker.js','utf8'),worker);
+for(const [id,audit] of Object.entries(golden)) {
+  messages.length=0;
+  worker.self.onmessage({data:{index:Kiki.getLevel(id).index}});
+  const result=messages.at(-1);
+  assert.equal(result.type,'result');
+  assert.equal(result.status,audit.port_status==='ported'?'ok':'incomplete',id+' worker classification');
+  if(audit.actions) {
+    assert.equal(result.replay.step,audit.actions.length,id+' worker replay');
+    assert(messages.some(m=>m.type==='progress'&&m.replay&&m.replay.trace.length),id+' replay progress');
+  } else {
+    assert.equal(result.replay,null,id+' must stop before searching missing mechanics');
+    assert.equal(result.search,null);
+  }
+  if(audit.port_status==='semi-ported')assert(audit.notes.length,id+' shortcut needs explanation');
+  if(audit.shortcutActions) {
+    const game=new Kiki.Game(Kiki.getLevel(id));game.applyGravity();
+    for(const action of audit.shortcutActions)assert(game.action(action));
+    assert(game.won,id+' documented shortcut must replay');
+  }
+}
+console.log('PASS worker route progress, incomplete classification, and documented shortcuts');

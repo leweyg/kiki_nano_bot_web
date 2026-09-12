@@ -8,7 +8,7 @@ function inside(p, size) {
 }
 for (const level of Kiki.levels) {
   assert.equal(data.levelDefinitions[level.index].port_status, level.port_status, level.id + ' registry status');
-  assert(['ported', 'being-ported', 'not-ported'].includes(level.port_status), level.id);
+  assert(['ported', 'semi-ported', 'being-ported', 'not-ported'].includes(level.port_status), level.id);
   assert(inside(level.player.coordinates, level.size), level.id + ' spawn');
   for (const object of level.objects.concat(level.exits)) {
     assert(inside(object.coordinates, level.size), level.id + ' object ' + JSON.stringify(object));

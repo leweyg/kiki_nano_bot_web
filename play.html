@@ -108,7 +108,7 @@
 	      color: #96e0a5
 	    }
 
-	    .port-status-being-ported {
+	    .port-status-being-ported, .port-status-semi-ported {
 	      color: #f0bf66
 	    }
 
@@ -1182,7 +1182,8 @@
 	      const status = level.port_status || 'not-ported';
 	      const statuses = {
 	        ported: { symbol: '✓', label: 'ported' },
-	        "being-ported": { symbol: '◐', label: 'being ported' },
+	        "semi-ported": { symbol: "◐", label: "semi-ported" },
+        "being-ported": { symbol: '◐', label: 'being ported' },
 	        "not-ported": { symbol: '○', label: 'not ported yet' }
 	      };
 	      return Object.assign({ status: statuses[status] ? status : 'not-ported' }, statuses[status] || statuses['not-ported']);

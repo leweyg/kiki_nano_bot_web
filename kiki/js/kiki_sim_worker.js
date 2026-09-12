@@ -14,9 +14,9 @@ self.onmessage = function (event) {
     self.postMessage({ type: 'progress', index: index, search: result.search, replay: result.replay, elapsed: Math.round(now - started) });
   }
   try {
-    if (level.port_status !== 'ported') {
+    if (level.port_status !== 'ported' && !(level.goldenPath && level.goldenPath.actions)) {
       result.status = 'incomplete';
-      result.detail = 'Incomplete — not certified';
+      result.detail = level.goldenPath ? (level.goldenPath.reason === 'missing-mechanics' ? 'Unsolvable · missing mechanics' : 'Unsolved · search budget reached') : 'Incomplete — not certified';
     } else {
       var path = level.solution || Kiki.solve(level, {
         maxStates: 20000,
@@ -38,6 +38,10 @@ self.onmessage = function (event) {
       result.status = valid && game.won ? 'ok' : 'fail';
       result.detail = result.status === 'ok' ? 'PASS · ' + path.length + ' moves' : path ? 'FAIL · replay did not finish' :
         result.search && result.search.reason === 'limit' ? 'Search limit reached · no route found' : 'Search exhausted · no route found';
+      if (result.status === 'ok' && level.port_status !== 'ported') {
+        result.status = 'incomplete';
+        result.detail = 'REPLAY OK · semi-ported · ' + path.length + ' moves';
+      }
     }
   } catch (error) {
     result.status = 'fail';

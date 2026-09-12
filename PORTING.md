@@ -1,4 +1,6 @@
-# Level port audit
+# Historical layout port audit
+
+**Current completion statuses and golden paths are tracked in [GOLDEN_PATHS.md](GOLDEN_PATHS.md).** The table below records the earlier geometry pass, before the golden-path review. Its `being-ported` and placeholder-only `not-ported` definitions are historical; current `not-ported` also includes unresolved puzzles and known missing mechanics.
 
 Numbers follow the original 1-based progression. `ported` requires a replayed completion route and no known required mechanic gap. `being-ported` means original space/basic objects are available, but completion or behavior remains incomplete. `not-ported` means a placeholder remains.
 

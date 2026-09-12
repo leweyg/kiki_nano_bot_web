@@ -10907,6 +10907,7 @@
     var golden = goldenPaths[definition.id];
     if (template && golden) {
       template.goldenPath = golden;
+      template.portNotes = golden.notes.slice();
       template.port_status = golden.port_status;
       if (golden.actions) template.solution = golden.actions;
       else delete template.solution;
