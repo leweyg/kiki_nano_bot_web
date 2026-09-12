@@ -53,11 +53,25 @@
             border-top: 1px solid #c4c9bc
         }
 
-        .row {
-            display: flex;
-            justify-content: space-between;
-            border-bottom: 1px solid #d5d8cd;
-            padding: 9px 0
+        button:disabled { opacity: .5 }
+        progress { display: block; width: 100%; margin-top: 12px; accent-color: var(--green) }
+        .table-scroll { overflow-x: auto }
+        table { width: 100%; border-collapse: collapse; text-align: left }
+        th, td { padding: 10px 8px; border-bottom: 1px solid #d5d8cd; vertical-align: top }
+        th:first-child, td:first-child { padding-left: 0 }
+        .diagnostics { display: block; margin-top: 6px; font-size: 11px; line-height: 1.5; white-space: pre-line; overflow-wrap: anywhere; color: #51594e }
+        .diagnostics:empty, .diagnostics[hidden], .pin-label[hidden] { display: none }
+        .row-toggle { background: none; color: inherit; padding: 0; font: inherit; text-align: left; cursor: pointer; width: 100%; line-height: 1.5 }
+        .row-toggle:hover { text-decoration: underline }
+        .row-toggle:focus-visible { outline: 2px solid var(--green); outline-offset: 3px }
+        .pin-label { font-size: 11px; color: var(--green) }
+        .pending { color: #686e65 }
+        .running { background: #e5ebdf }
+        .incomplete { color: #796329 }
+        @media (max-width: 500px) {
+            main { padding: 24px 4vw }
+            th, td { padding: 9px 5px; font-size: 12px }
+            h1 { font-size: 36px }
         }
 
         .ok {
@@ -74,33 +88,23 @@
     <main><a href="index.html">← back to Kiki</a>
         <h1>Level lab</h1>
         <p>Browser mirror of the offline solver. Every level uses the same state machine as <code>sim.js</code>.</p>
-        <button id="run">Run simulation</button>
-        <div class="summary" id="summary">Ready.</div>
-        <div id="results"></div>
+        <p>Results appear as each level finishes. Incomplete ports are reported separately and are not certified playable.</p>
+        <p>The active row opens automatically. Click a result to pin its details open; click again to unpin.</p>
+        <button id="run" type="button">Run simulation</button>
+        <button id="stop" type="button" disabled>Stop</button>
+        <div class="summary">
+            <div id="summary" role="status" aria-live="polite">Preparing levels…</div>
+            <progress id="progress" value="0" max="50" aria-label="Levels checked"></progress>
+        </div>
+        <div class="table-scroll">
+            <table aria-label="Level simulation results">
+                <thead><tr><th scope="col">Level</th><th scope="col">Port status</th><th scope="col">Simulation</th></tr></thead>
+                <tbody id="results"></tbody>
+            </table>
+        </div>
     </main>
     <script src="kiki/js/kiki_static_data.js"></script>
-    <script src="kiki/js/kiki.js"></script>
-    <script>
-      function run() {
-        var results = Kiki.levels.map(function (level) {
-          if (level.port_status !== 'ported') return { level: level, incomplete: true };
-          var path = level.solution || Kiki.solve(level, { maxStates: 20000 });
-          var game = new Kiki.Game(level);
-          game.applyGravity();
-          (path || []).forEach(function (action) { game.action(action); });
-          return { level: level, path: path, won: game.won };
-        });
-        var good = results.filter(function (r) { return r.won; }).length;
-        var incomplete = results.filter(function (r) { return r.incomplete; }).length;
-        document.getElementById('summary').textContent = good + ' verified; ' + incomplete + ' incomplete; ' + (results.length - good - incomplete) + ' failed';
-        document.getElementById('results').innerHTML = results.map(function (r) {
-          return '<div class="row ' + (r.won ? 'ok' : 'fail') + '"><span>' + r.level.title + '</span><span>' +
-            (r.incomplete ? r.level.port_status : r.won ? 'PASS · ' + r.path.length + ' moves' : 'FAIL') + '</span></div>';
-        }).join('');
-      }
-      document.getElementById('run').onclick = run;
-      run();
-    </script>
+    <script src="kiki/js/kiki_sim_ui.js"></script>
 </body>
 
 </html>

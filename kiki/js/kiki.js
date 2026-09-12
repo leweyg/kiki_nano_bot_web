@@ -931,26 +931,45 @@
     start.applyGravity();
     var queue = [{ game: start, path: [] }];
     var queueIndex = 0;
+    var discovered = 1, actionChecks = 0, validTransitions = 0;
     var visited = {}; visited[start.stateKey()] = true;
     var actions = level.solverActions || solverActions;
-    while (queueIndex < queue.length) {
-      if (maxStates && queueIndex >= maxStates) return null;
-      var current = queue[queueIndex];
-      queue[queueIndex] = null;
-      queueIndex += 1;
-      if (current.game.won) return current.path;
-      if (maxDepth && current.path.length >= maxDepth) continue;
-      actions.forEach(function (action) {
-        var next = current.game.clone();
-        if (next.action(action)) {
-          var nextKey = next.stateKey();
-          if (!visited[nextKey]) {
-            visited[nextKey] = true;
-            queue.push({ game: next, path: current.path.concat([action]) });
-          }
-        }
+    function report(current, reason) {
+      if (!options.onProgress) return;
+      options.onProgress({
+        reason: reason, explored: queueIndex, discovered: discovered,
+        actionChecks: actionChecks, validTransitions: validTransitions,
+        queued: queue.length - queueIndex, maxStates: maxStates,
+        depth: current.path.length, position: copyPosition(current.game.position),
+        dir: copyPosition(current.game.dir), trace: current.path.slice(-6)
       });
     }
+    var current = queue[0];
+    report(current, 'running');
+    while (queueIndex < queue.length) {
+      if (maxStates && queueIndex >= maxStates) { report(current, 'limit'); return null; }
+      current = queue[queueIndex];
+      queue[queueIndex] = null;
+      queueIndex += 1;
+      if (current.game.won) { report(current, 'found'); return current.path; }
+      if (!maxDepth || current.path.length < maxDepth) {
+        actions.forEach(function (action) {
+          actionChecks += 1;
+          var next = current.game.clone();
+          if (next.action(action)) {
+            validTransitions += 1;
+            var nextKey = next.stateKey();
+            if (!visited[nextKey]) {
+              visited[nextKey] = true;
+              discovered += 1;
+              queue.push({ game: next, path: current.path.concat([action]) });
+            }
+          }
+        });
+      }
+      if (queueIndex % 64 === 0) report(current, 'running');
+    }
+    report(current, 'exhausted');
     return null;
   }
 

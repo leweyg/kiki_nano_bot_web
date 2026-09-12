@@ -31,3 +31,16 @@ Health/death, energy depletion, atom and mutant-damage mechanics are still absen
 their original sound files/aliases are available but do not have gameplay triggers.
 Original menu sounds have no matching web menus; enabling sound uses `menu_select`.
 Run `node sound_test.js` for asset, cue and audio lifecycle checks.
+
+`kiki_sim_ui.js` paints the level lab table immediately and requests checks one at
+a time from `kiki_sim_worker.js`. The worker imports the same static data and game
+state as the offline simulator. Search diagnostics report explored/queued states,
+action checks, route depth, cell/facing direction and the last six route actions;
+replay diagnostics show the current solution step. Search updates are throttled
+to roughly ten per second. Stop terminates the worker; restarting resets results.
+Incomplete ports remain explicitly skipped rather than certified playable.
+
+Row expansion is `autoExpanded || userExpanded`: the active check opens its row,
+and clicking a result pins/unpins it independently. Pins survive stop/restart;
+finished unpinned rows collapse but retain their diagnostics. Run
+`node sim_progress_test.js` for search instrumentation and route-regression checks.
