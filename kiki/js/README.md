@@ -44,3 +44,12 @@ Row expansion is `autoExpanded || userExpanded`: the active check opens its row,
 and clicking a result pins/unpins it independently. Pins survive stop/restart;
 finished unpinned rows collapse but retain their diagnostics. Run
 `node sim_progress_test.js` for search instrumentation and route-regression checks.
+
+Golden routes live in `kiki_golden_paths.js` and are replayed from a fresh level
+state. The Hint button starts off on every page load. It draws small instanced
+dots 0.32 cells toward the surface below the bot, sampling the same animation
+curves used by movement and wall transitions. Dots advance during ordinary game
+frames and a 1.6-second toggle preview, then freeze when the page idles. Turning
+hints on never solves a level in the browser or modifies the live game. The route
+is a walkthrough from the initial state, not a replan after moving puzzle pieces.
+`node golden_path_test.js` replays all saved routes and checks their audit status.

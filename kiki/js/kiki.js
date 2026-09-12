@@ -144,6 +144,7 @@
       intro: template.intro,
       portNotes: cloneValue(template.portNotes || []),
       solution: cloneValue(template.solution),
+      goldenPath: cloneValue(template.goldenPath),
       cameraMode: template.cameraMode,
       powerCondition: template.powerCondition,
       switchConditions: cloneValue(template.switchConditions),

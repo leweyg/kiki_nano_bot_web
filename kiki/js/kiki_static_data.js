@@ -1,8 +1,12 @@
 (function (root, factory) {
-  if (typeof module !== "undefined" && module.exports) module.exports = factory();
-  else root.KikiStaticData = factory();
-}(typeof globalThis !== "undefined" ? globalThis : this, function () {
+  if (typeof module !== "undefined" && module.exports) module.exports = factory(root);
+  else root.KikiStaticData = factory(root);
+}(typeof globalThis !== "undefined" ? globalThis : this, function (root) {
   "use strict";
+
+  var goldenPaths = root.KikiGoldenPaths;
+  if (!goldenPaths && typeof require !== "undefined") goldenPaths = require("./kiki_golden_paths.js");
+  goldenPaths = goldenPaths || {};
 
   var themes = ["mint", "copper", "sky", "violet", "lime", "coral"];
   var levelDefinitions = [
@@ -10900,6 +10904,13 @@
 
   levelDefinitions.forEach(function (definition) {
     var template = levelTemplates[definition.id];
+    var golden = goldenPaths[definition.id];
+    if (template && golden) {
+      template.goldenPath = golden;
+      template.port_status = golden.port_status;
+      if (golden.actions) template.solution = golden.actions;
+      else delete template.solution;
+    }
     if (template && template.port_status) definition.port_status = template.port_status;
   });
 

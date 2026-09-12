@@ -1,6 +1,6 @@
 /* The synchronous solver runs off the UI thread, one requested level at a time. */
 'use strict';
-importScripts('kiki_static_data.js', 'kiki.js');
+importScripts('kiki_golden_paths.js', 'kiki_static_data.js', 'kiki.js');
 self.onmessage = function (event) {
   var index = event.data.index;
   var level = Kiki.levels[index];
