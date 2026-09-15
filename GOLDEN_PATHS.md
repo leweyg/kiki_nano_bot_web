@@ -1,6 +1,6 @@
 # Golden path audit
 
-Levels 1–50 audited: **14 ported, 5 semi-ported, 31 not-ported**. Nineteen saved paths replay successfully; 24 levels stop at known mechanic gaps and seven stop at search/resource limits. Saved paths are replay-verified in the shared game engine, not claims of optimality or complete source-engine equivalence. `ported` means a valid route without a known required mechanic gap; `semi-ported` means a route exists but bypasses the intended puzzle or uses approximate mechanics; `not-ported` means missing mechanics or an unsuccessful bounded search. Original 3D layouts remain available in all cases.
+Levels 1–50 audited: **15 ported, 4 semi-ported, 31 not-ported**. Nineteen saved paths replay successfully; 24 levels stop at known mechanic gaps and seven stop at search/resource limits. Saved paths are replay-verified in the shared game engine, not claims of optimality or complete source-engine equivalence. `ported` means a valid route without a known required mechanic gap; `semi-ported` means a route exists but bypasses the intended puzzle or uses approximate mechanics; `not-ported` means missing mechanics or an unsuccessful bounded search. Original 3D layouts remain available in all cases.
 
 `unsolvable` is an audit outcome, not a mathematical impossibility claim. Known missing mechanics stop the search immediately. The other searches used BFS (12 seconds / 40,000 expanded states), then weighted best-first (weights 4 and 1.5, up to 18 seconds / 100,000 states each), at most 180,000 discovered states per attempt and depth 100 for weighted search. Each process had a 900 MB heap and a 65-second outer deadline. Search metadata is stored beside the routes.
 
@@ -11,7 +11,7 @@ Hint is off by default, below KIKI. It displays the original route, including ju
 | 1 | start | ported | 8 | 0 / 0 | Golden path replayed from the initial state through the active exit. |
 | 2 | steps | ported | 5 | 0 / 0 | Golden path replayed from the initial state through the active exit. |
 | 3 | move | ported | 11 | 1 / 1 | Golden path replayed from the initial state through the active exit; no known required mechanic gap. |
-| 4 | electro | semi-ported | 13 | 1 / 0 | Replay opens the exit with the simplified connected-motor check without powering the wire network; electrical fidelity is incomplete. |
+| 4 | electro | ported | 32 | 5 / 0 | Circuit-biased search explored 119 states; replay connects motor, cog and generator, charging the wires before opening the exit. |
 | 5 | elevate | not-ported | — | — | Bomb-lift and elevated-circuit behavior remain approximate; stopped before claiming a faithful route. Search intentionally stopped at the known mechanic gap. |
 | 6 | throw | semi-ported | 43 | 6 / 0 | Hint uses the existing 43-action stone-stacking route. A four-action far-jump shortcut also wins without pushing either stone, bypassing the tutorial. |
 | 7 | gold | ported | 10 | 5 / 0 | Golden path replayed from the initial state through the active exit; no known required mechanic gap. |
@@ -60,3 +60,5 @@ Hint is off by default, below KIKI. It displays the original route, including ju
 | 50 | mutants | not-ported | — | — | Mutant combat, the all-deactivated exit callback and the outro transition are missing. Search intentionally stopped at the known mechanic gap. |
 
 Recheck every saved route with `node golden_path_test.js`. To search an individually reviewed level again, run `node --max-old-space-size=900 kiki/js/tools/golden_solver.js LEVEL result.json`; it writes a candidate result, never changes published routes or port status. Existing saved solutions are replayed first. Only run searches after checking for missing mechanics; a simulated win cannot establish fidelity by itself.
+
+Electro uses circuit-weighted best-first search in the shared solver, favoring motor–cog–generator arrangements with the generator on a wire cell, then travel to the active exit. Its saved route was regenerated after requiring wire power for exit activation. Other levels retain breadth-first search.

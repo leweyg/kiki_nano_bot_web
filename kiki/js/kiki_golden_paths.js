@@ -86,57 +86,85 @@
   "electro": {
     "status": "solved",
     "reason": "replay-verified",
-    "elapsedMs": 26165,
+    "elapsedMs": 143,
     "attempts": [
       {
-        "method": "breadth-first",
-        "reason": "running",
-        "elapsedMs": 12020,
-        "explored": 10240,
-        "discovered": 17794,
-        "actionChecks": 81920,
-        "validTransitions": 61262,
-        "queued": 7554,
-        "maxStates": 40000,
-        "depth": 10,
-        "stopped": "time/frontier budget"
-      },
-      {
-        "method": "weighted-best-first",
+        "method": "circuit-weighted-best-first",
         "weight": 4,
         "reason": "found",
-        "explored": 11533,
-        "discovered": 21376,
-        "actionChecks": 92256,
-        "elapsedMs": 14143
+        "explored": 119,
+        "discovered": 314,
+        "actionChecks": 944,
+        "validTransitions": 734,
+        "queued": 195,
+        "maxStates": 20000,
+        "depth": 32,
+        "position": {
+          "x": 4,
+          "y": 3,
+          "z": 3
+        },
+        "dir": {
+          "x": 0,
+          "y": 0,
+          "z": -1
+        },
+        "trace": [
+          "push backward",
+          "move backward",
+          "move backward",
+          "turn left",
+          "jump forward",
+          "jump forward"
+        ],
+        "elapsedMs": 143
       }
     ],
     "actions": [
       "move backward",
-      "move backward",
-      "move backward",
+      "turn left",
+      "turn left",
       "jump forward",
+      "move forward",
+      "move forward",
       "turn right",
       "jump forward",
+      "jump forward",
+      "push backward",
+      "push backward",
+      "move backward",
+      "move backward",
+      "turn left",
+      "jump forward",
+      "push backward",
+      "move backward",
+      "move backward",
+      "move backward",
+      "turn right",
       "jump forward",
       "push backward",
       "move backward",
       "move backward",
       "turn right",
       "jump forward",
+      "push backward",
+      "move backward",
+      "move backward",
+      "turn left",
+      "jump forward",
       "jump forward"
     ],
     "metrics": {
-      "moves": 13,
-      "pushes": 1,
+      "moves": 32,
+      "pushes": 5,
       "shots": 0,
       "activeSwitches": 0,
       "objects": 60,
       "initiallyWon": false
     },
-    "port_status": "semi-ported",
+    "port_status": "ported",
     "notes": [
-      "Replay opens the exit with the simplified connected-motor check without powering the wire network; electrical fidelity is incomplete."
+      "Replay connects the motor through the cog to the generator on a wire cell and powers the wire network before reaching the exit."
     ]
   },
   "elevate": {

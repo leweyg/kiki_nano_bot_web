@@ -21,3 +21,34 @@ const exhausted=[];
 assert.equal(Kiki.solve(level,{maxDepth:1,onProgress:p=>exhausted.push(p)}),null);
 assert.equal(exhausted.at(-1).reason,'exhausted');
 console.log('PASS search progress counts, bounded traces, limits/exhaustion, and unchanged solver routes');
+
+// Electro must solve the actual circuit within the live simulator's budget.
+const electro = Kiki.getLevel('electro');
+const circuitProgress = [];
+const circuitPath = Kiki.solve(electro, {maxStates:20000,onProgress:s=>circuitProgress.push(s)});
+assert(circuitPath, 'circuit-biased search must find an Electro route');
+assert.equal(circuitProgress.at(-1).reason, 'found');
+for (const stats of circuitProgress) assert.equal(stats.queued, stats.discovered - stats.explored);
+const circuit = new Kiki.Game(electro);
+circuit.applyGravity();
+assert(!circuit.exits.some(e=>e.active));
+for (const action of circuitPath) {
+  assert(circuit.action(action));
+  if (circuit.exits.some(e=>e.active)) {
+    const generator = circuit.objects.find(o=>o.type==='generator');
+    assert(generator.mechanical, 'generator must be driven by the motor');
+    assert(circuit.objects.find(o=>o.type==='gear').mechanical, 'cog must join the motor chain');
+    assert(circuit.objects.some(o=>o.type==='wire' && o.powered &&
+      o.coordinates.x===generator.coordinates.x && o.coordinates.y===generator.coordinates.y &&
+      o.coordinates.z===generator.coordinates.z), 'generator must charge a wire in its own cell');
+  }
+}
+assert(circuit.won);
+const shortcut = new Kiki.Game(electro);
+shortcut.applyGravity();
+['move backward','move backward','move backward','jump forward','turn right','jump forward',
+ 'jump forward','push backward'].forEach(a=>assert(shortcut.action(a)));
+assert(shortcut.objects.find(o=>o.type==='generator').mechanical);
+assert(!shortcut.objects.some(o=>o.type==='wire'&&o.powered));
+assert(!shortcut.exits.some(e=>e.active), 'spinning generator without wire power must leave the exit closed');
+console.log('PASS Electro circuit search, powered-wire replay, and rejected mechanical-only shortcut');

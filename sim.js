@@ -4,7 +4,6 @@ var Kiki = require("./kiki/js/kiki.js");
 var failed = [];
 var incomplete = [];
 var scriptedRoutes = {
-  electro: ["move forward", "turn right", "jump forward", "turn right", "move forward", "move forward", "jump forward", "move forward", "push forward", "jump forward", "turn right", "jump forward", "jump forward"],
   throw: [
     "turn left", "turn left", "jump forward", "jump forward", "jump forward", "push backward",
     "move backward", "move backward", "turn right", "jump forward", "push backward", "move backward",

@@ -561,6 +561,8 @@
         return gear.type === "motorGear" && gear.mechanical && samePosition(add(gear.coordinates, vec(0, 1, 0)), object.coordinates);
       });
     }, this);
+    // Electro must feed the wire network, not merely spin the generator.
+    if (this.level.id === "electro") reachesMotor = reachesMotor && wireObjects.some(function (wire) { return wire.powered; });
     this.setExitActive("exit", reachesMotor);
   };
   Game.prototype.stateKey = function () {
@@ -924,13 +926,74 @@
   };
   Game.prototype.reset = function () { return new Game(this.level); };
 
+  // Electro needs a motor -> cog -> generator chain ending on a wire cell.
+  // Enumerate those arrangements once, then favor pushes toward the closest one.
+  function electroHeuristic(start) {
+    if (start.level.id !== "electro") return null;
+    var motor = start.objects.find(function (o) { return o.type === "motorGear"; });
+    var cogIndex = start.objects.findIndex(function (o) { return o.type === "gear"; });
+    var generatorIndex = start.objects.findIndex(function (o) { return o.type === "generator"; });
+    if (!motor || cogIndex < 0 || generatorIndex < 0) return null;
+    var targets = [];
+    gearNeighborDirections(motor.face).forEach(function (direction) {
+      var cog = add(motor.coordinates, direction);
+      gearNeighborDirections(motor.face).forEach(function (nextDirection) {
+        var generator = add(cog, nextDirection);
+        if (samePosition(generator, motor.coordinates)) return;
+        if (start.objects.some(function (o) { return o.type === "wire" && samePosition(o.coordinates, generator); })) {
+          targets.push({ cog: cog, generator: generator });
+        }
+      });
+    });
+    if (!targets.length) return null;
+    function distance(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z); }
+    return function (game) {
+      if (game.won) return 0;
+      var active = game.exits.filter(function (exit) { return exit.active; });
+      if (active.length) return Math.min.apply(null, active.map(function (exit) { return distance(game.position, exit.coordinates); }));
+      var cog = game.objects[cogIndex].coordinates, generator = game.objects[generatorIndex].coordinates;
+      return 10 + Math.min.apply(null, targets.map(function (target) {
+        var cogMoves = distance(cog, target.cog), generatorMoves = distance(generator, target.generator);
+        var approach = Math.min(cogMoves ? distance(game.position, cog) : Infinity,
+          generatorMoves ? distance(game.position, generator) : Infinity);
+        return 6 * (cogMoves + generatorMoves) + (Number.isFinite(approach) ? approach : 0);
+      }));
+    };
+  }
+
+  function pushSearchNode(heap, node) {
+    var index = heap.length;
+    heap.push(node);
+    while (index > 0) {
+      var parent = (index - 1) >> 1;
+      if (heap[parent].score <= node.score) break;
+      heap[index] = heap[parent]; index = parent;
+    }
+    heap[index] = node;
+  }
+  function popSearchNode(heap) {
+    var first = heap[0], last = heap.pop();
+    if (heap.length) {
+      var index = 0;
+      while (index * 2 + 1 < heap.length) {
+        var child = index * 2 + 1;
+        if (child + 1 < heap.length && heap[child + 1].score < heap[child].score) child += 1;
+        if (heap[child].score >= last.score) break;
+        heap[index] = heap[child]; index = child;
+      }
+      heap[index] = last;
+    }
+    return first;
+  }
+
   function solve(level, options) {
     options = options || {};
     var maxStates = options.maxStates || 0;
     var maxDepth = options.maxDepth || 0;
     var start = new Game(level);
     start.applyGravity();
-    var queue = [{ game: start, path: [] }];
+    var heuristic = electroHeuristic(start);
+    var queue = [{ game: start, path: [], score: heuristic ? heuristic(start) * 4 : 0 }];
     var queueIndex = 0;
     var discovered = 1, actionChecks = 0, validTransitions = 0;
     var visited = {}; visited[start.stateKey()] = true;
@@ -940,17 +1003,17 @@
       options.onProgress({
         reason: reason, explored: queueIndex, discovered: discovered,
         actionChecks: actionChecks, validTransitions: validTransitions,
-        queued: queue.length - queueIndex, maxStates: maxStates,
+        queued: heuristic ? queue.length : queue.length - queueIndex, maxStates: maxStates,
         depth: current.path.length, position: copyPosition(current.game.position),
         dir: copyPosition(current.game.dir), trace: current.path.slice(-6)
       });
     }
     var current = queue[0];
     report(current, 'running');
-    while (queueIndex < queue.length) {
+    while (heuristic ? queue.length : queueIndex < queue.length) {
       if (maxStates && queueIndex >= maxStates) { report(current, 'limit'); return null; }
-      current = queue[queueIndex];
-      queue[queueIndex] = null;
+      current = heuristic ? popSearchNode(queue) : queue[queueIndex];
+      if (!heuristic) queue[queueIndex] = null;
       queueIndex += 1;
       if (current.game.won) { report(current, 'found'); return current.path; }
       if (!maxDepth || current.path.length < maxDepth) {
@@ -963,7 +1026,11 @@
             if (!visited[nextKey]) {
               visited[nextKey] = true;
               discovered += 1;
-              queue.push({ game: next, path: current.path.concat([action]) });
+              var node = { game: next, path: current.path.concat([action]) };
+              if (heuristic) {
+                node.score = node.path.length + 4 * heuristic(next);
+                pushSearchNode(queue, node);
+              } else queue.push(node);
             }
           }
         });
