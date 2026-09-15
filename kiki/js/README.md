@@ -19,7 +19,13 @@ transform, animation, transparency, and resource-reuse checks (tested with Node.
 `kiki_sound.js` plays the original relative `kiki/sound/*.wav` assets, with the
 original sound aliases and volume ratios. Sound defaults on; the button below
 Reset toggles it and remembers the choice for this tab's session, including level
-navigation. Browser audio unlocks on the first touch/key gesture. Muting or hiding
+navigation. When enabled, walk, jump, and land asynchronously fetch and decode as
+soon as the player is created. Browser audio unlocks on the first touch/key
+gesture; other effects preload after those three finish. One shared AudioContext
+requests interactive latency and caches decoded buffers. Every playback creates
+an independent, one-shot source, so effects (including repeated walks) can overlap,
+up to 16 simultaneous voices. Separate AudioContexts are unnecessary.
+Muting or hiding
 the page cancels queued sounds and stops current playback. No audio update loop
 is added.
 

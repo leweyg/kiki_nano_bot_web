@@ -7,6 +7,7 @@
   var volumes = { bot_move: .2, bot_jump: .7, bot_land: .7, switch_off: .5 };
   var aliases = { switch_off: 'switch_on', bot_spiked: 'bot_move', spikes_start: 'bot_move', atom_birth: 'atom_digest', motor: 'bomb_splitter' };
   var names = ('bot_move bot_jump bot_land bot_health_alert bot_death bot_no_energy bullet_shot bullet_hit_wall bullet_hit_object bullet_hit_player bullet_hit_mutant stone_move stone_land switch_on atom_digest menu_fade menu_item menu_select menu_abort gate_open gate_close gate_warp bomb_explode bomb_splitter gear_on gear_off generator_on generator_off').split(' ');
+  var critical = ['bot_move', 'bot_jump', 'bot_land'];
   function file(name) { return 'kiki/sound/' + (aliases[name] || name) + '.wav'; }
   function cell(object) { var p = object.coordinates; return object.type + ':' + p.x + ',' + p.y + ',' + p.z; }
   function moved(a, b) { return a.x !== b.x || a.y !== b.y || a.z !== b.z; }
@@ -61,11 +62,24 @@
     this.timers = new Set();
     this.generation = 0;
     this.hidden = false;
+    // Fetch and decode movement cues before the first gesture, without resuming audio.
+    this.preload();
   }
+  Player.prototype.preload = function () {
+    if (!this.enabled || this.hidden) return Promise.resolve();
+    var Context = this.host.AudioContext || this.host.webkitAudioContext;
+    if (!Context) return Promise.resolve();
+    try {
+      if (!this.context) this.context = new Context({ latencyHint: 'interactive' });
+      return Promise.all(critical.map(function (name) {
+        return this.load(name).catch(function () {});
+      }, this));
+    } catch (_) { return Promise.resolve(); }
+  };
   Player.prototype.load = function (name) {
     var path = file(name), self = this;
     if (!this.buffers.has(path)) {
-      var pending = this.host.fetch(path).then(function (response) {
+      var pending = Promise.resolve().then(function () { return self.host.fetch(path); }).then(function (response) {
         if (!response.ok) throw new Error('Sound unavailable: ' + path);
         return response.arrayBuffer();
       }).then(function (bytes) { return self.context.decodeAudioData(bytes); });
@@ -79,11 +93,16 @@
     var Context = this.host.AudioContext || this.host.webkitAudioContext;
     if (!Context) return;
     try {
-      if (!this.context) this.context = new Context();
+      var prepared = this.preload();
+      if (!this.context) return;
       var resumed = this.context.resume();
       if (resumed) resumed.catch(function () {});
-      // Cached once, on user input; no background audio or animation loop.
-      names.forEach(function (name) { this.load(name).catch(function () {}); }, this);
+      // Let critical effects finish before competing for network/decode resources.
+      var self = this, generation = this.generation;
+      prepared.then(function () {
+        if (!self.enabled || self.hidden || generation !== self.generation) return;
+        names.forEach(function (name) { self.load(name).catch(function () {}); });
+      });
     } catch (_) { /* Audio failure must never interrupt controls. */ }
   };
   Player.prototype.stop = function () {
