@@ -40,11 +40,11 @@ function bfs(budgetMs, limit) {
       stats=s;
       if(Date.now()-began>budgetMs || s.discovered>180000)throw Error('budget');
     }});
-    attempts.push({method:level.id==='electro'?'circuit-weighted-best-first':'breadth-first',elapsedMs:Date.now()-began,...stats});
+    attempts.push({method:level.id==='elevate'?'bomb-and-circuit-weighted-best-first':level.id==='electro'?'circuit-weighted-best-first':'breadth-first',elapsedMs:Date.now()-began,...stats});
     return path;
   } catch(error) {
     if(error.message!=='budget')throw error;
-    attempts.push({method:level.id==='electro'?'circuit-weighted-best-first':'breadth-first',reason:'budget',elapsedMs:Date.now()-began,...stats,stopped:'time/frontier budget'});
+    attempts.push({method:level.id==='elevate'?'bomb-and-circuit-weighted-best-first':level.id==='electro'?'circuit-weighted-best-first':'breadth-first',reason:'budget',elapsedMs:Date.now()-began,...stats,stopped:'time/frontier budget'});
     return null;
   }
 }

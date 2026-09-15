@@ -487,21 +487,7 @@
     });
     var drivenGenerators = this.updateMechanicalGears();
 
-    if (this.level.powerCondition === "elevatedCircuit") {
-      var circuitParts = this.objects.filter(function (object) { return object.circuitPart; });
-      var elevated = circuitParts.length > 0 && circuitParts.every(function (object) {
-        return (object.coordinates.y || 0) >= 2;
-      });
-      var connected = elevated && circuitParts.every(function (object) { return object.mechanical; });
-      this.setExitActive("exit", connected);
-      this.objects.forEach(function (object) {
-        if (object.circuitPart && isGearObject(object)) object.powered = connected;
-        if (object.type === "wire") object.active = connected;
-      });
-      return;
-    }
-
-    if (this.level.powerCondition !== "connectedMotor") return;
+    if (this.level.powerCondition !== "connectedMotor" && this.level.powerCondition !== "elevatedCircuit") return;
 
     this.setExitActive("exit", false);
     drivenGenerators.forEach(function (generator) { generator.powered = true; });
@@ -561,8 +547,8 @@
         return gear.type === "motorGear" && gear.mechanical && samePosition(add(gear.coordinates, vec(0, 1, 0)), object.coordinates);
       });
     }, this);
-    // Electro must feed the wire network, not merely spin the generator.
-    if (this.level.id === "electro") reachesMotor = reachesMotor && wireObjects.some(function (wire) { return wire.powered; });
+    // These circuit puzzles must feed the wires, not merely spin the generator.
+    if (this.level.id === "electro" || this.level.powerCondition === "elevatedCircuit") reachesMotor = reachesMotor && wireObjects.some(function (wire) { return wire.powered; });
     this.setExitActive("exit", reachesMotor);
   };
   Game.prototype.stateKey = function () {
@@ -961,6 +947,35 @@
     };
   }
 
+  function elevateHeuristic(start) {
+    if (start.level.id !== "elevate") return null;
+    var motor = start.objects.find(function (o) { return o.type === "motorGear"; });
+    if (!motor) return null;
+    function distance(a, b) { return Math.abs(a.x - b.x) + Math.abs(a.y - b.y) + Math.abs(a.z - b.z); }
+    return function (game) {
+      if (game.won) return 0;
+      var active = game.exits.filter(function (exit) { return exit.active; });
+      if (active.length) return Math.min.apply(null, active.map(function (exit) { return distance(game.position, exit.coordinates); }));
+      var bombs = game.objects.filter(function (o) { return o.type === "bomb"; });
+      if (bombs.length) return 100 + 20 * bombs.length + Math.min.apply(null, bombs.map(function (bomb) {
+        return distance(game.position, bomb.coordinates);
+      }));
+      // The ceiling wire is five cells from the motor: all four cogs and
+      // the generator must form a straight chain along the motor's row.
+      var parts = game.objects.filter(function (o) { return o.circuitPart; }).slice().sort(function (a, b) {
+        return a.coordinates.x - b.coordinates.x;
+      });
+      var moves = 0, approach = Infinity;
+      parts.forEach(function (part, index) {
+        var target = vec(motor.coordinates.x + index + 1, motor.coordinates.y, motor.coordinates.z);
+        var remaining = distance(part.coordinates, target);
+        moves += remaining;
+        if (remaining) approach = Math.min(approach, distance(game.position, part.coordinates));
+      });
+      return 10 + 6 * moves + (Number.isFinite(approach) ? approach : 0);
+    };
+  }
+
   function pushSearchNode(heap, node) {
     var index = heap.length;
     heap.push(node);
@@ -992,7 +1007,7 @@
     var maxDepth = options.maxDepth || 0;
     var start = new Game(level);
     start.applyGravity();
-    var heuristic = electroHeuristic(start);
+    var heuristic = electroHeuristic(start) || elevateHeuristic(start);
     var queue = [{ game: start, path: [], score: heuristic ? heuristic(start) * 4 : 0 }];
     var queueIndex = 0;
     var discovered = 1, actionChecks = 0, validTransitions = 0;
@@ -1022,6 +1037,12 @@
           var next = current.game.clone();
           if (next.action(action)) {
             validTransitions += 1;
+            // Keep Elevate's bombs in place so their blasts lift the parts above.
+            if (level.id === "elevate" && next.objects.some(function (object) {
+              return object.type === "bomb" && !current.game.objects.some(function (original) {
+                return original.type === "bomb" && samePosition(original.coordinates, object.coordinates);
+              });
+            })) return;
             var nextKey = next.stateKey();
             if (!visited[nextKey]) {
               visited[nextKey] = true;

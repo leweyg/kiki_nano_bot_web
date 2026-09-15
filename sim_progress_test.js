@@ -52,3 +52,43 @@ assert(shortcut.objects.find(o=>o.type==='generator').mechanical);
 assert(!shortcut.objects.some(o=>o.type==='wire'&&o.powered));
 assert(!shortcut.exits.some(e=>e.active), 'spinning generator without wire power must leave the exit closed');
 console.log('PASS Electro circuit search, powered-wire replay, and rejected mechanical-only shortcut');
+
+const elevate = Kiki.getLevel('elevate');
+const liftProgress = [];
+const liftPath = Kiki.solve(elevate, {maxStates:20000,onProgress:s=>liftProgress.push(s)});
+assert(liftPath, 'Elevate must solve within the simulator budget');
+assert.equal(liftProgress.at(-1).reason, 'found');
+for (const stats of liftProgress) assert.equal(stats.queued, stats.discovered - stats.explored);
+const lift = new Kiki.Game(elevate);
+lift.applyGravity();
+const cell = o=>JSON.stringify(o.coordinates);
+const bombCells = lift.objects.filter(o=>o.type==='bomb').map(cell);
+let shots = 0, raised = false;
+for (const action of liftPath) {
+  const before = lift.objects.filter(o=>o.type==='bomb').map(cell);
+  assert(lift.action(action));
+  const after = lift.objects.filter(o=>o.type==='bomb').map(cell);
+  assert(after.every(p=>bombCells.includes(p)), 'bombs must stay in their original cells');
+  if (after.length < before.length) {
+    assert.equal(action, 'shoot', 'detonate bombs by shooting');
+    shots++;
+  }
+  if (!after.length && !raised) {
+    assert(lift.objects.filter(o=>o.circuitPart).every(o=>o.coordinates.y===4), 'blasts lift all parts to ceiling');
+    raised = true;
+    assert(!lift.exits.some(e=>e.active), 'lifting alone does not power the exit');
+  }
+  if (lift.exits.some(e=>e.active)) {
+    assert(lift.objects.filter(o=>o.circuitPart).every(o=>o.mechanical));
+    assert(lift.objects.filter(o=>o.type==='wire').every(o=>o.powered), 'entire exit loop receives generator power');
+  }
+}
+assert(shots>0 && raised && lift.won);
+// Break the drive chain: circuit and wire power must disappear together.
+const broken = lift.clone();
+const cog = broken.objects.find(o=>o.type==='gear');
+broken.moveObjectTo(cog, {x:cog.coordinates.x,y:4,z:1});
+broken.updatePower();
+assert(!broken.exits.some(e=>e.active));
+assert(!broken.objects.some(o=>o.type==='wire'&&o.powered));
+console.log('PASS Elevate bomb shots without pushes, ceiling lift, powered loop, and disconnected circuit');

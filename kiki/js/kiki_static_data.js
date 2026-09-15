@@ -183,7 +183,7 @@
       size: { x: 9, y: 5, z: 7 },
       intro: "elevate",
       powerCondition: "elevatedCircuit",
-      solverActions: ["move forward", "move backward", "turn left", "turn right", "shoot"],
+      solverActions: ["move forward", "move backward", "turn left", "turn right", "jump forward", "jump far forward", "jump", "push forward", "push backward", "shoot"],
       help: "$scale(1.5)mission:\nactivate the exit!\n\nto activate the exit,\nfeed it with electricity\n\nuse the bombs\nto elevate the gears\nand the generator\n\nthe bombs will detonate\nif you shoot them",
       player: { position: { x: 3, y: -2, z: 0 }, orientation: "roty90", nostatus: false },
       exits: [

@@ -168,12 +168,102 @@
     ]
   },
   "elevate": {
-    "status": "unsolvable",
-    "port_status": "not-ported",
-    "reason": "missing-mechanics",
+    "status": "solved",
+    "reason": "replay-verified",
+    "port_status": "ported",
+    "elapsedMs": 78,
+    "attempts": [
+      {
+        "method": "bomb-and-circuit-weighted-best-first",
+        "weight": 4,
+        "reason": "found",
+        "explored": 178,
+        "discovered": 574,
+        "actionChecks": 1770,
+        "validTransitions": 1444,
+        "queued": 396,
+        "maxStates": 20000,
+        "depth": 47,
+        "position": {
+          "x": 6,
+          "y": 0,
+          "z": 3
+        },
+        "dir": {
+          "x": -1,
+          "y": 0,
+          "z": 0
+        },
+        "trace": [
+          "jump far forward",
+          "jump far forward",
+          "jump far forward",
+          "jump far forward",
+          "jump forward",
+          "move forward"
+        ],
+        "elapsedMs": 78
+      }
+    ],
+    "actions": [
+      "move backward",
+      "turn left",
+      "shoot",
+      "move backward",
+      "turn left",
+      "shoot",
+      "turn right",
+      "jump far forward",
+      "move forward",
+      "jump forward",
+      "jump far forward",
+      "jump forward",
+      "push forward",
+      "turn left",
+      "jump forward",
+      "turn left",
+      "jump forward",
+      "push backward",
+      "turn left",
+      "move backward",
+      "turn left",
+      "jump forward",
+      "jump forward",
+      "push backward",
+      "turn left",
+      "move backward",
+      "move backward",
+      "move backward",
+      "turn right",
+      "jump forward",
+      "push backward",
+      "turn left",
+      "jump far forward",
+      "move forward",
+      "turn left",
+      "jump forward",
+      "jump forward",
+      "push backward",
+      "move backward",
+      "move backward",
+      "turn left",
+      "jump far forward",
+      "jump far forward",
+      "jump far forward",
+      "jump far forward",
+      "jump forward",
+      "move forward"
+    ],
+    "metrics": {
+      "moves": 47,
+      "pushes": 5,
+      "shots": 2,
+      "activeSwitches": 0,
+      "objects": 36,
+      "initiallyWon": false
+    },
     "notes": [
-      "Bomb-lift and elevated-circuit behavior remain approximate; stopped before claiming a faithful route.",
-      "Search intentionally stopped at the known mechanic gap."
+      "Shoots bombs in place to lift all five circuit parts; connects the ceiling motor through four cogs to the generator on the wire, powering the exit loop. Blast animation timing remains simplified."
     ]
   },
   "throw": {
