@@ -1622,7 +1622,10 @@
         queuedAction = null;
         act(next);
       } else {
-        continueHeldInput();
+        heldMoveTimer = setTimeout(() => {
+          heldMoveTimer = null;
+          continueHeldInput();
+        }, HELD_MOVE_DELAY_MS);
       }
     }
     function scheduleAdvanceIfWon() {
@@ -1739,6 +1742,8 @@
     }
     function act(direction) {
       if (game.won || advancingLevel || Date.now() < suppressInputUntil) return;
+      if (heldMoveTimer !== null) clearTimeout(heldMoveTimer);
+      heldMoveTimer = null;
       showGestureFeedback(direction);
       if (activeAnimation) {
         if (direction.indexOf('jump') === 0) return;
@@ -1779,7 +1784,7 @@
       const changed = heldInput.move !== direction || heldInput.pointerMove !== pointerId;
       heldInput.move = direction;
       heldInput.pointerMove = pointerId;
-      if (changed && !activeAnimation && !queuedAction) {
+      if (changed && !activeAnimation && !queuedAction && heldMoveTimer === null) {
         const action = actionForMove(direction);
         if (action === 'jump forward') consumeJumpIntent();
         act(action);
@@ -1794,6 +1799,8 @@
     const touchpad = document.getElementById('touchpad');
     const touchpadKnob = document.getElementById('touchpad-knob');
     const HOLD_GESTURE_MS = 350;
+    const HELD_MOVE_DELAY_MS = 200;
+    let heldMoveTimer = null;
     const touchpadState = { pointerId: null, originX: 0, originY: 0, dragging: false, holdTimer: null, holdMode: null };
     function clearHoldTimer() {
       if (touchpadState.holdTimer !== null) clearTimeout(touchpadState.holdTimer);
